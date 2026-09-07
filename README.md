@@ -31,7 +31,7 @@ _A preencher._
 
 ## Descrição
 
-_A preencher conforme o projeto for desenvolvido. Ver `CLAUDE.md` para o contexto técnico completo._
+_A preencher._
 
 ---
 
