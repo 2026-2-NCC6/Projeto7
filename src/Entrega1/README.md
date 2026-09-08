@@ -109,6 +109,26 @@ ofensiva é maior que zero, só contorno (e em cinza) quando está zerada.
 Regra de XP em `domain/progression/level-rules.ts`:
 `xpDoNível(n) = 500 + n * 250`. O jogador começa no nível 0.
 
+### Conquistas
+
+O catálogo (28 conquistas em 9 categorias) e as regras de desbloqueio ficam em
+`domain/achievement/`, sem persistência: cada conquista é **avaliada** a cada
+requisição sobre os dados que já existem (progressão, ofensiva e sessões).
+
+Uma conquista é uma `AchievementCriterion` declarativa — uma métrica, um alvo e
+uma comparação. `evaluateAchievements` resolve a métrica e devolve
+`{ current, progress, unlocked }`. Métricas que ainda não têm origem de dados
+devolvem `null` (hoje só `leaderboardPosition`, porque não existe ranking), e a
+conquista aparece bloqueada e sem barra de progresso.
+
+Quando o gameplay começar a gravar sessões, nada aqui muda: as conquistas
+passam a desbloquear sozinhas. Adicionar uma conquista nova é uma entrada no
+catálogo mais o texto em `frontend/src/content/texts.ts`.
+
+O backend define identidade e regra (id, categoria, nível, critério); o app
+define aparência e texto (título, descrição, ícone, cor). Nenhum texto de
+interface vem da API.
+
 ---
 
 ## API
@@ -118,9 +138,17 @@ Regra de XP em `domain/progression/level-rules.ts`:
 | POST | `/auth/sign-up` | — | `201` · `409` e-mail em uso · `400` validação |
 | POST | `/auth/sign-in` | — | `200` · `401` credenciais inválidas |
 | GET | `/me/home` | Bearer | `200` · `401` sem token/expirado |
+| GET | `/me/profile` | Bearer | `200` · `401` sem token/expirado |
 
 `/me/home` devolve nome do jogador, ofensiva diária, progressão por trilha e o
 resumo das sessões.
+
+`/me/profile` devolve os dados do jogador, progressão, estatísticas (incluindo
+precisão), recordes pessoais, modo favorito e as 28 conquistas avaliadas.
+Recordes, precisão e modo favorito são agregados por consulta sobre
+`training_sessions` — como ainda não existe gameplay, hoje vêm `null`, e a tela
+mostra `—` em vez de inventar um número. `rank` é sempre `null` até existir
+ranking.
 
 ---
 
@@ -140,15 +168,26 @@ presentation/    controllers, DTOs, guard JWT, filtro de exceções
 **Frontend**
 
 ```
-src/theme/       tokens de cor, espaçamento, raio, tipografia e sombra
+src/theme/       tokens dos temas claro e escuro, espaçamento, raio, tipografia
 src/content/     todos os textos da interface (pt-BR) e a saudação por horário
 src/components/  componentes compartilhados
-src/screens/     Login, SignUp, Home (com componentes próprios em components/)
-src/navigation/  stack de autenticação, tabs e tab bar customizada
-src/services/    cliente HTTP, serviço de autenticação e da Home
-src/hooks/       formulários e carregamento da Home
-src/store/       sessão (zustand)
+src/screens/     Login, SignUp, Home, Profile, Achievements
+src/navigation/  stack de autenticação, tabs, tab bar e stack do perfil
+src/services/    cliente HTTP e serviços de autenticação, Home e perfil
+src/hooks/       formulários, carregamento de dados e tema efetivo
+src/store/       sessão e preferência de tema (zustand)
 ```
+
+### Tema claro e escuro
+
+`theme/colors.ts` exporta dois conjuntos com os mesmos nomes de token
+(`lightColors` e `darkColors`); `App.tsx` escolhe um e entrega ao
+`ThemeProvider`. Os componentes não sabem qual tema está ativo — não existe
+condicional de tema fora de `theme/`.
+
+A preferência é **Claro · Escuro · Sistema**, salva em AsyncStorage. `Sistema`
+segue o aparelho. O laranja da marca é idêntico nos dois temas; o que muda são
+as superfícies e os textos.
 
 Os `index.tsx` só compõem componentes: nenhuma cor, tamanho ou espaçamento
 literal fora de `theme/` e dos arquivos `styles.ts`.
@@ -170,8 +209,12 @@ Por isso o `ValidationPipe` é instanciado antes de `NestFactory.create` em
 
 ## Escopo desta entrega
 
-Login e cadastro funcionais, persistindo no PostgreSQL. A Home mostra dados
-reais do jogador (todos começam zerados, porque ainda não existe gameplay que
-grave sessões). As abas Jogar, Estatísticas, Ranking e Perfil mostram um
-placeholder — fazem parte de entregas futuras, assim como os minigames e a
-integração com o ESP32.
+Login e cadastro funcionais, persistindo no PostgreSQL. A Home e o Perfil
+mostram dados reais do jogador (todos começam zerados, porque ainda não existe
+gameplay que grave sessões). O Perfil traz estatísticas, recordes, progressão,
+conquistas e as configurações (tema e sair da conta).
+
+O avatar no topo da Home abre um menu com "Ver perfil" e "Sair da conta".
+
+As abas Jogar, Estatísticas e Ranking mostram um placeholder — fazem parte de
+entregas futuras, assim como os minigames e a integração com o ESP32.
