@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react';
+import type { Achievement } from '../services/profile/types';
 import type { TabIconProps } from './components/TabIcons';
 
 export type AuthStackParamList = {
@@ -12,6 +13,11 @@ export type AppTabParamList = {
   Stats: undefined;
   Ranks: undefined;
   Profile: undefined;
+};
+
+export type ProfileStackParamList = {
+  ProfileOverview: undefined;
+  Achievements: { achievements: Achievement[] };
 };
 
 export type AppTabName = keyof AppTabParamList;

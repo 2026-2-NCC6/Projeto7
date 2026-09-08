@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { texts } from '../content/texts';
 import { HomeScreen } from '../screens/Home';
 import { PlaceholderScreen } from '../screens/Placeholder';
-import { texts } from '../content/texts';
 import {
   HomeIcon,
   PlayIcon,
@@ -10,6 +10,7 @@ import {
   StatsIcon,
 } from './components/TabIcons';
 import { SmashTabBar } from './components/SmashTabBar';
+import { ProfileNavigator } from './ProfileNavigator';
 import type { AppTabParamList, TabDefinition } from './types';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
@@ -32,7 +33,7 @@ export function AppTabs() {
       <Tab.Screen name="Play">{() => <PlaceholderScreen title={texts.tabs.play} />}</Tab.Screen>
       <Tab.Screen name="Stats">{() => <PlaceholderScreen title={texts.tabs.stats} />}</Tab.Screen>
       <Tab.Screen name="Ranks">{() => <PlaceholderScreen title={texts.tabs.ranks} />}</Tab.Screen>
-      <Tab.Screen name="Profile">{() => <PlaceholderScreen title={texts.tabs.profile} />}</Tab.Screen>
+      <Tab.Screen name="Profile" component={ProfileNavigator} />
     </Tab.Navigator>
   );
 }
