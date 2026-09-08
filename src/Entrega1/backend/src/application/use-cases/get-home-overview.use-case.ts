@@ -1,18 +1,11 @@
 import { DailyStreak } from '../../domain/daily-streak/daily-streak.entity';
 import { DailyStreakRepository } from '../../domain/daily-streak/daily-streak-repository.port';
-import { ProgressionTrack } from '../../domain/game/game-mode';
 import { ProgressionRepository } from '../../domain/progression/progression-repository.port';
 import { EMPTY_SESSION_STATS, SessionStats } from '../../domain/training-session/session-stats';
 import { TrainingSessionRepository } from '../../domain/training-session/training-session-repository.port';
 import { UserNotFoundError } from '../../domain/user/errors';
 import { UserRepository } from '../../domain/user/user-repository.port';
-
-export interface TrackProgressView {
-  track: ProgressionTrack;
-  level: number;
-  xp: number;
-  xpRequired: number;
-}
+import { toTrackProgressView, TrackProgressView } from './track-progress';
 
 export interface HomeOverview {
   player: {
@@ -57,12 +50,7 @@ export class GetHomeOverviewUseCase {
         longestStreak: streak.longestStreak,
         completedToday: streak.isCompletedOn(new Date()),
       },
-      progress: progressions.map((progression) => ({
-        track: progression.track,
-        level: progression.level,
-        xp: progression.xp,
-        xpRequired: progression.xpRequired,
-      })),
+      progress: progressions.map(toTrackProgressView),
       stats: stats ?? EMPTY_SESSION_STATS,
     };
   }
