@@ -39,3 +39,9 @@ export class Progression {
     return xpRequiredForLevel(this.props.level);
   }
 }
+
+export function highestLevelOf(progressions: Progression[], track?: ProgressionTrack): number {
+  return progressions
+    .filter((progression) => track === undefined || progression.track === track)
+    .reduce((highest, progression) => Math.max(highest, progression.level), 0);
+}

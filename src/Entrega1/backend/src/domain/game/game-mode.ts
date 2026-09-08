@@ -10,3 +10,5 @@ export const GAME_MODES = [
 ] as const;
 
 export type GameMode = (typeof GAME_MODES)[number];
+
+export const LEVEL_MODES: GameMode[] = ['level_color', 'level_score'];
