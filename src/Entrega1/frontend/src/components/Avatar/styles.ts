@@ -10,4 +10,4 @@ export const Circle = styled.View<{ diameter: number }>`
   background-color: ${({ theme }) => theme.colors.ink};
 `;
 
-export const Initial = styled(Text).attrs({ weight: 'extraBold', tone: 'onPrimary' })``;
+export const Initial = styled(Text).attrs({ weight: 'extraBold', tone: 'onInk' })``;

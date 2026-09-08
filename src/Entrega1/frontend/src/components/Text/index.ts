@@ -5,6 +5,7 @@ export type TextTone =
   | 'ink'
   | 'inkSoft'
   | 'onPrimary'
+  | 'onInk'
   | 'primary'
   | 'primaryDark'
   | 'danger';
@@ -22,6 +23,7 @@ const toneColor = {
   ink: (t: { colors: { ink: string } }) => t.colors.ink,
   inkSoft: (t: { colors: { inkSoft: string } }) => t.colors.inkSoft,
   onPrimary: (t: { colors: { onPrimary: string } }) => t.colors.onPrimary,
+  onInk: (t: { colors: { onInk: string } }) => t.colors.onInk,
   primary: (t: { colors: { primary: string } }) => t.colors.primary,
   primaryDark: (t: { colors: { primaryDark: string } }) => t.colors.primaryDark,
   danger: (t: { colors: { danger: string } }) => t.colors.danger,

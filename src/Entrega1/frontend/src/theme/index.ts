@@ -1,21 +1,34 @@
-import { colors } from './colors';
+import { Colors, darkColors, lightColors } from './colors';
 import { radii } from './radii';
 import { shadows } from './shadows';
 import { sizes } from './sizes';
 import { spacing } from './spacing';
 import { typography } from './typography';
 
-export const theme = {
-  colors,
-  spacing,
-  radii,
-  sizes,
-  typography,
-  shadows,
-} as const;
+export type ThemeMode = 'light' | 'dark';
 
-export type AppTheme = typeof theme;
+export type ThemePreference = ThemeMode | 'system';
 
-export { colors, radii, shadows, sizes, spacing, typography };
+export interface AppTheme {
+  mode: ThemeMode;
+  colors: Colors;
+  spacing: typeof spacing;
+  radii: typeof radii;
+  sizes: typeof sizes;
+  typography: typeof typography;
+  shadows: typeof shadows;
+}
+
+function buildTheme(mode: ThemeMode, colors: Colors): AppTheme {
+  return { mode, colors, spacing, radii, sizes, typography, shadows };
+}
+
+export const themes: Record<ThemeMode, AppTheme> = {
+  light: buildTheme('light', lightColors),
+  dark: buildTheme('dark', darkColors),
+};
+
+export { darkColors, lightColors, radii, shadows, sizes, spacing, typography };
+export type { Colors } from './colors';
 export { fontAssets } from './typography';
 export type { FontSizeToken, FontWeightToken, LineHeightToken } from './typography';
