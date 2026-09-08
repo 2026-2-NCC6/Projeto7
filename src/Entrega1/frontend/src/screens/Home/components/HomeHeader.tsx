@@ -1,3 +1,4 @@
+import { Pressable } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { Avatar } from '../../../components/Avatar';
 import { Icon } from '../../../components/Icon';
@@ -47,9 +48,15 @@ interface HomeHeaderProps {
   greeting: string;
   name: string;
   dailyStreak: number;
+  onOpenAccountMenu: () => void;
 }
 
-export function HomeHeader({ greeting, name, dailyStreak }: HomeHeaderProps) {
+export function HomeHeader({
+  greeting,
+  name,
+  dailyStreak,
+  onOpenAccountMenu,
+}: HomeHeaderProps) {
   const theme = useTheme();
   const active = dailyStreak > 0;
 
@@ -72,7 +79,13 @@ export function HomeHeader({ greeting, name, dailyStreak }: HomeHeaderProps) {
           />
           <StreakValue active={active}>{dailyStreak}</StreakValue>
         </StreakPill>
-        <Avatar name={name} />
+        <Pressable
+          onPress={onOpenAccountMenu}
+          accessibilityRole="button"
+          accessibilityLabel={texts.home.accountMenu}
+        >
+          <Avatar name={name} />
+        </Pressable>
       </Actions>
     </Row>
   );

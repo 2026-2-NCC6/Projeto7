@@ -8,6 +8,13 @@ export const shadows = {
     shadowRadius: 12,
     elevation: 6,
   },
+  menu: {
+    shadowColor: palette.charcoal,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 12,
+  },
   heroCard: {
     shadowColor: palette.orangeDark,
     shadowOffset: { width: 0, height: 12 },

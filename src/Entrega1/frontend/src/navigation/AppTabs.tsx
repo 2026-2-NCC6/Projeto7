@@ -29,7 +29,11 @@ export function AppTabs() {
       screenOptions={{ headerShown: false }}
       tabBar={(props) => <SmashTabBar {...props} tabs={tabs} />}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Home">
+        {({ navigation }) => (
+          <HomeScreen onViewProfile={() => navigation.navigate('Profile')} />
+        )}
+      </Tab.Screen>
       <Tab.Screen name="Play">{() => <PlaceholderScreen title={texts.tabs.play} />}</Tab.Screen>
       <Tab.Screen name="Stats">{() => <PlaceholderScreen title={texts.tabs.stats} />}</Tab.Screen>
       <Tab.Screen name="Ranks">{() => <PlaceholderScreen title={texts.tabs.ranks} />}</Tab.Screen>
