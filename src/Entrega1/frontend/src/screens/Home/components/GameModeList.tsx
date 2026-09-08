@@ -2,6 +2,7 @@ import { Pressable } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { Card } from '../../../components/Card';
 import { Icon } from '../../../components/Icon';
+import { gameModeIcons, gameModeLabels } from '../../../content/gameLabels';
 import { Text } from '../../../components/Text';
 import { Triangle } from '../../../components/Triangle';
 import type { GameMode, ModeAccent } from '../data/gameModes';
@@ -57,10 +58,10 @@ export function GameModeList({ modes, onSelect }: GameModeListProps) {
         <Pressable key={mode.id} onPress={() => onSelect(mode)} accessibilityRole="button">
           <Row>
             <Badge accent={accentColor(mode.accent)}>
-              <Icon name={mode.icon} color={theme.colors.onPrimary} />
+              <Icon name={gameModeIcons[mode.id]} color={theme.colors.onPrimary} />
             </Badge>
             <Details>
-              <Name>{mode.name}</Name>
+              <Name>{gameModeLabels[mode.id]}</Name>
               <Tag>{mode.tag}</Tag>
             </Details>
             <Triangle direction="right" {...CHEVRON} color={theme.colors.inkSoft} />

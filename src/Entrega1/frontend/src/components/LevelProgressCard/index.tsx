@@ -1,10 +1,10 @@
 import styled from 'styled-components/native';
-import { Card } from '../../../components/Card';
-import { ProgressFill, ProgressTrack } from '../../../components/ProgressBar';
-import { Text } from '../../../components/Text';
-import { texts } from '../../../content/texts';
-import type { TrackProgress } from '../../../services/home/types';
-import { trackLabels } from '../data/gameModes';
+import { trackLabels } from '../../content/gameLabels';
+import { texts } from '../../content/texts';
+import type { TrackProgress } from '../../services/home/types';
+import { Card } from '../Card';
+import { ProgressFill, ProgressTrack } from '../ProgressBar';
+import { Text } from '../Text';
 
 const Container = styled(Card)`
   padding: ${({ theme }) => theme.spacing['4xl']}px;

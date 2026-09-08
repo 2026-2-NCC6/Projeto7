@@ -8,7 +8,7 @@ import { DailyChallengeCard } from './components/DailyChallengeCard';
 import { GameModeList } from './components/GameModeList';
 import { HeroCard } from './components/HeroCard';
 import { HomeHeader } from './components/HomeHeader';
-import { LevelProgressCard } from './components/LevelProgressCard';
+import { LevelProgressCard } from '../../components/LevelProgressCard';
 import { QuickStats } from './components/QuickStats';
 import { gameModes } from './data/gameModes';
 import { Centered, Content, ErrorMessage, RetryLabel, Section } from './styles';

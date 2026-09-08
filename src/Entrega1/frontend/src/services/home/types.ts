@@ -1,4 +1,4 @@
-export type ProgressionTrack = 'color' | 'score';
+import type { ProgressionTrack } from '../../types/game';
 
 export interface TrackProgress {
   track: ProgressionTrack;
