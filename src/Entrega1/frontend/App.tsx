@@ -2,6 +2,7 @@ import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from 'styled-components/native';
+import { DeviceProvider } from './src/device/runtime/DeviceProvider';
 import { useThemeMode } from './src/hooks/useThemeMode';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { fontAssets, themes } from './src/theme';
@@ -18,7 +19,9 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider theme={themes[mode]}>
         <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
-        <RootNavigator />
+        <DeviceProvider>
+          <RootNavigator />
+        </DeviceProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
