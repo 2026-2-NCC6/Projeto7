@@ -1,7 +1,7 @@
 # Smash — Entrega 1
 
-Autenticação (login e cadastro) com persistência real em PostgreSQL, e a Home
-com os dados do jogador vindos do backend.
+Autenticação, Home e Perfil com dados reais do PostgreSQL, e o gameplay: **Color
+Mode** e **Score Mode**, 20 níveis cada, com o motor de jogo separado do hardware.
 
 ```
 backend/    NestJS + TypeORM + PostgreSQL (Clean Architecture)
@@ -82,8 +82,9 @@ EXPO_PUBLIC_API_URL=http://SEU_IP_LOCAL:3000 npm run app
 users                 conta: id, name, email, password_hash, created_at
 user_progressions     nível e XP por trilha (color, score) — PK (user_id, track)
 daily_streaks         ofensiva diária: atual, recorde, último dia concluído
-training_sessions     uma linha por treino: modo, score, acertos, erros,
-                      melhor sequência, duração, quando
+training_sessions     uma linha por treino: modo, nível, concluído, score,
+                      acertos, erros, melhor sequência, duração, XP ganho,
+                      tempo de resposta médio e melhor, quando
 ```
 
 Ao criar uma conta, o backend grava numa **transação** o usuário, as duas
@@ -95,12 +96,15 @@ os números nunca saem de sincronia com as sessões.
 
 ### Modos de jogo
 
-| Modo | Ícone | Trilha | Tem nível? |
+| Modo | Ícone | Trilha | Jogável hoje |
 | --- | --- | --- | --- |
-| Level Color Mode | sequência de blocos | `color` | sim |
-| Level Score Mode | alvo | `score` | sim |
-| Infinite Color Mode | infinito | `color` | não |
-| Infinite Score Mode | cronômetro | `score` | não |
+| Color Mode | sequência de blocos | `color` | sim |
+| Score Mode | alvo | `score` | sim |
+| Infinite Color | infinito | `color` | não |
+| Infinite Score | cronômetro | `score` | não |
+
+Os identificadores no banco continuam `level_color`, `level_score`,
+`infinite_color` e `infinite_score` — só os rótulos da interface mudaram.
 
 Os ícones são SVG desenhados em `src/components/Icon`, sem fonte de ícones.
 A chama da ofensiva usa o mesmo ícone em dois estados: preenchida quando a
@@ -121,13 +125,77 @@ uma comparação. `evaluateAchievements` resolve a métrica e devolve
 devolvem `null` (hoje só `leaderboardPosition`, porque não existe ranking), e a
 conquista aparece bloqueada e sem barra de progresso.
 
-Quando o gameplay começar a gravar sessões, nada aqui muda: as conquistas
-passam a desbloquear sozinhas. Adicionar uma conquista nova é uma entrada no
-catálogo mais o texto em `frontend/src/content/texts.ts`.
+Com o gameplay gravando sessões, nada aqui mudou: as conquistas passaram a
+desbloquear sozinhas. Adicionar uma conquista nova é uma entrada no catálogo mais
+o texto em `frontend/src/content/texts.ts`.
 
 O backend define identidade e regra (id, categoria, nível, critério); o app
 define aparência e texto (título, descrição, ícone, cor). Nenhum texto de
 interface vem da API.
+
+---
+
+## Gameplay
+
+Duas camadas, e a fronteira entre elas é o ponto principal:
+
+```
+frontend/src/device/     tudo que sabe que existe uma parede
+frontend/src/gameplay/   motor, regras, níveis e métricas
+```
+
+O motor (`gameplay/domain/game-session.ts`) é um reducer puro sobre os estados
+`preparing → awaitingHit → resolving → levelCleared / levelFailed`, mais `paused`
+e `deviceLost`. Ele cuida do ciclo de vida, do tempo, das métricas e do estado do
+dispositivo. Cada modo só decide o que é acerto e quando o nível termina, por trás
+de `GameRules`. Registrar um modo novo é uma pasta em `gameplay/modes/` mais uma
+linha em `modes/registry.ts` — não existe `if (mode === ...)` em lugar nenhum.
+
+Os níveis são **dados**: `modes/color/color-levels.ts` e
+`modes/score/score-levels.ts`, 20 entradas cada. Ajustar a dificuldade é editar a
+tabela.
+
+### Color Mode
+
+A tela fica da cor do próximo alvo. Errar a cor — ou estourar a janela de reação —
+devolve a sequência para o começo e conta um erro. A dificuldade cresce em
+comprimento da sequência, janela de reação, tempo de recuperação e erros tolerados.
+
+### Score Mode
+
+Cada cor vale pontos e o nível termina ao atingir a meta. Níveis mais altos têm
+limite de tempo, multiplicador por sequência de acertos, penalidade por erro,
+paleta reduzida (acertar fora da paleta é erro) e precisão mínima.
+
+### A parede ainda não existe
+
+`device/contracts/` define o que é um evento de impacto (`TargetHitEvent`,
+`DeviceStatusEvent`, `DeviceFaultEvent`) e a porta `TargetDevice`. Mensagem crua
+nunca chega ao motor: `device/parsing/` valida o formato `Impacto` com zod e
+`device/runtime/event-pipeline.ts` descarta alvo desconhecido, evento duplicado e
+`t_ms` fora de ordem, emitindo `DeviceFaultEvent` em vez de quebrar a sessão.
+
+O `SimulatedTargetDevice` monta exatamente a mesma mensagem que o firmware vai
+publicar e a manda pelo mesmo parser e pipeline — o motor não tem como distinguir
+os dois. **Quando o ESP32 existir, é uma classe nova implementando `TargetDevice`
+e um `case` em `device/runtime/device-factory.ts`.** Nada em `gameplay/` muda.
+
+Impacto simulado nunca vira número na tela: as leituras carregam
+`impact.simulated: true` e a tela de resultado mostra `—`.
+
+### Simulador durante o desenvolvimento
+
+Em `__DEV__`, um painel flutuante ("sim", canto inferior direito da tela de jogo)
+permite disparar alvos específicos, ligar o **piloto automático** (joga o nível
+sozinho, útil para demonstrar sem a parede), derrubar e refazer a conexão, e
+mandar uma mensagem inválida. Fora de `__DEV__` o painel não renderiza nada.
+
+### Métricas
+
+Cada tentativa vira um `AttemptRecord`. No fim, `metrics-collector.ts` produz
+duração, precisão, acertos e erros, maior sequência, pontuação, conclusão, tempo
+de resposta (médio, melhor, pior), estatísticas por alvo e impacto — cada métrica
+sem origem de dados aparece como `—` em vez de um número inventado.
 
 ---
 
@@ -139,6 +207,7 @@ interface vem da API.
 | POST | `/auth/sign-in` | — | `200` · `401` credenciais inválidas |
 | GET | `/me/home` | Bearer | `200` · `401` sem token/expirado |
 | GET | `/me/profile` | Bearer | `200` · `401` sem token/expirado |
+| POST | `/me/sessions` | Bearer | `201` · `400` validação · `401` sem token |
 
 `/me/home` devolve nome do jogador, ofensiva diária, progressão por trilha e o
 resumo das sessões.
@@ -146,9 +215,12 @@ resumo das sessões.
 `/me/profile` devolve os dados do jogador, progressão, estatísticas (incluindo
 precisão), recordes pessoais, modo favorito e as 28 conquistas avaliadas.
 Recordes, precisão e modo favorito são agregados por consulta sobre
-`training_sessions` — como ainda não existe gameplay, hoje vêm `null`, e a tela
-mostra `—` em vez de inventar um número. `rank` é sempre `null` até existir
-ranking.
+`training_sessions`. `rank` é sempre `null` até existir ranking.
+
+`POST /me/sessions` grava o treino, credita XP e marca o dia na ofensiva — tudo
+numa transação — e devolve `xpAwarded`, a progressão da trilha e a ofensiva
+atualizada. A regra de XP é do backend (`domain/progression/session-reward.ts`):
+o app conta o que aconteceu, o servidor decide quanto vale.
 
 ---
 
@@ -171,8 +243,11 @@ presentation/    controllers, DTOs, guard JWT, filtro de exceções
 src/theme/       tokens dos temas claro e escuro, espaçamento, raio, tipografia
 src/content/     todos os textos da interface (pt-BR) e a saudação por horário
 src/components/  componentes compartilhados
-src/screens/     Login, SignUp, Home, Profile, Achievements
-src/navigation/  stack de autenticação, tabs, tab bar e stack do perfil
+src/screens/     Login, SignUp, Home, Play, LevelSelect, ModeIntro, ColorGame,
+                 ScoreGame, GameResults, Profile, Achievements
+src/navigation/  stack de autenticação, stack do app, tabs, stack de jogo e perfil
+src/device/      contratos, parser, pipeline e adaptador simulado da parede
+src/gameplay/    motor, regras, níveis, métricas, serviços e ferramentas de dev
 src/services/    cliente HTTP e serviços de autenticação, Home e perfil
 src/hooks/       formulários, carregamento de dados e tema efetivo
 src/store/       sessão e preferência de tema (zustand)
@@ -186,8 +261,14 @@ src/store/       sessão e preferência de tema (zustand)
 condicional de tema fora de `theme/`.
 
 A preferência é **Claro · Escuro · Sistema**, salva em AsyncStorage. `Sistema`
-segue o aparelho. O laranja da marca é idêntico nos dois temas; o que muda são
-as superfícies e os textos.
+segue o aparelho. O verde-limão da marca é idêntico nos dois temas; o que muda
+são as superfícies e os textos.
+
+`primary` é **preenchimento** e carrega `onPrimary` (grafite — texto branco sobre
+o limão não se lê). `primaryDark` é o acento quando ele mesmo é o texto ou o
+ícone sobre `background`/`surface`: limão escuro no tema claro, limão claro no
+escuro. Qualquer elemento fino (ícone da tab, link, barra de progresso, borda de
+foco) usa `primaryDark`.
 
 Os `index.tsx` só compõem componentes: nenhuma cor, tamanho ou espaçamento
 literal fora de `theme/` e dos arquivos `styles.ts`.
@@ -209,12 +290,14 @@ Por isso o `ValidationPipe` é instanciado antes de `NestFactory.create` em
 
 ## Escopo desta entrega
 
-Login e cadastro funcionais, persistindo no PostgreSQL. A Home e o Perfil
-mostram dados reais do jogador (todos começam zerados, porque ainda não existe
-gameplay que grave sessões). O Perfil traz estatísticas, recordes, progressão,
-conquistas e as configurações (tema e sair da conta).
+Login e cadastro funcionais, persistindo no PostgreSQL. Home e Perfil mostram
+dados reais do jogador, agora alimentados pelo gameplay. O Perfil traz
+estatísticas, recordes, progressão, conquistas e as configurações (tema e sair da
+conta). O avatar no topo da Home abre um menu com "Ver perfil" e "Sair da conta".
 
-O avatar no topo da Home abre um menu com "Ver perfil" e "Sair da conta".
+A aba Jogar traz Color Mode e Score Mode com 20 níveis cada, seleção de nível,
+tutorial por modo, resultados com métricas e gravação da sessão no backend.
 
-As abas Jogar, Estatísticas e Ranking mostram um placeholder — fazem parte de
-entregas futuras, assim como os minigames e a integração com o ESP32.
+Fora do escopo por enquanto: as abas Estatísticas e Ranking, os modos Infinite, o
+Desafio Diário como modo próprio e o firmware do ESP32 — a parede é representada
+pelo dispositivo simulado.
