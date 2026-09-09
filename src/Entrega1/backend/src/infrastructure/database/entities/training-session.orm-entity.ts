@@ -14,6 +14,12 @@ export class TrainingSessionOrmEntity {
   mode: GameMode;
 
   @Column({ type: 'int', default: 0 })
+  level: number;
+
+  @Column({ type: 'boolean', default: false })
+  cleared: boolean;
+
+  @Column({ type: 'int', default: 0 })
   score: number;
 
   @Column({ type: 'int', default: 0 })
@@ -27,6 +33,15 @@ export class TrainingSessionOrmEntity {
 
   @Column({ type: 'int', name: 'duration_ms', default: 0 })
   durationMs: number;
+
+  @Column({ type: 'int', name: 'xp_awarded', default: 0 })
+  xpAwarded: number;
+
+  @Column({ type: 'int', name: 'avg_response_ms', nullable: true })
+  avgResponseMs: number | null;
+
+  @Column({ type: 'int', name: 'best_response_ms', nullable: true })
+  bestResponseMs: number | null;
 
   @CreateDateColumn({ type: 'timestamptz', name: 'played_at' })
   playedAt: Date;

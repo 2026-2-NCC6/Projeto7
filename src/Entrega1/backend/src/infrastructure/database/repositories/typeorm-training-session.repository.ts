@@ -1,9 +1,12 @@
 import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 import { GAME_MODES, GameMode, LEVEL_MODES } from '../../../domain/game/game-mode';
+import { CompletedTraining } from '../../../domain/training-session/completed-training';
 import { SessionInsights } from '../../../domain/training-session/session-insights';
 import { SessionStats } from '../../../domain/training-session/session-stats';
 import { TrainingSessionRepository } from '../../../domain/training-session/training-session-repository.port';
+import { DailyStreakOrmEntity } from '../entities/daily-streak.orm-entity';
 import { TrainingSessionOrmEntity } from '../entities/training-session.orm-entity';
+import { UserProgressionOrmEntity } from '../entities/user-progression.orm-entity';
 
 interface StatsRow {
   totalSessions: string | null;
@@ -17,7 +20,8 @@ type InsightsRow = {
   bestScore: string | null;
   fastestLevelMs: string | null;
   longestHitStreak: string | null;
-} & Record<GameMode, string | null>;
+} & Record<GameMode, string | null> &
+  Record<`cleared_${GameMode}`, string | null>;
 
 function toNullableNumber(value: string | null | undefined): number | null {
   return value === null || value === undefined ? null : Number(value);
@@ -28,16 +32,69 @@ function selectSessionsPerMode(
 ): SelectQueryBuilder<TrainingSessionOrmEntity> {
   return GAME_MODES.reduce(
     (builder, mode) =>
-      builder.addSelect(`COUNT(*) FILTER (WHERE session.mode = '${mode}')`, mode),
+      builder
+        .addSelect(`COUNT(*) FILTER (WHERE session.mode = '${mode}')`, mode)
+        .addSelect(
+          `COALESCE(MAX(session.level) FILTER (WHERE session.mode = '${mode}' AND session.cleared), 0)`,
+          `cleared_${mode}`,
+        ),
     query,
+  );
+}
+
+function perMode(
+  row: InsightsRow | undefined,
+  key: (mode: GameMode) => keyof InsightsRow,
+): Record<GameMode, number> {
+  return GAME_MODES.reduce(
+    (counts, mode) => ({ ...counts, [mode]: Number(row?.[key(mode)] ?? 0) }),
+    {} as Record<GameMode, number>,
   );
 }
 
 export class TypeOrmTrainingSessionRepository implements TrainingSessionRepository {
   private readonly repository: Repository<TrainingSessionOrmEntity>;
 
-  constructor(dataSource: DataSource) {
+  constructor(private readonly dataSource: DataSource) {
     this.repository = dataSource.getRepository(TrainingSessionOrmEntity);
+  }
+
+  async commit({ session, progression, dailyStreak }: CompletedTraining): Promise<void> {
+    await this.dataSource.transaction(async (manager) => {
+      await manager.getRepository(TrainingSessionOrmEntity).insert({
+        id: session.id,
+        userId: session.userId,
+        mode: session.mode,
+        level: session.level,
+        cleared: session.cleared,
+        score: session.score,
+        hits: session.hits,
+        misses: session.misses,
+        bestStreak: session.bestStreak,
+        durationMs: session.durationMs,
+        xpAwarded: session.xpAwarded,
+        avgResponseMs: session.avgResponseMs,
+        bestResponseMs: session.bestResponseMs,
+      });
+
+      await manager
+        .getRepository(UserProgressionOrmEntity)
+        .update(
+          { userId: progression.userId, track: progression.track },
+          { level: progression.level, xp: progression.xp },
+        );
+
+      await manager
+        .getRepository(DailyStreakOrmEntity)
+        .update(
+          { userId: dailyStreak.userId },
+          {
+            currentStreak: dailyStreak.currentStreak,
+            longestStreak: dailyStreak.longestStreak,
+            lastCompletedOn: dailyStreak.lastCompletedOn,
+          },
+        );
+    });
   }
 
   async statsFor(userId: string): Promise<SessionStats> {
@@ -82,10 +139,8 @@ export class TypeOrmTrainingSessionRepository implements TrainingSessionReposito
         fastestLevelMs: toNullableNumber(row?.fastestLevelMs),
         longestHitStreak: toNullableNumber(row?.longestHitStreak),
       },
-      sessionsByMode: GAME_MODES.reduce(
-        (counts, mode) => ({ ...counts, [mode]: Number(row?.[mode] ?? 0) }),
-        {} as Record<GameMode, number>,
-      ),
+      sessionsByMode: perMode(row, (mode) => mode),
+      highestClearedByMode: perMode(row, (mode) => `cleared_${mode}`),
     };
   }
 }

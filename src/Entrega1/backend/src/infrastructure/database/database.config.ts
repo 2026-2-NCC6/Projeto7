@@ -5,6 +5,7 @@ import { UserOrmEntity } from './entities/user.orm-entity';
 import { UserProgressionOrmEntity } from './entities/user-progression.orm-entity';
 import { CreateUsersTable1757250000000 } from './migrations/1757250000000-CreateUsersTable';
 import { CreateProgressionTables1757260000000 } from './migrations/1757260000000-CreateProgressionTables';
+import { AddSessionDetail1757270000000 } from './migrations/1757270000000-AddSessionDetail';
 
 export function buildDataSourceOptions(env: NodeJS.ProcessEnv = process.env): DataSourceOptions {
   return {
@@ -20,7 +21,11 @@ export function buildDataSourceOptions(env: NodeJS.ProcessEnv = process.env): Da
       DailyStreakOrmEntity,
       TrainingSessionOrmEntity,
     ],
-    migrations: [CreateUsersTable1757250000000, CreateProgressionTables1757260000000],
+    migrations: [
+      CreateUsersTable1757250000000,
+      CreateProgressionTables1757260000000,
+      AddSessionDetail1757270000000,
+    ],
     synchronize: false,
   };
 }

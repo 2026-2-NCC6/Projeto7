@@ -38,6 +38,18 @@ export class Progression {
   get xpRequired(): number {
     return xpRequiredForLevel(this.props.level);
   }
+
+  award(xp: number): Progression {
+    let level = this.props.level;
+    let carried = this.props.xp + Math.max(0, xp);
+
+    while (carried >= xpRequiredForLevel(level)) {
+      carried -= xpRequiredForLevel(level);
+      level += 1;
+    }
+
+    return new Progression({ ...this.props, level, xp: carried });
+  }
 }
 
 export function highestLevelOf(progressions: Progression[], track?: ProgressionTrack): number {
