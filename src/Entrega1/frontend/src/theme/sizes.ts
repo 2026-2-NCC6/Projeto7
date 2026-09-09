@@ -15,6 +15,16 @@ export const sizes = {
   streakSquare: 8,
   inputBorder: 1.5,
   hairline: 1,
+
+  gameChip: 32,
+  promptRing: 110,
+  promptRingBorder: 3,
+  timelineDot: 26,
+  timelineDotBorder: 2,
+  meterThick: 12,
+  levelTile: 64,
+  legendSwatch: 20,
+  targetGridMaxWidth: 300,
 } as const;
 
 export type Sizes = typeof sizes;
