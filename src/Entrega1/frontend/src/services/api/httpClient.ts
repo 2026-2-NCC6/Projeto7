@@ -58,8 +58,12 @@ async function request<TResponse>({
   return payload as TResponse;
 }
 
-export function post<TResponse>(path: string, body: object): Promise<TResponse> {
-  return request<TResponse>({ method: 'POST', path, body });
+export function post<TResponse>(
+  path: string,
+  body: object,
+  accessToken: string | null = null,
+): Promise<TResponse> {
+  return request<TResponse>({ method: 'POST', path, body, accessToken });
 }
 
 export function get<TResponse>(path: string, accessToken: string | null): Promise<TResponse> {

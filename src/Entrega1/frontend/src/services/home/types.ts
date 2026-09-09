@@ -1,4 +1,4 @@
-import type { ProgressionTrack } from '../../types/game';
+import type { GameModeId, ProgressionTrack } from '../../types/game';
 
 export interface TrackProgress {
   track: ProgressionTrack;
@@ -24,6 +24,7 @@ export interface HomeOverview {
   dailyChallenge: DailyChallengeStatus;
   progress: TrackProgress[];
   stats: SessionStats;
+  highestClearedByMode: Record<GameModeId, number>;
 }
 
 export const GUEST_OVERVIEW: HomeOverview = {
@@ -34,4 +35,10 @@ export const GUEST_OVERVIEW: HomeOverview = {
     { track: 'score', level: 0, xp: 0, xpRequired: 500 },
   ],
   stats: { totalSessions: 0, bestStreak: 0, totalScore: 0 },
+  highestClearedByMode: {
+    level_color: 0,
+    level_score: 0,
+    infinite_color: 0,
+    infinite_score: 0,
+  },
 };

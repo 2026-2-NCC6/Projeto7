@@ -7,7 +7,7 @@ import {
 import { useTheme } from 'styled-components/native';
 import { useAuthStore } from '../store/authStore';
 import { type AppTheme, type ThemeMode, themes } from '../theme';
-import { AppTabs } from './AppTabs';
+import { AppNavigator } from './AppNavigator';
 import { AuthNavigator } from './AuthNavigator';
 
 function navigationThemeFor(theme: AppTheme): Theme {
@@ -17,7 +17,7 @@ function navigationThemeFor(theme: AppTheme): Theme {
     ...base,
     colors: {
       ...base.colors,
-      primary: theme.colors.primary,
+      primary: theme.colors.primaryDark,
       background: theme.colors.background,
       card: theme.colors.surfaceRaised,
       text: theme.colors.ink,
@@ -38,7 +38,7 @@ export function RootNavigator() {
 
   return (
     <NavigationContainer theme={navigationThemes[theme.mode]}>
-      {session === 'none' ? <AuthNavigator /> : <AppTabs />}
+      {session === 'none' ? <AuthNavigator /> : <AppNavigator />}
     </NavigationContainer>
   );
 }

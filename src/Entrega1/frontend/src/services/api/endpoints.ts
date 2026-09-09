@@ -3,4 +3,5 @@ export const endpoints = {
   signIn: '/auth/sign-in',
   home: '/me/home',
   profile: '/me/profile',
+  recordSession: '/me/sessions',
 } as const;

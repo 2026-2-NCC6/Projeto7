@@ -158,10 +158,10 @@ export const texts = {
     heroEyebrow: 'O APP É SEU CONTROLE',
     heroTitle: 'Escolha um modo e vá acertar a parede de verdade',
     heroAction: 'Começar treino',
-    dailyChallenge: 'Desafio Diário',
+    dailyChallenge: 'Ofensiva diária',
     dailyStreak: (days: number) => `Ofensiva de ${days} ${days === 1 ? 'dia' : 'dias'}`,
-    dailyPending: 'Jogue o desafio de hoje',
-    dailyDone: 'Concluído hoje',
+    dailyPending: 'Treine hoje para manter a ofensiva',
+    dailyDone: 'Você já treinou hoje',
     chooseMode: 'Escolha um modo',
     progress: 'Progresso',
     level: (level: number) => `Nível ${level}`,
@@ -175,6 +175,136 @@ export const texts = {
     retry: 'Tentar novamente',
     viewProfile: 'Ver perfil',
     accountMenu: 'Sua conta',
+  },
+
+  play: {
+    title: 'Escolha um modo',
+    subtitle: 'A parede recebe as batidas. O app mostra o que acertar e como você foi.',
+    soon: 'Em breve',
+    playMode: (name: string) => `Jogar ${name}`,
+    modeTag: {
+      level_color: 'Sequência de cores',
+      level_score: 'Pontos por alvo',
+      infinite_color: 'Cores sem fim',
+      infinite_score: 'Pontos contra o relógio',
+    },
+    modeDescription: {
+      level_color:
+        'Acerte a sequência de cores na ordem mostrada. A tela vira a cor do próximo alvo.',
+      level_score: 'Persiga os alvos que valem mais e alcance a pontuação do nível.',
+      infinite_color: 'Cores sem fim, até você errar.',
+      infinite_score: 'Some pontos sem parar, contra o relógio.',
+    },
+  },
+
+  levels: {
+    title: (mode: string) => `${mode} · Níveis`,
+    level: (level: number) => `Nível ${level}`,
+    back: 'Voltar',
+    locked: 'Bloqueado',
+    bestScore: (score: number) => `Recorde ${score.toLocaleString('pt-BR')}`,
+    progress: (cleared: number, total: number) => `${cleared} de ${total} concluídos`,
+  },
+
+  intro: {
+    eyebrow: (mode: string) => `${mode} · COMO FUNCIONA`,
+    skip: 'Pular',
+    back: 'Voltar',
+    next: 'Próximo',
+    start: 'Começar treino',
+    steps: {
+      level_color: [
+        {
+          title: 'Siga a sequência',
+          description:
+            'Cada nível mostra uma sequência de cores. Acerte os alvos da parede exatamente nessa ordem.',
+        },
+        {
+          title: 'A tela mostra o alvo',
+          description:
+            'O celular fica da cor do próximo alvo: tela âmbar significa acertar o alvo âmbar.',
+        },
+        {
+          title: 'Não perca o ritmo',
+          description:
+            'A linha do tempo marca cada acerto. Um erro devolve a sequência para o começo.',
+        },
+      ],
+      level_score: [
+        {
+          title: 'Cada alvo vale pontos',
+          description:
+            'Os alvos da parede valem valores diferentes. Os mais difíceis pagam mais.',
+        },
+        {
+          title: 'Alcance a meta',
+          description: 'Continue batendo até a pontuação chegar à meta do nível.',
+        },
+        {
+          title: 'Sequência multiplica',
+          description:
+            'Acertos seguidos aumentam o multiplicador. Errar zera a sequência e pode custar pontos.',
+        },
+      ],
+    },
+  },
+
+  game: {
+    close: 'Sair',
+    header: (mode: string, level: number) => `${mode} · Nível ${level}`,
+    help: 'Como funciona',
+    prepare: 'Prepare-se',
+    hitTarget: 'ACERTE O ALVO',
+    targetName: {
+      amber: 'âmbar',
+      blue: 'azul',
+      red: 'vermelho',
+    },
+    sequence: (done: number, total: number) => `${done} de ${total}`,
+    scoreGoal: (target: number) => `de ${target.toLocaleString('pt-BR')} pontos para passar de nível`,
+    streak: (streak: number) => `Sequência ${streak}`,
+    multiplier: (value: number) => `${value.toLocaleString('pt-BR')}x`,
+    minimumAccuracy: (percent: number) => `Precisão mínima ${percent}%`,
+    currentAccuracy: (percent: number) => `Precisão ${Math.round(percent)}%`,
+    timeLeft: 'Tempo restante',
+    mistakesLeft: (left: number) => `${left} ${left === 1 ? 'erro restante' : 'erros restantes'}`,
+    device: {
+      connecting: 'Procurando a parede…',
+      lost: 'Conexão com a parede perdida',
+      disconnected: 'Parede desconectada',
+      retry: 'Reconectar',
+    },
+  },
+
+  results: {
+    cleared: 'Nível concluído!',
+    clearedSubtitle: 'Bom trabalho na parede',
+    failed: 'Nível não concluído',
+    failedReason: {
+      timeExpired: 'O tempo acabou.',
+      mistakesExhausted: 'Erros demais nesta sequência.',
+      deviceLost: 'A conexão com a parede caiu.',
+    },
+    duration: 'Duração',
+    accuracy: 'Precisão',
+    averageResponse: 'Resposta média',
+    fastestResponse: 'Resposta mais rápida',
+    slowestResponse: 'Resposta mais lenta',
+    averageInterval: 'Intervalo médio',
+    fastestInterval: 'Intervalo mais curto',
+    longestStreak: 'Maior sequência',
+    finalScore: 'Pontuação',
+    completion: 'Conclusão',
+    attempts: 'Tentativas',
+    impact: 'Impacto médio',
+    xpAwarded: (xp: number) => `+${xp.toLocaleString('pt-BR')} XP`,
+    levelUp: (level: number) => `Você chegou ao nível ${level}!`,
+    saveError: 'Não foi possível salvar esta sessão.',
+    guestNotice: 'Entre na sua conta para guardar seu progresso.',
+    nextLevel: 'Próximo nível',
+    retryLevel: 'Repetir nível',
+    exit: 'Sair',
+    allLevelsDone: 'Você concluiu todos os níveis deste modo.',
   },
 
   profile: {

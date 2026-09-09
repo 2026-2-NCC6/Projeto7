@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { profileService } from '../services/profile/profileService';
 import type { Profile } from '../services/profile/types';
+import { useLevelProgressStore } from '../gameplay/store/levelProgressStore';
 import { useAuthStore } from '../store/authStore';
 import { toFormErrorMessage } from './formError';
 
@@ -13,6 +14,7 @@ interface ProfileState {
 
 export function useProfile(): ProfileState {
   const accessToken = useAuthStore((state) => state.accessToken);
+  const lastSyncedAt = useLevelProgressStore((state) => state.lastSyncedAt);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(Boolean(accessToken));
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export function useProfile(): ProfileState {
 
   useEffect(() => {
     void load();
-  }, [load]);
+  }, [load, lastSyncedAt]);
 
   return { profile, loading, error, reload: () => void load() };
 }

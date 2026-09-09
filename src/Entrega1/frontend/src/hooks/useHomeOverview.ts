@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { homeService } from '../services/home/homeService';
 import { GUEST_OVERVIEW, type HomeOverview } from '../services/home/types';
+import { useLevelProgressStore } from '../gameplay/store/levelProgressStore';
 import { useAuthStore } from '../store/authStore';
 import { toFormErrorMessage } from './formError';
 
@@ -13,6 +14,7 @@ interface HomeOverviewState {
 
 export function useHomeOverview(): HomeOverviewState {
   const accessToken = useAuthStore((state) => state.accessToken);
+  const lastSyncedAt = useLevelProgressStore((state) => state.lastSyncedAt);
   const [overview, setOverview] = useState<HomeOverview | null>(
     accessToken ? null : GUEST_OVERVIEW,
   );
@@ -40,7 +42,7 @@ export function useHomeOverview(): HomeOverviewState {
 
   useEffect(() => {
     void load();
-  }, [load]);
+  }, [load, lastSyncedAt]);
 
   return { overview, loading, error, reload: () => void load() };
 }

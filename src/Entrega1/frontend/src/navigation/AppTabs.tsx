@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { texts } from '../content/texts';
 import { HomeScreen } from '../screens/Home';
 import { PlaceholderScreen } from '../screens/Placeholder';
+import type { PlayableModeId } from '../types/game';
 import {
   HomeIcon,
   PlayIcon,
@@ -10,6 +11,7 @@ import {
   StatsIcon,
 } from './components/TabIcons';
 import { SmashTabBar } from './components/SmashTabBar';
+import { PlayNavigator } from './PlayNavigator';
 import { ProfileNavigator } from './ProfileNavigator';
 import type { AppTabParamList, TabDefinition } from './types';
 
@@ -23,7 +25,11 @@ const tabs: TabDefinition[] = [
   { name: 'Profile', label: texts.tabs.profile, icon: ProfileIcon },
 ];
 
-export function AppTabs() {
+interface AppTabsProps {
+  onStartLevel: (mode: PlayableModeId, level: number) => void;
+}
+
+export function AppTabs({ onStartLevel }: AppTabsProps) {
   return (
     <Tab.Navigator
       screenOptions={{ headerShown: false }}
@@ -31,10 +37,16 @@ export function AppTabs() {
     >
       <Tab.Screen name="Home">
         {({ navigation }) => (
-          <HomeScreen onViewProfile={() => navigation.navigate('Profile')} />
+          <HomeScreen
+            onViewProfile={() => navigation.navigate('Profile')}
+            onOpenPlay={() => navigation.navigate('Play')}
+            onSelectMode={(mode) =>
+              navigation.navigate('Play', { screen: 'LevelSelect', params: { mode } })
+            }
+          />
         )}
       </Tab.Screen>
-      <Tab.Screen name="Play">{() => <PlaceholderScreen title={texts.tabs.play} />}</Tab.Screen>
+      <Tab.Screen name="Play">{() => <PlayNavigator onStartLevel={onStartLevel} />}</Tab.Screen>
       <Tab.Screen name="Stats">{() => <PlaceholderScreen title={texts.tabs.stats} />}</Tab.Screen>
       <Tab.Screen name="Ranks">{() => <PlaceholderScreen title={texts.tabs.ranks} />}</Tab.Screen>
       <Tab.Screen name="Profile" component={ProfileNavigator} />

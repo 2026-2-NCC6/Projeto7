@@ -7,10 +7,10 @@ export const trackLabels: Record<ProgressionTrack, string> = {
 };
 
 export const gameModeLabels: Record<GameModeId, string> = {
-  level_color: 'Level Color Mode',
-  level_score: 'Level Score Mode',
-  infinite_color: 'Infinite Color Mode',
-  infinite_score: 'Infinite Score Mode',
+  level_color: 'Color Mode',
+  level_score: 'Score Mode',
+  infinite_color: 'Infinite Color',
+  infinite_score: 'Infinite Score',
 };
 
 export const gameModeIcons: Record<GameModeId, IconName> = {
