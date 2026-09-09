@@ -12,5 +12,5 @@ export const Cell = styled.View<{ highlighted: boolean }>`
   height: ${({ theme }) => theme.sizes.logoCell}px;
   border-radius: ${({ theme }) => theme.radii.sm}px;
   background-color: ${({ theme, highlighted }) =>
-    highlighted ? theme.colors.primary : theme.colors.border};
+    highlighted ? theme.colors.primaryDark : theme.colors.border};
 `;

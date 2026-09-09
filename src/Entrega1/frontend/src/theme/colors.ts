@@ -1,15 +1,20 @@
+import type { TargetColor } from '../types/game';
+
 export const palette = {
   bone: '#fcfaf7',
   linen: '#f7f5f1',
   ash: '#e4e1dd',
   charcoal: '#0f1216',
   slate: '#5a5e65',
-  orange: '#fa6e1d',
-  orangeDark: '#cf4500',
-  orangeSoft: '#ffe8d6',
+  lime: '#c3f53c',
+  limeDeep: '#4a7000',
+  limeMid: '#8fd400',
+  limeBright: '#d6ff5c',
+  limeSoft: '#edfbc6',
+  moss: '#1e2b0a',
   red: '#ea3c3f',
   blue: '#0077cd',
-  yellow: '#e6c540',
+  amber: '#f2a516',
   silver: '#c2c4c8',
   bronze: '#b78e77',
   white: '#ffffff',
@@ -20,12 +25,10 @@ export const palette = {
   steel: '#2b313a',
   mist: '#f2f1ef',
   fog: '#9aa2ad',
-  ember: '#3a2113',
-  amber: '#ff9552',
   coral: '#ff6b6e',
 } as const;
 
-export interface TierColor {
+export interface ColorPair {
   background: string;
   foreground: string;
 }
@@ -44,40 +47,41 @@ export interface Colors {
   primary: string;
   primaryDark: string;
   primarySoft: string;
+  heroGradient: readonly [string, string];
 
   danger: string;
 
-  target: {
-    yellow: string;
-    blue: string;
-    red: string;
-  };
+  target: Record<TargetColor, ColorPair>;
 
   tier: {
-    bronze: TierColor;
-    silver: TierColor;
-    gold: TierColor;
-    legend: TierColor;
+    bronze: ColorPair;
+    silver: ColorPair;
+    gold: ColorPair;
+    legend: ColorPair;
   };
 
   translucentLight: string;
+  translucentDark: string;
 }
 
 const tier: Colors['tier'] = {
   bronze: { background: palette.bronze, foreground: palette.charcoal },
   silver: { background: palette.silver, foreground: palette.charcoal },
-  gold: { background: palette.yellow, foreground: palette.charcoal },
-  legend: { background: palette.orange, foreground: palette.white },
+  gold: { background: palette.amber, foreground: palette.charcoal },
+  legend: { background: palette.lime, foreground: palette.charcoal },
+};
+
+const target: Colors['target'] = {
+  amber: { background: palette.amber, foreground: palette.charcoal },
+  blue: { background: palette.blue, foreground: palette.white },
+  red: { background: palette.red, foreground: palette.white },
 };
 
 const shared = {
-  target: {
-    yellow: palette.yellow,
-    blue: palette.blue,
-    red: palette.red,
-  },
+  target,
   tier,
   translucentLight: 'rgba(255, 255, 255, 0.35)',
+  translucentDark: 'rgba(15, 18, 22, 0.28)',
 };
 
 export const lightColors: Colors = {
@@ -90,12 +94,13 @@ export const lightColors: Colors = {
 
   ink: palette.charcoal,
   inkSoft: palette.slate,
-  onPrimary: palette.white,
+  onPrimary: palette.charcoal,
   onInk: palette.white,
 
-  primary: palette.orange,
-  primaryDark: palette.orangeDark,
-  primarySoft: palette.orangeSoft,
+  primary: palette.lime,
+  primaryDark: palette.limeDeep,
+  primarySoft: palette.limeSoft,
+  heroGradient: [palette.lime, palette.limeMid],
 
   danger: palette.red,
 };
@@ -110,12 +115,13 @@ export const darkColors: Colors = {
 
   ink: palette.mist,
   inkSoft: palette.fog,
-  onPrimary: palette.white,
+  onPrimary: palette.charcoal,
   onInk: palette.obsidian,
 
-  primary: palette.orange,
-  primaryDark: palette.amber,
-  primarySoft: palette.ember,
+  primary: palette.lime,
+  primaryDark: palette.limeBright,
+  primarySoft: palette.moss,
+  heroGradient: [palette.limeMid, palette.lime],
 
   danger: palette.coral,
 };

@@ -75,7 +75,7 @@ export function HomeHeader({
             name="flame"
             filled={active}
             size={theme.sizes.icon - 4}
-            color={active ? theme.colors.primary : theme.colors.inkSoft}
+            color={active ? theme.colors.primaryDark : theme.colors.inkSoft}
           />
           <StreakValue active={active}>{dailyStreak}</StreakValue>
         </StreakPill>

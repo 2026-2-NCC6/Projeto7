@@ -61,5 +61,5 @@ export const FooterPrompt = styled(Text).attrs({
 export const FooterAction = styled(Text).attrs({
   size: 'md',
   weight: 'extraBold',
-  tone: 'primary',
+  tone: 'primaryDark',
 })``;

@@ -75,7 +75,7 @@ export function HeroCard({ onStartTraining }: HeroCardProps) {
 
   return (
     <Gradient
-      colors={[theme.colors.primary, theme.colors.primaryDark]}
+      colors={theme.colors.heroGradient}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={theme.shadows.heroCard}
@@ -94,7 +94,7 @@ export function HeroCard({ onStartTraining }: HeroCardProps) {
         {heroAccents.map((accent, index) => (
           <AccentCell
             key={index}
-            fill={accent ? theme.colors.target[accent] : theme.colors.translucentLight}
+            fill={accent ? theme.colors.target[accent].background : theme.colors.translucentDark}
           />
         ))}
       </AccentGrid>

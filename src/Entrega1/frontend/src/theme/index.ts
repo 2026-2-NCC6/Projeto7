@@ -29,6 +29,6 @@ export const themes: Record<ThemeMode, AppTheme> = {
 };
 
 export { darkColors, lightColors, radii, shadows, sizes, spacing, typography };
-export type { Colors } from './colors';
+export type { ColorPair, Colors } from './colors';
 export { fontAssets } from './typography';
 export type { FontSizeToken, FontWeightToken, LineHeightToken } from './typography';

@@ -33,5 +33,5 @@ export const ErrorMessage = styled(Text).attrs({
 export const RetryLabel = styled(Text).attrs({
   size: 'md',
   weight: 'extraBold',
-  tone: 'primary',
+  tone: 'primaryDark',
 })``;

@@ -1,22 +1,7 @@
-import type { GameModeId } from '../../../types/game';
+import type { TargetColor } from '../../../types/game';
 
-export type ModeAccent = 'primary' | 'blue' | 'red' | 'ink';
-
-export interface GameMode {
-  id: GameModeId;
-  tag: string;
-  accent: ModeAccent;
-}
-
-export const gameModes: GameMode[] = [
-  { id: 'level_color', tag: 'Acerte a sequência de cores', accent: 'primary' },
-  { id: 'level_score', tag: 'Some pontos por alvo', accent: 'blue' },
-  { id: 'infinite_color', tag: 'Cores sem fim, até você errar', accent: 'red' },
-  { id: 'infinite_score', tag: 'Pontos sem fim, contra o relógio', accent: 'ink' },
-];
-
-export const heroAccents: (('yellow' | 'blue' | 'red') | null)[] = [
-  'yellow',
+export const heroAccents: (TargetColor | null)[] = [
+  'amber',
   null,
   null,
   null,

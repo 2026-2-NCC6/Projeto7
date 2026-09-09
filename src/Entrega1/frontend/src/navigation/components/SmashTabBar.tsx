@@ -62,7 +62,7 @@ export function SmashTabBar({ state, navigation, tabs }: SmashTabBarProps) {
           >
             <Tab>
               <IconSlot>
-                <Icon color={active ? theme.colors.primary : theme.colors.inkSoft} />
+                <Icon color={active ? theme.colors.primaryDark : theme.colors.inkSoft} />
               </IconSlot>
               <Label active={active}>{tab.label}</Label>
             </Tab>

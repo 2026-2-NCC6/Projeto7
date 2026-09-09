@@ -7,7 +7,7 @@ export const Field = styled.TextInput<{ focused: boolean; invalid: boolean }>`
   border-radius: ${({ theme }) => theme.radii['2xl']}px;
   border-width: ${({ theme }) => theme.sizes.inputBorder}px;
   border-color: ${({ theme, focused, invalid }) =>
-    invalid ? theme.colors.danger : focused ? theme.colors.primary : theme.colors.border};
+    invalid ? theme.colors.danger : focused ? theme.colors.primaryDark : theme.colors.border};
   background-color: ${({ theme }) => theme.colors.surface};
   font-family: ${({ theme }) => theme.typography.fontFamily.medium};
   font-size: ${({ theme }) => theme.typography.fontSize.lg}px;

@@ -27,7 +27,7 @@ const Label = styled(SectionTitle)`
   margin-bottom: 0px;
 `;
 
-const SeeAll = styled(Text).attrs({ size: 'base', weight: 'extraBold', tone: 'primary' })``;
+const SeeAll = styled(Text).attrs({ size: 'base', weight: 'extraBold', tone: 'primaryDark' })``;
 
 const Strip = styled.View`
   flex-direction: row;

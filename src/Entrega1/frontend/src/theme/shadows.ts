@@ -2,7 +2,7 @@ import { palette } from './colors';
 
 export const shadows = {
   primaryButton: {
-    shadowColor: palette.orange,
+    shadowColor: palette.limeDeep,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.35,
     shadowRadius: 12,
@@ -16,7 +16,7 @@ export const shadows = {
     elevation: 12,
   },
   heroCard: {
-    shadowColor: palette.orangeDark,
+    shadowColor: palette.limeDeep,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.4,
     shadowRadius: 16,

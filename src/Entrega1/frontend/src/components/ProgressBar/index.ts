@@ -12,5 +12,5 @@ export const ProgressFill = styled.View<{ percentage: number }>`
   width: ${({ percentage }) => percentage}%;
   height: 100%;
   border-radius: ${({ theme }) => theme.radii.pill}px;
-  background-color: ${({ theme }) => theme.colors.primary};
+  background-color: ${({ theme }) => theme.colors.primaryDark};
 `;

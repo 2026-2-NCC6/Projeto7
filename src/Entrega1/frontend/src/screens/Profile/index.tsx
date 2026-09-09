@@ -45,7 +45,7 @@ export function ProfileScreen({ onOpenAchievements }: ProfileScreenProps) {
     return (
       <Screen edges={['top']}>
         <Centered>
-          <ActivityIndicator color={theme.colors.primary} size="large" />
+          <ActivityIndicator color={theme.colors.primaryDark} size="large" />
         </Centered>
       </Screen>
     );

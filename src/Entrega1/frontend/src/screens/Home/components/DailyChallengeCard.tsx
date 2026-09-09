@@ -44,7 +44,7 @@ const Dot = styled.View<{ filled: boolean }>`
   width: ${({ theme }) => theme.sizes.dot}px;
   height: ${({ theme }) => theme.sizes.dot}px;
   border-radius: ${({ theme }) => theme.sizes.dot / 2}px;
-  background-color: ${({ theme, filled }) => (filled ? theme.colors.primary : theme.colors.border)};
+  background-color: ${({ theme, filled }) => (filled ? theme.colors.primaryDark : theme.colors.border)};
 `;
 
 function filledDots(streak: number): number {
