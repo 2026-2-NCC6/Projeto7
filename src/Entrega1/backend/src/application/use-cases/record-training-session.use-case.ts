@@ -1,6 +1,7 @@
 import { DailyStreak } from '../../domain/daily-streak/daily-streak.entity';
 import { DailyStreakRepository } from '../../domain/daily-streak/daily-streak-repository.port';
 import { GameMode } from '../../domain/game/game-mode';
+import { isInfiniteMode } from '../../domain/game/game-mode';
 import { TRACK_BY_MODE } from '../../domain/game/session-mode';
 import { Progression } from '../../domain/progression/progression.entity';
 import { ProgressionRepository } from '../../domain/progression/progression-repository.port';
@@ -64,7 +65,7 @@ export class RecordTrainingSessionUseCase {
     const progression = existingProgression ?? Progression.start(input.userId, track);
     const streak = existingStreak ?? DailyStreak.start(input.userId);
 
-    const xpAwarded = xpForSession(input.level, input.cleared);
+    const xpAwarded = xpForSession(input);
     const rewarded = progression.award(xpAwarded);
     const day = new Date();
 
@@ -84,8 +85,11 @@ export class RecordTrainingSessionUseCase {
       xpAwarded,
     });
 
-    // Treinar conta como o dia cumprido; um nível não concluído não mantém a ofensiva.
-    const nextStreak = input.cleared ? streak.completeOn(day) : streak;
+    // Treinar conta como o dia cumprido; um nível não concluído não mantém a
+    // ofensiva. Um modo infinito nunca é "concluído", então a série terminada já
+    // conta o dia.
+    const nextStreak =
+      input.cleared || isInfiniteMode(input.mode) ? streak.completeOn(day) : streak;
 
     await this.sessions.commit({
       session,

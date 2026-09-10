@@ -12,3 +12,9 @@ export const GAME_MODES = [
 export type GameMode = (typeof GAME_MODES)[number];
 
 export const LEVEL_MODES: GameMode[] = ['level_color', 'level_score'];
+
+export const INFINITE_MODES: GameMode[] = ['infinite_color', 'infinite_score'];
+
+export function isInfiniteMode(mode: GameMode): boolean {
+  return INFINITE_MODES.includes(mode);
+}

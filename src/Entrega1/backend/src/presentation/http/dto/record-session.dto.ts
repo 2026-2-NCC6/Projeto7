@@ -18,8 +18,9 @@ export class RecordSessionDto {
   @IsIn(GAME_MODES as unknown as string[], { message: 'Modo de jogo inválido.' })
   mode: GameMode;
 
+  // Zero is the level an endless run reports, since it has no level table.
   @IsInt()
-  @Min(1)
+  @Min(0)
   @Max(MAX_LEVEL)
   level: number;
 
