@@ -192,9 +192,16 @@ function onTick<TConfig extends LevelConfig, TState>(
   if (advanced.phase.kind === 'preparing') {
     const remainingMs = advanced.phase.remainingMs - deltaMs;
 
+    // The countdown never counts against the session clock, and resuming after a
+    // pause or a reconnect picks it up where it stopped instead of rewinding it.
     return remainingMs > 0
       ? { ...advanced, phase: { kind: 'preparing', remainingMs }, sessionElapsedMs: session.sessionElapsedMs }
-      : { ...advanced, phase: { kind: 'awaitingHit' }, sessionElapsedMs: 0, promptElapsedMs: 0 };
+      : {
+          ...advanced,
+          phase: { kind: 'awaitingHit' },
+          sessionElapsedMs: session.sessionElapsedMs,
+          promptElapsedMs: 0,
+        };
   }
 
   if (advanced.phase.kind === 'resolving') {
