@@ -10,6 +10,8 @@ export interface ModeProgress {
   bestScoreByLevel: Record<number, number>;
 }
 
+type PersistedProgress = Pick<LevelProgressState, 'byMode' | 'introSeen'>;
+
 interface LevelProgressState {
   byMode: Record<PlayableModeId, ModeProgress>;
   introSeen: Record<PlayableModeId, boolean>;
@@ -101,6 +103,17 @@ export const useLevelProgressStore = create<LevelProgressState>()(
       name: 'smash:levels',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: ({ byMode, introSeen }) => ({ byMode, introSeen }),
+      // The default merge is shallow, so a save written before a mode existed would
+      // replace the defaults wholesale and leave the new mode undefined.
+      merge: (persisted, current) => {
+        const saved = persisted as Partial<PersistedProgress> | undefined;
+
+        return {
+          ...current,
+          byMode: { ...current.byMode, ...saved?.byMode },
+          introSeen: { ...current.introSeen, ...saved?.introSeen },
+        };
+      },
       onRehydrateStorage: () => (state) => state?.markHydrated(),
     },
   ),

@@ -158,7 +158,10 @@ function onHit<TConfig extends LevelConfig, TState>(
     return session;
   }
 
-  const outcome = rules.onHit(session.modeState, hit, config);
+  const outcome = rules.onHit(session.modeState, hit, config, {
+    sessionElapsedMs: session.sessionElapsedMs,
+    promptElapsedMs: session.promptElapsedMs,
+  });
 
   const record: AttemptRecord = {
     atMs: session.sessionElapsedMs,

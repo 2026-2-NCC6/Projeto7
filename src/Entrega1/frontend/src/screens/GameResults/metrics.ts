@@ -1,6 +1,7 @@
 import { texts } from '../../content/texts';
 import type { Metric } from '../../gameplay/components/MetricGrid';
 import type { SessionMetrics } from '../../gameplay/domain/metrics/session-metrics';
+import { hasLevels } from '../../gameplay/modes/mode-catalog';
 import type { PlayableModeId } from '../../types/game';
 
 const UNAVAILABLE = '—';
@@ -25,6 +26,14 @@ const responseLabels: Record<PlayableModeId, { average: string; fastest: string 
     fastest: texts.results.fastestResponse,
   },
   level_score: {
+    average: texts.results.averageInterval,
+    fastest: texts.results.fastestInterval,
+  },
+  infinite_color: {
+    average: texts.results.averageResponse,
+    fastest: texts.results.fastestResponse,
+  },
+  infinite_score: {
     average: texts.results.averageInterval,
     fastest: texts.results.fastestInterval,
   },
@@ -56,11 +65,16 @@ export function metricsFor(mode: PlayableModeId, metrics: SessionMetrics): Metri
       value: metrics.response ? seconds(metrics.response.fastestMs) : UNAVAILABLE,
     },
     { key: 'attempts', label: texts.results.attempts, value: String(metrics.totalAttempts) },
-    {
-      key: 'completion',
-      label: texts.results.completion,
-      value: `${metrics.completionPercent}%`,
-    },
+    // Completion is a share of a level, so an endless run has none.
+    ...(hasLevels(mode)
+      ? [
+          {
+            key: 'completion',
+            label: texts.results.completion,
+            value: `${metrics.completionPercent}%`,
+          },
+        ]
+      : []),
     { key: 'impact', label: texts.results.impact, value: impact },
   ];
 }

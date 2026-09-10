@@ -4,7 +4,8 @@ import type {
   RoundOutcome,
   SessionTiming,
 } from '../../domain/game-rules';
-import type { ScoreLevelConfig, StreakMultiplier } from './score-levels';
+import { multiplierFor } from '../shared/scoring';
+import type { ScoreLevelConfig } from './score-levels';
 import { scoreLevels } from './score-levels';
 
 const PERCENT = 100;
@@ -14,14 +15,6 @@ export interface ScoreRoundState {
   readonly streak: number;
   readonly attempts: number;
   readonly correctHits: number;
-}
-
-export function multiplierFor(streak: number, multiplier: StreakMultiplier | null): number {
-  if (!multiplier) {
-    return 1;
-  }
-
-  return Math.min(multiplier.max, 1 + Math.floor(streak / multiplier.every) * multiplier.step);
 }
 
 export function accuracyOf(state: ScoreRoundState): number | null {

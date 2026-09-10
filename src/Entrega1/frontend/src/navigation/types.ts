@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 import type { SessionResult } from '../gameplay/domain/metrics/session-result';
 import type { Achievement } from '../services/profile/types';
-import type { PlayableModeId } from '../types/game';
+import type { LevelModeId, PlayableModeId } from '../types/game';
 import type { TabIconProps } from './components/TabIcons';
 
 export type AuthStackParamList = {
@@ -16,7 +16,7 @@ export type AppStackParamList = {
 
 export type AppTabParamList = {
   Home: undefined;
-  Play: { screen: 'LevelSelect'; params: { mode: PlayableModeId } } | undefined;
+  Play: { screen: 'LevelSelect'; params: { mode: LevelModeId } } | undefined;
   Stats: undefined;
   Ranks: undefined;
   Profile: undefined;
@@ -24,7 +24,7 @@ export type AppTabParamList = {
 
 export type PlayStackParamList = {
   PlayHome: undefined;
-  LevelSelect: { mode: PlayableModeId };
+  LevelSelect: { mode: LevelModeId };
 };
 
 export type GameStackParamList = {

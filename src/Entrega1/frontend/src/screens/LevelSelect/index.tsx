@@ -6,7 +6,7 @@ import { texts } from '../../content/texts';
 import type { LevelConfig } from '../../gameplay/domain/game-rules';
 import { rulesFor } from '../../gameplay/modes/registry';
 import { isLevelUnlocked, useLevelProgressStore } from '../../gameplay/store/levelProgressStore';
-import type { PlayableModeId } from '../../types/game';
+import type { LevelModeId } from '../../types/game';
 import { LevelTile, type LevelTileTone } from './components/LevelTile';
 import {
   BackAction,
@@ -31,7 +31,7 @@ function inRows(levels: readonly LevelConfig[]): LevelConfig[][] {
 }
 
 interface LevelSelectScreenProps {
-  mode: PlayableModeId;
+  mode: LevelModeId;
   onGoBack: () => void;
   onSelectLevel: (level: number) => void;
 }

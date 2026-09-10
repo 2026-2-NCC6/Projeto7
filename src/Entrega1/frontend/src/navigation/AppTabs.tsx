@@ -1,5 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { texts } from '../content/texts';
+import { hasLevels, INFINITE_LEVEL } from '../gameplay/modes/mode-catalog';
 import { HomeScreen } from '../screens/Home';
 import { PlaceholderScreen } from '../screens/Placeholder';
 import type { PlayableModeId } from '../types/game';
@@ -40,8 +41,11 @@ export function AppTabs({ onStartLevel }: AppTabsProps) {
           <HomeScreen
             onViewProfile={() => navigation.navigate('Profile')}
             onOpenPlay={() => navigation.navigate('Play')}
+            // An endless mode has nothing to select, so it opens straight into the game.
             onSelectMode={(mode) =>
-              navigation.navigate('Play', { screen: 'LevelSelect', params: { mode } })
+              hasLevels(mode)
+                ? navigation.navigate('Play', { screen: 'LevelSelect', params: { mode } })
+                : onStartLevel(mode, INFINITE_LEVEL)
             }
           />
         )}

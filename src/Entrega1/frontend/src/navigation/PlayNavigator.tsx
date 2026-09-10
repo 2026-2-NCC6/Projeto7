@@ -1,12 +1,14 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { hasLevels, INFINITE_LEVEL } from '../gameplay/modes/mode-catalog';
 import { LevelSelectScreen } from '../screens/LevelSelect';
 import { PlayScreen } from '../screens/Play';
+import type { PlayableModeId } from '../types/game';
 import type { PlayStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<PlayStackParamList>();
 
 interface PlayNavigatorProps {
-  onStartLevel: (mode: PlayStackParamList['LevelSelect']['mode'], level: number) => void;
+  onStartLevel: (mode: PlayableModeId, level: number) => void;
 }
 
 export function PlayNavigator({ onStartLevel }: PlayNavigatorProps) {
@@ -15,7 +17,12 @@ export function PlayNavigator({ onStartLevel }: PlayNavigatorProps) {
       <Stack.Screen name="PlayHome">
         {({ navigation }) => (
           <PlayScreen
-            onSelectMode={(mode) => navigation.navigate('LevelSelect', { mode })}
+            // An endless mode has nothing to select, so it opens straight into the game.
+            onSelectMode={(mode) =>
+              hasLevels(mode)
+                ? navigation.navigate('LevelSelect', { mode })
+                : onStartLevel(mode, INFINITE_LEVEL)
+            }
           />
         )}
       </Stack.Screen>

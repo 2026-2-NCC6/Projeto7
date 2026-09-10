@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useTheme } from 'styled-components/native';
 import { gameModeLabels } from '../../content/gameLabels';
 import { texts } from '../../content/texts';
+import { WALL_TARGETS } from '../../device/contracts';
 import { useDevice } from '../../device/runtime/useDevice';
 import { ConnectionBanner } from '../../gameplay/components/ConnectionBanner';
 import { GameHeader } from '../../gameplay/components/GameHeader';
@@ -9,12 +10,13 @@ import { MeterBar } from '../../gameplay/components/MeterBar';
 import { PrepareOverlay } from '../../gameplay/components/PrepareOverlay';
 import { TargetGrid } from '../../gameplay/components/TargetGrid';
 import type { SessionResult } from '../../gameplay/domain/metrics/session-result';
-import type { ScoreLevelConfig } from '../../gameplay/modes/score/score-levels';
-import { accuracyOf, type ScoreRoundState } from '../../gameplay/modes/score/score-rules';
-import { multiplierFor } from '../../gameplay/modes/shared/scoring';
 import { GameplayDevPanel } from '../../gameplay/devtools/GameplayDevPanel';
+import type { InfiniteScoreConfig } from '../../gameplay/modes/infinite-score/infinite-score-levels';
+import type { InfiniteScoreState } from '../../gameplay/modes/infinite-score/infinite-score-rules';
+import { INFINITE_LEVEL } from '../../gameplay/modes/mode-catalog';
+import { multiplierFor } from '../../gameplay/modes/shared/scoring';
+import { remainingPercentOf } from '../../gameplay/modes/shared/time-budget';
 import { useGameSession } from '../../gameplay/runtime/useGameSession';
-import { WALL_TARGETS } from '../../device/contracts';
 import { TARGET_COLORS } from '../../types/game';
 import {
   Body,
@@ -23,7 +25,6 @@ import {
   LegendItem,
   LegendValue,
   ScoreBlock,
-  ScoreGoal,
   ScoreValue,
   Stage,
   StatusNote,
@@ -32,19 +33,24 @@ import {
   TimeLabel,
 } from './styles';
 
-const FULL_PERCENT = 100;
-
-interface ScoreGameScreenProps {
+interface InfiniteScoreGameScreenProps {
   level: number;
   onExit: () => void;
   onHelp: () => void;
   onFinish: (result: SessionResult) => void;
 }
 
-export function ScoreGameScreen({ level, onExit, onHelp, onFinish }: ScoreGameScreenProps) {
+export function InfiniteScoreGameScreen({
+  onExit,
+  onHelp,
+  onFinish,
+}: InfiniteScoreGameScreenProps) {
   const theme = useTheme();
   const { status, reconnect } = useDevice();
-  const controller = useGameSession<ScoreRoundState>({ mode: 'level_score', level });
+  const controller = useGameSession<InfiniteScoreState>({
+    mode: 'infinite_score',
+    level: INFINITE_LEVEL,
+  });
 
   useEffect(() => {
     if (controller?.result) {
@@ -57,24 +63,14 @@ export function ScoreGameScreen({ level, onExit, onHelp, onFinish }: ScoreGameSc
   }
 
   const { session, config } = controller;
-  const scoreConfig = config as ScoreLevelConfig;
+  const scoreConfig = config as InfiniteScoreConfig;
   const { modeState } = session;
-
-  const timePercent =
-    scoreConfig.timeLimitMs === null
-      ? null
-      : Math.max(
-          0,
-          FULL_PERCENT - (session.sessionElapsedMs / scoreConfig.timeLimitMs) * FULL_PERCENT,
-        );
-
-  const accuracy = accuracyOf(modeState);
   const multiplier = multiplierFor(modeState.streak, scoreConfig.streakMultiplier);
 
   return (
     <Stage edges={['top', 'bottom']}>
       <GameHeader
-        label={texts.game.header(gameModeLabels.level_score, config.level)}
+        label={texts.game.header(gameModeLabels.infinite_score, null)}
         foreground={theme.colors.ink}
         chipBackground={theme.colors.surface}
         onClose={onExit}
@@ -83,37 +79,28 @@ export function ScoreGameScreen({ level, onExit, onHelp, onFinish }: ScoreGameSc
 
       <Body>
         <ScoreBlock>
-          <ScoreValue foreground={theme.colors.primaryDark}>{modeState.score}</ScoreValue>
-          <ScoreGoal>{texts.game.scoreGoal(scoreConfig.targetScore)}</ScoreGoal>
+          <ScoreValue foreground={theme.colors.primaryDark}>
+            {modeState.score.toLocaleString('pt-BR')}
+          </ScoreValue>
         </ScoreBlock>
 
+        <TimeLabel>{texts.game.timeLeft}</TimeLabel>
         <MeterBar
-          percentage={session.progress * FULL_PERCENT}
-          fillColor={theme.colors.primaryDark}
+          percentage={remainingPercentOf(
+            modeState.deadlineMs,
+            session.sessionElapsedMs,
+            scoreConfig.timeBudget,
+          )}
+          fillColor={theme.colors.danger}
           trackColor={theme.colors.border}
           thickness={theme.sizes.meterThick}
+          animated={false}
         />
-
-        {timePercent === null ? null : (
-          <>
-            <TimeLabel>{texts.game.timeLeft}</TimeLabel>
-            <MeterBar
-              percentage={timePercent}
-              fillColor={theme.colors.danger}
-              trackColor={theme.colors.border}
-              thickness={theme.sizes.progressBarSmall}
-              animated={false}
-            />
-          </>
-        )}
 
         <Legend>
           {TARGET_COLORS.map((color) => (
             <LegendItem key={color}>
-              <Swatch
-                fill={theme.colors.target[color].background}
-                muted={!scoreConfig.palette.includes(color)}
-              />
+              <Swatch fill={theme.colors.target[color].background} />
               <LegendValue>{`+${scoreConfig.pointsPerColor[color]}`}</LegendValue>
             </LegendItem>
           ))}
@@ -141,13 +128,6 @@ export function ScoreGameScreen({ level, onExit, onHelp, onFinish }: ScoreGameSc
           {scoreConfig.streakMultiplier ? (
             <StatusNote>{texts.game.multiplier(multiplier)}</StatusNote>
           ) : null}
-          {scoreConfig.requiredAccuracyPercent === null ? null : (
-            <StatusNote>
-              {accuracy === null
-                ? texts.game.minimumAccuracy(scoreConfig.requiredAccuracyPercent)
-                : texts.game.currentAccuracy(accuracy)}
-            </StatusNote>
-          )}
         </StatusRow>
 
         <ConnectionBanner

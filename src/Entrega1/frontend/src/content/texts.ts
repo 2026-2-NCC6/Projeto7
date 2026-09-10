@@ -246,12 +246,47 @@ export const texts = {
             'Acertos seguidos aumentam o multiplicador. Errar zera a sequência e pode custar pontos.',
         },
       ],
+      infinite_color: [
+        {
+          title: 'Cores sem parar',
+          description:
+            'Não existe sequência para terminar: a tela pede uma cor, você bate, ela pede outra.',
+        },
+        {
+          title: 'Acertar devolve tempo',
+          description:
+            'A barra é o seu tempo. Cada acerto devolve um pouco; errar a cor custa caro.',
+        },
+        {
+          title: 'O tempo devolvido diminui',
+          description:
+            'Quanto mais pontos, menos tempo cada acerto devolve. Você joga até a barra zerar.',
+        },
+      ],
+      infinite_score: [
+        {
+          title: 'Sem meta, só pontos',
+          description:
+            'Bata em qualquer alvo e acumule. O objetivo é a maior pontuação antes do tempo acabar.',
+        },
+        {
+          title: 'Acertar devolve tempo',
+          description:
+            'A barra é o seu tempo. Cada acerto devolve um pouco, e a sequência ainda multiplica.',
+        },
+        {
+          title: 'O tempo devolvido diminui',
+          description:
+            'Quanto mais pontos, menos tempo cada acerto devolve. A parede fica mais rápida que você.',
+        },
+      ],
     },
   },
 
   game: {
     close: 'Sair',
-    header: (mode: string, level: number) => `${mode} · Nível ${level}`,
+    header: (mode: string, level: number | null) =>
+      level === null ? mode : `${mode} · Nível ${level}`,
     help: 'Como funciona',
     prepare: 'Prepare-se',
     hitTarget: 'ACERTE O ALVO',
@@ -261,6 +296,7 @@ export const texts = {
       red: 'vermelho',
     },
     sequence: (done: number, total: number) => `${done} de ${total}`,
+    hitsMade: (hits: number) => `${hits} ${hits === 1 ? 'acerto' : 'acertos'}`,
     scoreGoal: (target: number) => `de ${target.toLocaleString('pt-BR')} pontos para passar de nível`,
     streak: (streak: number) => `Sequência ${streak}`,
     multiplier: (value: number) => `${value.toLocaleString('pt-BR')}x`,
@@ -301,8 +337,11 @@ export const texts = {
     levelUp: (level: number) => `Você chegou ao nível ${level}!`,
     saveError: 'Não foi possível salvar esta sessão.',
     guestNotice: 'Entre na sua conta para guardar seu progresso.',
+    runEnded: 'Fim da série',
+    runEndedSubtitle: 'O tempo acabou. Sua pontuação foi registrada.',
     nextLevel: 'Próximo nível',
     retryLevel: 'Repetir nível',
+    playAgain: 'Jogar de novo',
     exit: 'Sair',
     allLevelsDone: 'Você concluiu todos os níveis deste modo.',
   },

@@ -1,11 +1,7 @@
 import type { TargetHitEvent } from '../../../device/contracts';
 import type { TargetColor } from '../../../types/game';
-import type {
-  GameRules,
-  RandomSource,
-  RoundOutcome,
-  SessionTiming,
-} from '../../domain/game-rules';
+import type { GameRules, RoundOutcome, SessionTiming } from '../../domain/game-rules';
+import { buildSequence } from '../shared/color-sequence';
 import type { ColorLevelConfig } from './color-levels';
 import { colorLevels } from './color-levels';
 
@@ -17,17 +13,6 @@ export interface ColorRoundState {
 
 export function currentColorOf(state: ColorRoundState): TargetColor {
   return state.sequence[state.index] ?? state.sequence[state.sequence.length - 1];
-}
-
-function buildSequence(config: ColorLevelConfig, random: RandomSource): TargetColor[] {
-  const sequence: TargetColor[] = [];
-
-  while (sequence.length < config.sequenceLength) {
-    const choices = config.palette.filter((color) => color !== sequence[sequence.length - 1]);
-    sequence.push(choices[Math.floor(random() * choices.length)]);
-  }
-
-  return sequence;
 }
 
 function advanced(state: ColorRoundState, config: ColorLevelConfig): RoundOutcome<ColorRoundState> {
@@ -65,7 +50,11 @@ export const colorRules: GameRules<ColorLevelConfig, ColorRoundState> = {
   levels: colorLevels,
 
   start(config, random) {
-    return { sequence: buildSequence(config, random), index: 0, mistakes: 0 };
+    return {
+      sequence: buildSequence(config.palette, config.sequenceLength, random),
+      index: 0,
+      mistakes: 0,
+    };
   },
 
   onHit(state, hit: TargetHitEvent, config) {

@@ -2,20 +2,24 @@ import { useEffect } from 'react';
 import { useTheme } from 'styled-components/native';
 import { gameModeLabels } from '../../content/gameLabels';
 import { texts } from '../../content/texts';
+import { targetsWithColor } from '../../device/contracts';
 import { useDevice } from '../../device/runtime/useDevice';
 import { ConnectionBanner } from '../../gameplay/components/ConnectionBanner';
 import { GameHeader } from '../../gameplay/components/GameHeader';
 import { MeterBar } from '../../gameplay/components/MeterBar';
 import { PrepareOverlay } from '../../gameplay/components/PrepareOverlay';
 import { PromptRing } from '../../gameplay/components/PromptRing';
-import { SequenceTimeline } from '../../gameplay/components/SequenceTimeline';
 import type { SessionResult } from '../../gameplay/domain/metrics/session-result';
-import type { ColorLevelConfig } from '../../gameplay/modes/color/color-levels';
-import { currentColorOf, type ColorRoundState } from '../../gameplay/modes/color/color-rules';
 import { GameplayDevPanel } from '../../gameplay/devtools/GameplayDevPanel';
+import { INFINITE_LEVEL } from '../../gameplay/modes/mode-catalog';
+import type { InfiniteColorConfig } from '../../gameplay/modes/infinite-color/infinite-color-levels';
+import {
+  currentColorOf,
+  type InfiniteColorState,
+} from '../../gameplay/modes/infinite-color/infinite-color-rules';
+import { remainingPercentOf } from '../../gameplay/modes/shared/time-budget';
 import { useColorWash } from '../../gameplay/runtime/useColorWash';
 import { useGameSession } from '../../gameplay/runtime/useGameSession';
-import { targetsWithColor } from '../../device/contracts';
 import { TARGET_COLORS, type TargetColor } from '../../types/game';
 import {
   Footer,
@@ -23,25 +27,31 @@ import {
   Middle,
   Prompt,
   Safe,
+  Score,
   Stage,
   TargetName,
-  TimelineArea,
-  WindowBar,
+  TimeArea,
+  TimeLabel,
 } from './styles';
 
-const FULL_PERCENT = 100;
-
-interface ColorGameScreenProps {
+interface InfiniteColorGameScreenProps {
   level: number;
   onExit: () => void;
   onHelp: () => void;
   onFinish: (result: SessionResult) => void;
 }
 
-export function ColorGameScreen({ level, onExit, onHelp, onFinish }: ColorGameScreenProps) {
+export function InfiniteColorGameScreen({
+  onExit,
+  onHelp,
+  onFinish,
+}: InfiniteColorGameScreenProps) {
   const theme = useTheme();
   const { status, reconnect } = useDevice();
-  const controller = useGameSession<ColorRoundState>({ mode: 'level_color', level });
+  const controller = useGameSession<InfiniteColorState>({
+    mode: 'infinite_color',
+    level: INFINITE_LEVEL,
+  });
 
   const modeState = controller?.session.modeState;
   const activeColor: TargetColor = modeState ? currentColorOf(modeState) : TARGET_COLORS[0];
@@ -58,55 +68,33 @@ export function ColorGameScreen({ level, onExit, onHelp, onFinish }: ColorGameSc
   }
 
   const { session, config } = controller;
-  const colorConfig = config as ColorLevelConfig;
-
-  const windowPercent =
-    colorConfig.reactionWindowMs === null
-      ? null
-      : Math.max(
-          0,
-          FULL_PERCENT - (session.promptElapsedMs / colorConfig.reactionWindowMs) * FULL_PERCENT,
-        );
-
-  const mistakesLeft =
-    colorConfig.maxMistakes === null ? null : colorConfig.maxMistakes - session.modeState.mistakes;
+  const { timeBudget } = config as InfiniteColorConfig;
 
   return (
     <Stage style={{ backgroundColor: background }}>
       <Safe edges={['top', 'bottom']}>
         <GameHeader
-          label={texts.game.header(gameModeLabels.level_color, config.level)}
+          label={texts.game.header(gameModeLabels.infinite_color, null)}
           foreground={tone.foreground}
           chipBackground={overlay}
           onClose={onExit}
           onHelp={onHelp}
         />
 
-        <TimelineArea>
-          <SequenceTimeline
-            length={session.modeState.sequence.length}
-            index={session.modeState.index}
-            colors={{
-              done: tone.foreground,
-              doneMark: tone.background,
-              current: overlay,
-              pending: overlay,
-              outline: tone.foreground,
-            }}
+        <TimeArea>
+          <TimeLabel foreground={tone.foreground}>{texts.game.timeLeft.toUpperCase()}</TimeLabel>
+          <MeterBar
+            percentage={remainingPercentOf(
+              session.modeState.deadlineMs,
+              session.sessionElapsedMs,
+              timeBudget,
+            )}
+            fillColor={tone.foreground}
+            trackColor={overlay}
+            thickness={theme.sizes.meterThick}
+            animated={false}
           />
-        </TimelineArea>
-
-        {windowPercent === null ? null : (
-          <WindowBar>
-            <MeterBar
-              percentage={windowPercent}
-              fillColor={tone.foreground}
-              trackColor={overlay}
-              thickness={theme.sizes.progressBarSmall}
-              animated={false}
-            />
-          </WindowBar>
-        )}
+        </TimeArea>
 
         <Middle>
           {session.phase.kind === 'preparing' ? null : (
@@ -131,10 +119,11 @@ export function ColorGameScreen({ level, onExit, onHelp, onFinish }: ColorGameSc
             foreground={tone.foreground}
             onRetry={reconnect}
           />
+          <Score foreground={tone.foreground}>
+            {session.modeState.score.toLocaleString('pt-BR')}
+          </Score>
           <FooterNote foreground={tone.foreground}>
-            {mistakesLeft === null
-              ? texts.game.sequence(session.modeState.index, session.modeState.sequence.length)
-              : texts.game.mistakesLeft(Math.max(0, mistakesLeft))}
+            {texts.game.hitsMade(session.modeState.index)}
           </FooterNote>
         </Footer>
 

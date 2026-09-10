@@ -1,12 +1,6 @@
 import type { TargetColor } from '../../../types/game';
 import type { LevelConfig } from '../../domain/game-rules';
-
-export interface StreakMultiplier {
-  /** Hits in a row needed for each extra step. */
-  readonly every: number;
-  readonly step: number;
-  readonly max: number;
-}
+import type { StreakMultiplier } from '../shared/scoring';
 
 export interface ScoreLevelConfig extends LevelConfig {
   readonly targetScore: number;

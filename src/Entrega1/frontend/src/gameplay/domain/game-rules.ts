@@ -35,7 +35,12 @@ export interface GameRules<TConfig extends LevelConfig, TState> {
   readonly mode: PlayableModeId;
   readonly levels: readonly TConfig[];
   start(config: TConfig, random: RandomSource): TState;
-  onHit(state: TState, hit: TargetHitEvent, config: TConfig): RoundOutcome<TState>;
+  onHit(
+    state: TState,
+    hit: TargetHitEvent,
+    config: TConfig,
+    timing: SessionTiming,
+  ): RoundOutcome<TState>;
   onElapsed(state: TState, timing: SessionTiming, config: TConfig): RoundOutcome<TState> | null;
 }
 
