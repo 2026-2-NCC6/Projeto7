@@ -1,12 +1,14 @@
 # Smash — Entrega 1
 
 Autenticação, Home e Perfil com dados reais do PostgreSQL, e o gameplay: **Color
-Mode** e **Score Mode**, 20 níveis cada, com o motor de jogo separado do hardware.
+Mode**, **Score Mode**, **Infinite Color** e **Infinite Score**, com o motor de
+jogo separado do hardware — e o firmware da parede.
 
 ```
-backend/    NestJS + TypeORM + PostgreSQL (Clean Architecture)
-frontend/   React Native (Expo) + TypeScript + styled-components
-scripts/    utilitários (emulador Android)
+backend/            NestJS + TypeORM + PostgreSQL (Clean Architecture)
+backend/firmware/   firmware do ESP32 (C++/Arduino) — veja o README de lá
+frontend/           React Native (Expo) + TypeScript + styled-components
+scripts/            utilitários (emulador Android)
 ```
 
 ---
@@ -96,12 +98,12 @@ os números nunca saem de sincronia com as sessões.
 
 ### Modos de jogo
 
-| Modo | Ícone | Trilha | Jogável hoje |
+| Modo | Ícone | Trilha | Níveis |
 | --- | --- | --- | --- |
-| Color Mode | sequência de blocos | `color` | sim |
-| Score Mode | alvo | `score` | sim |
-| Infinite Color | infinito | `color` | não |
-| Infinite Score | cronômetro | `score` | não |
+| Color Mode | sequência de blocos | `color` | 20 |
+| Score Mode | alvo | `score` | 20 |
+| Infinite Color | infinito | `color` | — |
+| Infinite Score | cronômetro | `score` | — |
 
 Os identificadores no banco continuam `level_color`, `level_score`,
 `infinite_color` e `infinite_score` — só os rótulos da interface mudaram.
@@ -167,7 +169,29 @@ Cada cor vale pontos e o nível termina ao atingir a meta. Níveis mais altos t�
 limite de tempo, multiplicador por sequência de acertos, penalidade por erro,
 paleta reduzida (acertar fora da paleta é erro) e precisão mínima.
 
-### A parede ainda não existe
+### Infinite Color e Infinite Score
+
+Não têm níveis nem meta: têm um **banco de tempo**. O relógio corre, cada acerto
+devolve tempo, e o tempo devolvido **encolhe conforme a pontuação sobe**. A série
+acaba quando o banco zera, e a barra no topo é esse banco.
+
+A curva é dados, em `modes/infinite-color/` e `modes/infinite-score/`
+(`TimeBudget`: tempo inicial, bônus base, piso do bônus, decaimento por degrau,
+pontuação por degrau e penalidade por erro). Duas regras a mantêm honesta:
+
+- o banco **nunca guarda mais do que o tamanho inicial**, senão quem joga rápido
+  acumula uma reserva invisível e a série deixa de terminar;
+- o **piso do bônus** fica abaixo do ciclo mais rápido que alguém consegue manter,
+  então até o piloto automático acaba perdendo terreno.
+
+Uma série termina em ~35 s para quem está começando e ~90 s para quem joga bem —
+quem separa os dois é a **pontuação**, não a duração.
+
+O XP é do backend (`domain/progression/session-reward.ts`): modo com nível paga
+pelo nível, modo infinito paga pela pontuação, com teto. Uma série terminada conta
+o dia na ofensiva, já que "concluir" não existe nesses modos.
+
+### A parede
 
 `device/contracts/` define o que é um evento de impacto (`TargetHitEvent`,
 `DeviceStatusEvent`, `DeviceFaultEvent`) e a porta `TargetDevice`. Mensagem crua
@@ -175,10 +199,22 @@ nunca chega ao motor: `device/parsing/` valida o formato `Impacto` com zod e
 `device/runtime/event-pipeline.ts` descarta alvo desconhecido, evento duplicado e
 `t_ms` fora de ordem, emitindo `DeviceFaultEvent` em vez de quebrar a sessão.
 
-O `SimulatedTargetDevice` monta exatamente a mesma mensagem que o firmware vai
-publicar e a manda pelo mesmo parser e pipeline — o motor não tem como distinguir
-os dois. **Quando o ESP32 existir, é uma classe nova implementando `TargetDevice`
-e um `case` em `device/runtime/device-factory.ts`.** Nada em `gameplay/` muda.
+O `SimulatedTargetDevice` monta exatamente a mesma mensagem que o firmware
+publica e a manda pelo mesmo parser e pipeline — o motor não tem como distinguir
+os dois. O `WebSocketTargetDevice` é a parede de verdade: mesma porta, mesmo
+parser, mesmo pipeline. Trocar um pelo outro é uma variável de ambiente, e nada
+em `gameplay/` muda.
+
+```bash
+# simulador (padrão)
+npm run app
+
+# a parede de verdade, no modo SoftAP
+EXPO_PUBLIC_DEVICE_SOURCE=websocket EXPO_PUBLIC_DEVICE_URL=ws://192.168.4.1:81 npm run app
+```
+
+As variáveis estão em `frontend/.env.example`. O firmware, o protocolo completo e
+a calibração dos sensores estão em **`backend/firmware/README.md`**.
 
 Impacto simulado nunca vira número na tela: as leituras carregam
 `impact.simulated: true` e a tela de resultado mostra `—`.
@@ -298,6 +334,6 @@ conta). O avatar no topo da Home abre um menu com "Ver perfil" e "Sair da conta"
 A aba Jogar traz Color Mode e Score Mode com 20 níveis cada, seleção de nível,
 tutorial por modo, resultados com métricas e gravação da sessão no backend.
 
-Fora do escopo por enquanto: as abas Estatísticas e Ranking, os modos Infinite, o
-Desafio Diário como modo próprio e o firmware do ESP32 — a parede é representada
-pelo dispositivo simulado.
+Fora do escopo por enquanto: as abas Estatísticas e Ranking e o Desafio Diário
+como modo próprio. O firmware do ESP32 já existe em `backend/firmware/`; sem a
+parede montada, o app continua usando o dispositivo simulado.
