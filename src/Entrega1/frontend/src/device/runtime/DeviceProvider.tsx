@@ -22,7 +22,7 @@ interface DeviceProviderProps {
 
 export function DeviceProvider({ children }: DeviceProviderProps) {
   const deviceRef = useRef<TargetDevice | null>(null);
-  deviceRef.current ??= createTargetDevice(deviceConfig.source);
+  deviceRef.current ??= createTargetDevice(deviceConfig);
   const device = deviceRef.current;
 
   const [status, setStatus] = useState<DeviceConnectionStatus>(device.status);
