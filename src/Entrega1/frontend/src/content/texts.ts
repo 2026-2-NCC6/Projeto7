@@ -1,4 +1,6 @@
 import type { AchievementId } from '../services/profile/types';
+import type { RankingCategory } from '../services/ranking/types';
+import { formatNumber } from './formatters';
 
 interface AchievementCopy {
   title: string;
@@ -391,6 +393,45 @@ export const texts = {
     themeDark: 'Escuro',
     themeSystem: 'Sistema',
     signOut: 'Sair da conta',
+  },
+
+  ranks: {
+    title: 'Ranking',
+    playersCount: (total: number) =>
+      total === 1 ? '1 jogador classificado' : `${formatNumber(total)} jogadores classificados`,
+    categories: {
+      xp: 'XP',
+      bestScore: 'Melhor partida',
+      totalScore: 'Pontuação total',
+      infiniteColor: 'Infinite Color',
+      infiniteScore: 'Infinite Score',
+      dailyStreak: 'Ofensiva',
+    } satisfies Record<RankingCategory, string>,
+    descriptions: {
+      xp: 'XP acumulado em todas as sessões',
+      bestScore: 'Maior pontuação em uma única sessão',
+      totalScore: 'Soma dos pontos de todas as sessões',
+      infiniteColor: 'Recorde de pontos no Infinite Color',
+      infiniteScore: 'Recorde de pontos no Infinite Score',
+      dailyStreak: 'Maior sequência de dias treinando',
+    } satisfies Record<RankingCategory, string>,
+    xpValue: (value: number) => `${formatNumber(value)} XP`,
+    pointsValue: (value: number) => `${formatNumber(value)} pts`,
+    daysValue: (value: number) => (value === 1 ? '1 dia' : `${formatNumber(value)} dias`),
+    position: (position: number) => `#${formatNumber(position)}`,
+    you: 'Você',
+    yourPosition: 'Sua posição',
+    positionOf: (position: number, total: number) =>
+      `#${formatNumber(position)} de ${formatNumber(total)}`,
+    unrankedTitle: 'Você ainda não está no ranking',
+    unrankedMessage: 'Jogue uma sessão desta categoria para aparecer aqui.',
+    emptyTitle: 'Ninguém pontuou ainda',
+    emptyMessage: 'Seja o primeiro jogador a entrar nesta categoria.',
+    guestTitle: 'Entre para competir',
+    guestMessage: 'Com uma conta, suas sessões contam pontos e sua posição aparece no ranking.',
+    guestAction: 'Entrar ou criar conta',
+    loadError: 'Não foi possível carregar o ranking.',
+    retry: 'Tentar novamente',
   },
 
   tabs: {
