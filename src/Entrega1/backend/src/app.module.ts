@@ -6,6 +6,7 @@ import { HomeModule } from './presentation/http/home.module';
 import { ProfileModule } from './presentation/http/profile.module';
 import { RankingsModule } from './presentation/http/rankings.module';
 import { SessionsModule } from './presentation/http/sessions.module';
+import { StatisticsModule } from './presentation/http/statistics.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { SessionsModule } from './presentation/http/sessions.module';
     ProfileModule,
     SessionsModule,
     RankingsModule,
+    StatisticsModule,
   ],
 })
 export class AppModule {}

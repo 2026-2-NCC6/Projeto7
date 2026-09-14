@@ -8,12 +8,14 @@ import { TOKEN_ISSUER, TOKEN_VERIFIER } from '../application/ports/token-issuer.
 import { DAILY_STREAK_REPOSITORY } from '../domain/daily-streak/daily-streak-repository.port';
 import { PROGRESSION_REPOSITORY } from '../domain/progression/progression-repository.port';
 import { RANKING_REPOSITORY } from '../domain/ranking/ranking-repository.port';
+import { STATISTICS_REPOSITORY } from '../domain/statistics/statistics-repository.port';
 import { TRAINING_SESSION_REPOSITORY } from '../domain/training-session/training-session-repository.port';
 import { USER_REPOSITORY } from '../domain/user/user-repository.port';
 import { buildDataSourceOptions } from './database/database.config';
 import { TypeOrmDailyStreakRepository } from './database/repositories/typeorm-daily-streak.repository';
 import { TypeOrmProgressionRepository } from './database/repositories/typeorm-progression.repository';
 import { TypeOrmRankingRepository } from './database/repositories/typeorm-ranking.repository';
+import { TypeOrmStatisticsRepository } from './database/repositories/typeorm-statistics.repository';
 import { TypeOrmTrainingSessionRepository } from './database/repositories/typeorm-training-session.repository';
 import { TypeOrmUserRepository } from './database/repositories/typeorm-user.repository';
 import { BcryptPasswordHasher } from './security/bcrypt-password-hasher';
@@ -56,6 +58,11 @@ const JWT_TOKEN_SERVICE = Symbol('JwtTokenService');
       useFactory: (dataSource: DataSource) => new TypeOrmRankingRepository(dataSource),
     },
     {
+      provide: STATISTICS_REPOSITORY,
+      inject: [DATA_SOURCE],
+      useFactory: (dataSource: DataSource) => new TypeOrmStatisticsRepository(dataSource),
+    },
+    {
       provide: PASSWORD_HASHER,
       useFactory: () => new BcryptPasswordHasher(),
     },
@@ -90,6 +97,7 @@ const JWT_TOKEN_SERVICE = Symbol('JwtTokenService');
     DAILY_STREAK_REPOSITORY,
     TRAINING_SESSION_REPOSITORY,
     RANKING_REPOSITORY,
+    STATISTICS_REPOSITORY,
     PASSWORD_HASHER,
     ID_GENERATOR,
     TOKEN_ISSUER,
