@@ -1,4 +1,13 @@
+import type { DeviceKind } from '../../device/contracts';
 import type { GameModeId, ProgressionTrack } from '../../types/game';
+
+export interface TargetPerformanceRequest {
+  targetId: number;
+  attempts: number;
+  correctHits: number;
+  impactAverage: number | null;
+  impactPeak: number | null;
+}
 
 export interface RecordSessionRequest {
   mode: GameModeId;
@@ -11,6 +20,8 @@ export interface RecordSessionRequest {
   durationMs: number;
   avgResponseMs?: number;
   bestResponseMs?: number;
+  deviceKind: DeviceKind;
+  targets: TargetPerformanceRequest[];
 }
 
 export interface RecordedSession {

@@ -1,4 +1,12 @@
-import { createContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import { deviceConfig } from '../config';
 import type {
   DeviceConnectionStatus,
@@ -6,11 +14,17 @@ import type {
 } from '../contracts/device-event';
 import type { TargetDevice } from '../contracts/target-device';
 import { createTargetDevice } from './device-factory';
+import {
+  INITIAL_DEVICE_TELEMETRY,
+  recordDeviceEvent,
+  type DeviceTelemetry,
+} from './device-telemetry';
 
 export interface DeviceContextValue {
   device: TargetDevice;
   status: DeviceConnectionStatus;
   lastFault: DeviceFaultEvent | null;
+  telemetry: DeviceTelemetry;
   reconnect: () => void;
 }
 
@@ -27,9 +41,11 @@ export function DeviceProvider({ children }: DeviceProviderProps) {
 
   const [status, setStatus] = useState<DeviceConnectionStatus>(device.status);
   const [lastFault, setLastFault] = useState<DeviceFaultEvent | null>(null);
+  const [telemetry, record] = useReducer(recordDeviceEvent, INITIAL_DEVICE_TELEMETRY);
 
   useEffect(() => {
     const unsubscribe = device.subscribe((event) => {
+      record(event);
       if (event.kind === 'status') {
         setStatus(event.status);
       }
@@ -51,12 +67,13 @@ export function DeviceProvider({ children }: DeviceProviderProps) {
       device,
       status,
       lastFault,
+      telemetry,
       reconnect: () => {
         setLastFault(null);
         void device.connect();
       },
     }),
-    [device, status, lastFault],
+    [device, status, lastFault, telemetry],
   );
 
   return <DeviceContext.Provider value={value}>{children}</DeviceContext.Provider>;
