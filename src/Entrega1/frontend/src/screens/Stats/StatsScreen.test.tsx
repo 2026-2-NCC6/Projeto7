@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from '@testing-library/react-native';
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react-native';
 import { emptyStatistics, emptyTargets, fullStatistics } from '../../../test/fixtures';
 import {
   deferred,
@@ -39,8 +39,17 @@ async function layoutLineChart(label: string, width: number) {
 }
 
 beforeEach(() => {
+  jest.useFakeTimers();
   statistics.mockReset();
   signInAs('authenticated');
+});
+
+afterEach(async () => {
+  await cleanup();
+  await act(async () => {
+    jest.runOnlyPendingTimers();
+  });
+  jest.useRealTimers();
 });
 
 describe('StatsScreen', () => {
