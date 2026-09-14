@@ -25,6 +25,25 @@ export const sizes = {
   levelTile: 64,
   legendSwatch: 20,
   targetGridMaxWidth: 300,
+
+  chartHeight: 112,
+  chartLineHeight: 96,
+  chartStroke: 2.5,
+  chartDot: 3.5,
+  chartBarMaxWidth: 22,
+  chartBarMinGap: 2,
+  chartAxisWidth: 38,
+  podiumAvatar: 52,
+  podiumAvatarLeader: 64,
+  podiumColumnWidth: 96,
+  podiumStepLeader: 88,
+  podiumStepSecond: 64,
+  podiumStepThird: 48,
+  rankColumn: 34,
+  rowAvatar: 36,
+  heatmapMaxWidth: 240,
+  swatch: 12,
+  statusDot: 10,
 } as const;
 
 export type Sizes = typeof sizes;
