@@ -2,7 +2,7 @@
   "name": "smash-entrega1",
   "version": "1.0.0",
   "private": true,
-  "description": "Smash — Entrega 1: autenticação e dashboard",
+  "description": "Smash \u2014 Entrega 1: autentica\u00e7\u00e3o e dashboard",
   "scripts": {
     "setup": "npm --prefix backend install && npm --prefix frontend install && npm run db:migrate",
     "db:migrate": "npm --prefix backend run db:migrate",
@@ -11,7 +11,9 @@
     "app": "npm --prefix frontend start",
     "dev": "concurrently -n backend,app -c cyan,magenta \"npm:backend\" \"npm --prefix frontend start -- --android\"",
     "start": "npm run emulator && npm run dev",
-    "typecheck": "npm --prefix backend run typecheck && npm --prefix frontend run typecheck"
+    "typecheck": "npm --prefix backend run typecheck && npm --prefix frontend run typecheck",
+    "lint": "npm --prefix backend run lint && npm --prefix frontend run lint",
+    "test": "npm --prefix backend test && npm --prefix frontend test"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

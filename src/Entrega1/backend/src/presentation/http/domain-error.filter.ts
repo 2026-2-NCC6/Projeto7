@@ -7,7 +7,7 @@ import {
   UserNotFoundError,
 } from '../../domain/user/errors';
 
-const STATUS_BY_ERROR = new Map<Function, HttpStatus>([
+const STATUS_BY_ERROR = new Map<unknown, HttpStatus>([
   [EmailAlreadyInUseError, HttpStatus.CONFLICT],
   [InvalidCredentialsError, HttpStatus.UNAUTHORIZED],
   [UserNotFoundError, HttpStatus.NOT_FOUND],
