@@ -1,8 +1,8 @@
 # Smash — Entrega 1
 
-Autenticação, Home e Perfil com dados reais do PostgreSQL, e o gameplay: **Color
-Mode**, **Score Mode**, **Infinite Color** e **Infinite Score**, com o motor de
-jogo separado do hardware — e o firmware da parede.
+Autenticação, Home, Perfil, Estatísticas e Ranking com dados reais do PostgreSQL,
+e o gameplay: **Color Mode**, **Score Mode**, **Infinite Color** e **Infinite
+Score**, com o motor de jogo separado do hardware — e o firmware da parede.
 
 ```
 backend/            NestJS + TypeORM + PostgreSQL (Clean Architecture)
@@ -59,6 +59,8 @@ Para parar tudo: `Ctrl+C`.
 | `npm run emulator` | só abre o emulador e espera o boot |
 | `npm run db:migrate` | aplica as migrations pendentes |
 | `npm run typecheck` | TypeScript dos dois projetos |
+| `npm run lint` | ESLint dos dois projetos |
+| `npm test` | testes (Jest) dos dois projetos — veja a nota sobre o Node 22 |
 
 No Metro: `a` abre no Android · `r` recarrega · `j` abre o debugger.
 
@@ -86,7 +88,10 @@ user_progressions     nível e XP por trilha (color, score) — PK (user_id, tra
 daily_streaks         ofensiva diária: atual, recorde, último dia concluído
 training_sessions     uma linha por treino: modo, nível, concluído, score,
                       acertos, erros, melhor sequência, duração, XP ganho,
-                      tempo de resposta médio e melhor, quando
+                      tempo de resposta médio e melhor, dispositivo
+                      (simulated|websocket), quando
+training_session_targets  telemetria por alvo de cada treino: tentativas,
+                      acertos, impacto médio e pico — PK (session_id, target_id)
 ```
 
 Ao criar uma conta, o backend grava numa **transação** o usuário, as duas
@@ -124,8 +129,8 @@ requisição sobre os dados que já existem (progressão, ofensiva e sessões).
 Uma conquista é uma `AchievementCriterion` declarativa — uma métrica, um alvo e
 uma comparação. `evaluateAchievements` resolve a métrica e devolve
 `{ current, progress, unlocked }`. Métricas que ainda não têm origem de dados
-devolvem `null` (hoje só `leaderboardPosition`, porque não existe ranking), e a
-conquista aparece bloqueada e sem barra de progresso.
+devolvem `null`, e a conquista aparece bloqueada e sem barra de progresso.
+`leaderboardPosition` vem do ranking de XP.
 
 Com o gameplay gravando sessões, nada aqui mudou: as conquistas passaram a
 desbloquear sozinhas. Adicionar uma conquista nova é uma entrada no catálogo mais
@@ -244,6 +249,8 @@ sem origem de dados aparece como `—` em vez de um número inventado.
 | GET | `/me/home` | Bearer | `200` · `401` sem token/expirado |
 | GET | `/me/profile` | Bearer | `200` · `401` sem token/expirado |
 | POST | `/me/sessions` | Bearer | `201` · `400` validação · `401` sem token |
+| GET | `/me/statistics` | Bearer | `200` · `401` sem token/expirado |
+| GET | `/rankings/:category` | opcional | `200` · `400` categoria inválida |
 
 `/me/home` devolve nome do jogador, ofensiva diária, progressão por trilha e o
 resumo das sessões.
@@ -251,12 +258,29 @@ resumo das sessões.
 `/me/profile` devolve os dados do jogador, progressão, estatísticas (incluindo
 precisão), recordes pessoais, modo favorito e as 28 conquistas avaliadas.
 Recordes, precisão e modo favorito são agregados por consulta sobre
-`training_sessions`. `rank` é sempre `null` até existir ranking.
+`training_sessions`. `rank` é a posição no ranking de XP, ou `null` para quem
+ainda não pontuou.
 
 `POST /me/sessions` grava o treino, credita XP e marca o dia na ofensiva — tudo
 numa transação — e devolve `xpAwarded`, a progressão da trilha e a ofensiva
 atualizada. A regra de XP é do backend (`domain/progression/session-reward.ts`):
-o app conta o que aconteceu, o servidor decide quanto vale.
+o app conta o que aconteceu, o servidor decide quanto vale. O corpo aceita,
+opcionalmente, `deviceKind` e `targets` (tentativas, acertos e impacto por alvo);
+o impacto só é enviado quando veio da parede real, nunca do simulador.
+
+`/me/statistics` devolve o painel do jogador: resumo (precisão, tempo jogado,
+respostas, XP, sessões na parede real), atividade diária dos últimos 30 dias,
+desempenho por modo, acertos e impacto por alvo, as 10 sessões mais recentes,
+ofensiva, progressão e posição no ranking. As consultas recebem um
+`StatisticsScope` (`player` ou `all`), o mesmo recorte que o painel web geral vai
+usar para agregar todos os jogadores.
+
+`/rankings/:category` é público: `xp`, `bestScore`, `totalScore`,
+`infiniteColor`, `infiniteScore` ou `dailyStreak`. Devolve os 50 primeiros, o
+total de classificados e, com um token válido, a posição de quem pediu (`viewer`),
+mesmo fora do top 50. Empates dividem a posição (`RANK()`), e ids de usuário não
+saem na resposta. O ranking confia nas sessões que o app envia — é o risco R04 do
+relatório de cibersegurança, ainda em aberto.
 
 ---
 
@@ -322,6 +346,10 @@ ser encontrados. O Node 20 não tem esse problema.
 Por isso o `ValidationPipe` é instanciado antes de `NestFactory.create` em
 `src/main.ts`. Com esse cuidado o backend roda normalmente no Node 22.17.1.
 
+Os testes do app (`jest-expo`) esbarram na mesma regressão: no Node 22.17.1 o
+Babel deixa de encontrar plugins já instalados. Rode `npm test` do `frontend` com
+o Node 20 (ou 22.6); os testes do backend e o Metro funcionam no 22.17.1.
+
 ---
 
 ## Escopo desta entrega
@@ -334,6 +362,16 @@ conta). O avatar no topo da Home abre um menu com "Ver perfil" e "Sair da conta"
 A aba Jogar traz Color Mode e Score Mode com 20 níveis cada, seleção de nível,
 tutorial por modo, resultados com métricas e gravação da sessão no backend.
 
-Fora do escopo por enquanto: as abas Estatísticas e Ranking e o Desafio Diário
-como modo próprio. O firmware do ESP32 já existe em `backend/firmware/`; sem a
+A aba Estatísticas mostra o painel do jogador — gráficos de atividade e de
+precisão, mapa de acertos da parede, precisão por cor, impacto por alvo, modos,
+sessões recentes e recordes — e a telemetria da parede, dos sensores e do sistema.
+Campos de hardware que o firmware ainda não envia aparecem como "Indisponível". O
+botão do painel geral na web já está na tela, desabilitado até o site existir.
+
+A aba Ranking tem seis categorias, pódio, lista dos 50 primeiros e a posição do
+jogador fixada no rodapé quando ele está fora da lista. Visitantes veem o ranking
+com um convite para entrar.
+
+Fora do escopo por enquanto: o painel web geral e o Desafio Diário como modo
+próprio. O firmware do ESP32 já existe em `backend/firmware/`; sem a
 parede montada, o app continua usando o dispositivo simulado.
