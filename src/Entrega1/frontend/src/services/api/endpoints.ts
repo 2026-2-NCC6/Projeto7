@@ -6,5 +6,6 @@ export const endpoints = {
   home: '/me/home',
   profile: '/me/profile',
   recordSession: '/me/sessions',
+  statistics: '/me/statistics',
   ranking: (category: RankingCategory) => `/rankings/${category}`,
 } as const;

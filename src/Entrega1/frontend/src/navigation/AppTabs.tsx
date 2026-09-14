@@ -2,8 +2,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { texts } from '../content/texts';
 import { hasLevels, INFINITE_LEVEL } from '../gameplay/modes/mode-catalog';
 import { HomeScreen } from '../screens/Home';
-import { PlaceholderScreen } from '../screens/Placeholder';
 import { RanksScreen } from '../screens/Ranks';
+import { StatsScreen } from '../screens/Stats';
 import type { PlayableModeId } from '../types/game';
 import {
   HomeIcon,
@@ -52,7 +52,7 @@ export function AppTabs({ onStartLevel }: AppTabsProps) {
         )}
       </Tab.Screen>
       <Tab.Screen name="Play">{() => <PlayNavigator onStartLevel={onStartLevel} />}</Tab.Screen>
-      <Tab.Screen name="Stats">{() => <PlaceholderScreen title={texts.tabs.stats} />}</Tab.Screen>
+      <Tab.Screen name="Stats" component={StatsScreen} />
       <Tab.Screen name="Ranks" component={RanksScreen} />
       <Tab.Screen name="Profile" component={ProfileNavigator} />
     </Tab.Navigator>

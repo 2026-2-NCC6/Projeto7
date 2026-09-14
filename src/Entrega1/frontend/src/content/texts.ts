@@ -1,5 +1,7 @@
+import type { DeviceConnectionStatus, DeviceFaultCode, DeviceKind } from '../device/contracts';
 import type { AchievementId } from '../services/profile/types';
 import type { RankingCategory } from '../services/ranking/types';
+import type { TargetColor } from '../types/game';
 import { formatNumber } from './formatters';
 
 interface AchievementCopy {
@@ -434,15 +436,136 @@ export const texts = {
     retry: 'Tentar novamente',
   },
 
+  stats: {
+    title: 'Estatísticas',
+    subtitle: (level: number, memberSince: string) =>
+      `Nível ${level} · jogando desde ${memberSince}`,
+    guestSubtitle: 'Seus dados de treino e da parede',
+    empty: '—',
+    unavailable: 'Indisponível',
+    loadError: 'Não foi possível carregar suas estatísticas.',
+    retry: 'Tentar novamente',
+    guestTitle: 'Suas estatísticas ficam na sua conta',
+    guestMessage:
+      'Entre para acompanhar precisão, evolução, mapa de acertos e histórico de sessões.',
+    guestAction: 'Entrar ou criar conta',
+    noSessionsTitle: 'Nenhuma sessão registrada',
+    noSessionsMessage: 'Jogue sua primeira sessão para ver gráficos e métricas aqui.',
+    summary: {
+      accuracy: 'Precisão média',
+      playTime: 'Tempo jogado',
+      sessions: 'Sessões',
+      averageResponse: 'Resposta média',
+    },
+    records: 'Recordes e totais',
+    bestScore: 'Melhor pontuação',
+    totalScore: 'Pontuação total',
+    longestHitStreak: 'Maior sequência de acertos',
+    bestResponse: 'Resposta mais rápida',
+    xpEarned: 'XP ganho',
+    hitsAndMisses: 'Acertos / erros',
+    hitsAndMissesValue: (hits: string, misses: string) => `${hits} / ${misses}`,
+    dailyStreak: 'Ofensiva atual',
+    longestDailyStreak: 'Maior ofensiva',
+    daysValue: (days: number) => (days === 1 ? '1 dia' : `${formatNumber(days)} dias`),
+    rank: 'Posição no ranking (XP)',
+    rankValue: (position: number, total: number) =>
+      `#${formatNumber(position)} de ${formatNumber(total)}`,
+    lastSession: 'Última sessão',
+    progress: 'Progresso',
+    activity: 'Atividade',
+    activityCaption: (sessions: number, days: number) =>
+      `${formatNumber(sessions)} ${sessions === 1 ? 'sessão' : 'sessões'} nos últimos ${days} dias`,
+    activityWindow: (days: number) => `${days} dias`,
+    accuracyTrend: 'Evolução da precisão',
+    accuracyTrendCaption: (sessions: number) =>
+      sessions === 1 ? 'Última sessão' : `Últimas ${sessions} sessões`,
+    accuracyTrendEmpty: 'Sem tentativas registradas nas últimas sessões.',
+    wall: 'Mapa da parede',
+    wallCaption: 'Onde você mais acerta na grade 3×3',
+    wallEmpty: 'Os acertos por alvo aparecem depois da próxima sessão.',
+    colorAccuracy: 'Precisão por cor',
+    colors: {
+      amber: 'Âmbar',
+      blue: 'Azul',
+      red: 'Vermelho',
+    } satisfies Record<TargetColor, string>,
+    target: (id: number) => `Alvo ${id}`,
+    impact: 'Intensidade de impacto',
+    impactCaption: 'Leitura relativa do sensor (0–4095), comparável só no mesmo alvo',
+    impactEmpty: 'Aguardando sessões jogadas na parede real.',
+    impactAverage: 'Média',
+    impactPeak: 'Pico',
+    modes: 'Modos de jogo',
+    modeSummary: (sessions: number, share: string) =>
+      `${formatNumber(sessions)} ${sessions === 1 ? 'sessão' : 'sessões'} · ${share}`,
+    modeBest: (score: string) => `Recorde ${score}`,
+    modeLevel: (level: number) => `Nível ${level}`,
+    recentSessions: 'Sessões recentes',
+    table: {
+      mode: 'Modo',
+      score: 'Pontos',
+      accuracy: 'Precisão',
+    },
+    hardwareSection: 'Hardware e sistema',
+    device: 'Parede e dispositivo',
+    deviceStatus: {
+      connected: 'Conectado',
+      connecting: 'Conectando',
+      disconnected: 'Desconectado',
+      lost: 'Conexão perdida',
+    } satisfies Record<DeviceConnectionStatus, string>,
+    deviceKinds: {
+      simulated: 'Simulador',
+      websocket: 'Parede Wi-Fi',
+    } satisfies Record<DeviceKind, string>,
+    faultCodes: {
+      malformedMessage: 'Mensagem inválida',
+      unknownTarget: 'Alvo desconhecido',
+      duplicateEvent: 'Evento duplicado',
+      staleEvent: 'Evento fora de ordem',
+      transport: 'Falha de transporte',
+    } satisfies Record<DeviceFaultCode, string>,
+    connection: 'Conexão',
+    source: 'Fonte',
+    deviceId: 'Identificador',
+    address: 'Endereço',
+    impactReading: 'Leitura de impacto',
+    supported: 'Disponível',
+    notSupported: 'Não disponível',
+    hitsReceived: 'Impactos recebidos',
+    faultsReceived: 'Falhas detectadas',
+    lastFault: 'Última falha',
+    lastHit: 'Último impacto',
+    deviceUptime: 'Tempo ligado da parede',
+    connectedSince: 'Conectado desde',
+    reconnect: 'Reconectar',
+    hardwareSessions: 'Sessões na parede real',
+    sensors: 'Sensores',
+    sensorsCaption: 'Preenchido quando o firmware passar a enviar telemetria',
+    firmwareVersion: 'Versão do firmware',
+    wifiSignal: 'Sinal Wi-Fi',
+    thresholds: 'Limiares calibrados',
+    mqttBroker: 'Broker MQTT',
+    system: 'Sistema',
+    appVersion: 'Versão do app',
+    platform: 'Plataforma',
+    apiServer: 'Servidor',
+    environment: 'Ambiente',
+    development: 'Desenvolvimento',
+    production: 'Produção',
+    webDashboard: 'Painel geral na web',
+    webDashboardMessage:
+      'Veja estas métricas de forma agregada, com todos os jogadores e paredes.',
+    webDashboardAction: 'Abrir painel web',
+    webDashboardSoon: 'Disponível em breve',
+  },
+
   tabs: {
     home: 'Início',
     play: 'Jogar',
     stats: 'Estatísticas',
     ranks: 'Ranking',
     profile: 'Perfil',
-  },
-
-  placeholder: {
-    description: 'Esta tela faz parte de uma entrega futura.',
   },
 } as const;
