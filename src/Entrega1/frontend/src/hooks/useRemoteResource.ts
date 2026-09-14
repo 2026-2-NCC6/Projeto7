@@ -60,7 +60,7 @@ export function useRemoteResource<TData>(
   const current = settled?.loader === loader && settled.key === key;
 
   return {
-    data: settled?.data ?? null,
+    data: settled?.loader === loader ? settled.data : null,
     loading: !current,
     error: current ? settled.error : null,
     reload,

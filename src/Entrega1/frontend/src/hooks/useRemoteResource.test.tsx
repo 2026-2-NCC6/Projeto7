@@ -65,4 +65,38 @@ describe('useRemoteResource', () => {
 
     await waitFor(() => expect(loader).toHaveBeenCalledTimes(2));
   });
+
+  it('hides the previous resource while a different loader is pending', async () => {
+    const pending = deferred<string>();
+    const first = async () => 'previous player';
+    const second = () => pending.promise;
+    const { result, rerender } = await renderHook(
+      ({ loader }: { loader: ResourceLoader<string> }) => useRemoteResource(loader),
+      { initialProps: { loader: first } },
+    );
+
+    await waitFor(() => expect(result.current.data).toBe('previous player'));
+    await rerender({ loader: second });
+
+    expect(result.current).toMatchObject({ data: null, loading: true, error: null });
+
+    await act(async () => pending.resolve('current player'));
+    expect(result.current.data).toBe('current player');
+  });
+
+  it('keeps current resource data visible during a reload', async () => {
+    const pending = deferred<string>();
+    const loader = jest.fn<Promise<string>, []>()
+      .mockResolvedValueOnce('current data')
+      .mockImplementationOnce(() => pending.promise);
+    const { result } = await renderHook(() => useRemoteResource(loader));
+
+    await waitFor(() => expect(result.current.data).toBe('current data'));
+    await act(async () => result.current.reload());
+
+    expect(result.current).toMatchObject({ data: 'current data', loading: true, error: null });
+
+    await act(async () => pending.resolve('updated data'));
+    expect(result.current.data).toBe('updated data');
+  });
 });
