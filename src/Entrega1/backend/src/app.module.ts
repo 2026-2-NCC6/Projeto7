@@ -4,6 +4,7 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { AuthModule } from './presentation/http/auth.module';
 import { HomeModule } from './presentation/http/home.module';
 import { ProfileModule } from './presentation/http/profile.module';
+import { RankingsModule } from './presentation/http/rankings.module';
 import { SessionsModule } from './presentation/http/sessions.module';
 
 @Module({
@@ -14,6 +15,7 @@ import { SessionsModule } from './presentation/http/sessions.module';
     HomeModule,
     ProfileModule,
     SessionsModule,
+    RankingsModule,
   ],
 })
 export class AppModule {}

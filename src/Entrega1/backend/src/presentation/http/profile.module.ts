@@ -12,6 +12,7 @@ import {
   TRAINING_SESSION_REPOSITORY,
   TrainingSessionRepository,
 } from '../../domain/training-session/training-session-repository.port';
+import { RANKING_REPOSITORY, RankingRepository } from '../../domain/ranking/ranking-repository.port';
 import { USER_REPOSITORY, UserRepository } from '../../domain/user/user-repository.port';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { ProfileController } from './profile.controller';
@@ -27,13 +28,15 @@ import { ProfileController } from './profile.controller';
         PROGRESSION_REPOSITORY,
         DAILY_STREAK_REPOSITORY,
         TRAINING_SESSION_REPOSITORY,
+        RANKING_REPOSITORY,
       ],
       useFactory: (
         users: UserRepository,
         progressions: ProgressionRepository,
         dailyStreaks: DailyStreakRepository,
         sessions: TrainingSessionRepository,
-      ) => new GetProfileUseCase(users, progressions, dailyStreaks, sessions),
+        rankings: RankingRepository,
+      ) => new GetProfileUseCase(users, progressions, dailyStreaks, sessions, rankings),
     },
   ],
 })

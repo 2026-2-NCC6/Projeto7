@@ -12,7 +12,7 @@ export interface AuthenticatedRequest extends Request {
   userId?: string;
 }
 
-function extractBearerToken(request: Request): string | null {
+export function extractBearerToken(request: Request): string | null {
   const [scheme, token] = request.headers.authorization?.split(' ') ?? [];
   return scheme === 'Bearer' && token ? token : null;
 }

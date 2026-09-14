@@ -5,6 +5,7 @@ import { DailyStreakRepository } from '../../domain/daily-streak/daily-streak-re
 import { GameMode } from '../../domain/game/game-mode';
 import { ProgressionRepository } from '../../domain/progression/progression-repository.port';
 import { highestLevelOf } from '../../domain/progression/progression.entity';
+import { RankingRepository } from '../../domain/ranking/ranking-repository.port';
 import {
   EMPTY_SESSION_INSIGHTS,
   favoriteModeOf,
@@ -14,12 +15,8 @@ import { EMPTY_SESSION_STATS, SessionStats } from '../../domain/training-session
 import { TrainingSessionRepository } from '../../domain/training-session/training-session-repository.port';
 import { UserNotFoundError } from '../../domain/user/errors';
 import { UserRepository } from '../../domain/user/user-repository.port';
+import { playerRankOf, PlayerRank } from './player-rank';
 import { toTrackProgressView, TrackProgressView } from './track-progress';
-
-export interface PlayerRank {
-  position: number;
-  total: number;
-}
 
 export interface ProfileView {
   player: {
@@ -42,6 +39,7 @@ export class GetProfileUseCase {
     private readonly progressions: ProgressionRepository,
     private readonly dailyStreaks: DailyStreakRepository,
     private readonly sessions: TrainingSessionRepository,
+    private readonly rankings: RankingRepository,
   ) {}
 
   async execute(userId: string): Promise<ProfileView> {
@@ -51,20 +49,17 @@ export class GetProfileUseCase {
       throw new UserNotFoundError();
     }
 
-    const [progressions, dailyStreak, stats, insights] = await Promise.all([
+    const [progressions, dailyStreak, stats, insights, rank] = await Promise.all([
       this.progressions.findByUser(userId),
       this.dailyStreaks.findByUser(userId),
       this.sessions.statsFor(userId),
       this.sessions.insightsFor(userId),
+      playerRankOf(this.rankings, userId),
     ]);
 
     const streak = dailyStreak ?? DailyStreak.start(userId);
     const sessionStats = stats ?? EMPTY_SESSION_STATS;
     const sessionInsights = insights ?? EMPTY_SESSION_INSIGHTS;
-    // Sem ranking ainda: a posição não existe, e as conquistas de ranking
-    // ficam bloqueadas sem progresso em vez de mostrar um número inventado.
-    const rank: PlayerRank | null = null;
-    const leaderboardPosition: number | null = null;
 
     return {
       player: {
@@ -83,7 +78,7 @@ export class GetProfileUseCase {
         dailyStreak: streak,
         sessionStats,
         sessionInsights,
-        leaderboardPosition,
+        leaderboardPosition: rank?.position ?? null,
       }),
     };
   }
