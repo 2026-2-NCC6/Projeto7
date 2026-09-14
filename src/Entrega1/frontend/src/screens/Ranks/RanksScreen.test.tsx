@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import { aLeaderboard, rankedPlayers } from '../../../test/fixtures';
 import { deferred, renderWithProviders } from '../../../test/renderWithProviders';
 import { ApiError } from '../../services/api/httpClient';
@@ -73,6 +73,25 @@ describe('RanksScreen', () => {
     expect(screen.queryByTestId('podium-2')).toBeNull();
     expect(screen.getByText('1 jogador classificado')).toBeOnTheScreen();
     expect(screen.getByText('Você')).toBeOnTheScreen();
+  });
+
+  it('gives tied leaders the same podium treatment', async () => {
+    leaderboard.mockResolvedValue(aLeaderboard({
+      entries: [
+        { position: 1, name: 'Ana', value: 500, isViewer: false },
+        { position: 1, name: 'Bia', value: 500, isViewer: false },
+        { position: 3, name: 'Carla', value: 100, isViewer: false },
+      ],
+    }));
+
+    await renderWithProviders(<RanksScreen />);
+
+    const leader = await screen.findByTestId('podium-1');
+    const tiedLeader = screen.getByTestId('podium-2');
+    const firstStep = within(leader).getByText('1').parent;
+    const tiedStep = within(tiedLeader).getByText('1').parent;
+
+    expect(tiedStep?.props.style).toEqual(firstStep?.props.style);
   });
 
   it('highlights the viewer in the list without pinning them', async () => {

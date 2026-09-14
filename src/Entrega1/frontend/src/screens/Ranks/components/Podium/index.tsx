@@ -16,13 +16,14 @@ export function Podium({ players, formatValue }: PodiumProps) {
   return (
     <Row>
       {podiumOrder(players).map((player) => {
-        const place = (players.indexOf(player) + 1) as PodiumPlace;
+        const slot = players.indexOf(player) + 1;
+        const place = player.position as PodiumPlace;
         const diameter = place === 1 ? theme.sizes.podiumAvatarLeader : theme.sizes.podiumAvatar;
 
         return (
           <Column
-            key={`${place}-${player.name}`}
-            testID={`podium-${place}`}
+            key={`${slot}-${player.name}`}
+            testID={`podium-${slot}`}
             accessible
             accessibilityLabel={`${texts.ranks.position(player.position)} ${player.name}, ${formatValue(player.value)}`}
           >
