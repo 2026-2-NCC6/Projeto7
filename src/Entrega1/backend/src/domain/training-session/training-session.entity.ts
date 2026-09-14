@@ -51,7 +51,8 @@ function assertConsistentTargets({ targets, hits, misses }: TrainingSessionProps
   }
   if (
     sumOf(targets, (target) => target.correctHits) > hits ||
-    sumOf(targets, (target) => target.attempts) > hits + misses
+    sumOf(targets, (target) => target.attempts) > hits + misses ||
+    sumOf(targets, (target) => target.attempts - target.correctHits) > misses
   ) {
     throw new InvalidTrainingSessionError('alvos não batem com o total da sessão.');
   }

@@ -62,6 +62,7 @@ describe('TrainingSession.record', () => {
     ['a repeated target', [target({ targetId: 2 }), target({ targetId: 2 })]],
     ['more hits than attempts', [target({ attempts: 1, correctHits: 2 })]],
     ['an impact above the ADC range', [target({ impactPeak: 4096 })]],
+    ['more target misses than session misses', [target({ attempts: 5, correctHits: 1 })]],
     ['more target hits than session hits', [target({ attempts: 9, correctHits: 9 })]],
     ['more target attempts than session attempts', [target({ attempts: 11, correctHits: 1 })]],
   ])('rejects %s', (_reason, targets) => {
