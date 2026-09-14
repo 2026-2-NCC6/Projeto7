@@ -25,10 +25,10 @@ export function ModeBreakdownCard({ modes }: ModeBreakdownCardProps) {
                 <Icon name={row.icon} size={theme.sizes.iconSmall} color={theme.colors.primaryDark} />
               </IconTile>
               <Labels>
-                <ModeName numberOfLines={1}>{row.label}</ModeName>
-                <ModeSummary numberOfLines={1}>{row.summary}</ModeSummary>
+                <ModeName>{row.label}</ModeName>
+                <ModeSummary>{row.summary}</ModeSummary>
               </Labels>
-              <Detail numberOfLines={1} adjustsFontSizeToFit>
+              <Detail>
                 {row.detail}
               </Detail>
             </RowHeader>

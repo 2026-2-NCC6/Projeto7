@@ -42,8 +42,8 @@ export function RecentSessionsTable({ sessions }: RecentSessionsTableProps) {
         {recentSessionRows(sessions).map((row) => (
           <BodyRow key={row.id} testID="recent-session">
             <SessionColumn>
-              <ModeLabel numberOfLines={1}>{row.mode}</ModeLabel>
-              <DateLabel numberOfLines={1}>{row.playedAt}</DateLabel>
+              <ModeLabel>{row.mode}</ModeLabel>
+              <DateLabel>{row.playedAt}</DateLabel>
             </SessionColumn>
             <NumberColumn>
               <NumberLabel numberOfLines={1} adjustsFontSizeToFit>

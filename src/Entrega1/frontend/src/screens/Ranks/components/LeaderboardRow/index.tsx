@@ -2,7 +2,7 @@ import { useTheme } from 'styled-components/native';
 import { Avatar } from '../../../../components/Avatar';
 import { texts } from '../../../../content/texts';
 import type { RankedPlayer } from '../../../../services/ranking/types';
-import { Identity, Name, Position, Row, Value, YouLabel, YouTag } from './styles';
+import { Identity, Labels, Name, Position, Row, Value, YouLabel, YouTag } from './styles';
 
 interface LeaderboardRowProps {
   player: RankedPlayer;
@@ -24,12 +24,14 @@ export function LeaderboardRow({ player, formatValue }: LeaderboardRowProps) {
       </Position>
       <Identity>
         <Avatar name={player.name} diameter={theme.sizes.rowAvatar} fontSize="md" />
-        <Name numberOfLines={1}>{player.name}</Name>
-        {player.isViewer ? (
-          <YouTag>
-            <YouLabel>{texts.ranks.you}</YouLabel>
-          </YouTag>
-        ) : null}
+        <Labels>
+          <Name numberOfLines={1}>{player.name}</Name>
+          {player.isViewer ? (
+            <YouTag>
+              <YouLabel>{texts.ranks.you}</YouLabel>
+            </YouTag>
+          ) : null}
+        </Labels>
       </Identity>
       <Value numberOfLines={1} adjustsFontSizeToFit>
         {value}

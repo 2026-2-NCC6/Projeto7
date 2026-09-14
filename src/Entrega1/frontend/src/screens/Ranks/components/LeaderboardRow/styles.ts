@@ -27,11 +27,17 @@ export const Identity = styled.View`
   gap: ${({ theme }) => theme.spacing.md}px;
 `;
 
+export const Labels = styled.View`
+  flex: 1;
+  gap: ${({ theme }) => theme.spacing.xxs}px;
+`;
+
 export const Name = styled(Text).attrs({ size: 'md', weight: 'bold' })`
   flex-shrink: 1;
 `;
 
 export const YouTag = styled.View`
+  align-self: flex-start;
   padding: ${({ theme }) => theme.spacing.xxs}px ${({ theme }) => theme.spacing.md}px;
   border-radius: ${({ theme }) => theme.radii.pill}px;
   background-color: ${({ theme }) => theme.colors.primary};
