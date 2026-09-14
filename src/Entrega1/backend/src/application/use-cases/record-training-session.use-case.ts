@@ -6,6 +6,8 @@ import { TRACK_BY_MODE } from '../../domain/game/session-mode';
 import { Progression } from '../../domain/progression/progression.entity';
 import { ProgressionRepository } from '../../domain/progression/progression-repository.port';
 import { xpForSession } from '../../domain/progression/session-reward';
+import { DeviceKind } from '../../domain/training-session/device-kind';
+import { TargetPerformance } from '../../domain/training-session/target-performance';
 import { TrainingSession } from '../../domain/training-session/training-session.entity';
 import { TrainingSessionRepository } from '../../domain/training-session/training-session-repository.port';
 import { UserNotFoundError } from '../../domain/user/errors';
@@ -25,6 +27,26 @@ export interface RecordTrainingSessionInput {
   durationMs: number;
   avgResponseMs?: number | null;
   bestResponseMs?: number | null;
+  deviceKind?: DeviceKind;
+  targets?: TargetPerformanceInput[];
+}
+
+export interface TargetPerformanceInput {
+  targetId: number;
+  attempts: number;
+  correctHits: number;
+  impactAverage?: number | null;
+  impactPeak?: number | null;
+}
+
+function toTargetPerformance(input: TargetPerformanceInput): TargetPerformance {
+  return {
+    targetId: input.targetId,
+    attempts: input.attempts,
+    correctHits: input.correctHits,
+    impactAverage: input.impactAverage ?? null,
+    impactPeak: input.impactPeak ?? null,
+  };
 }
 
 export interface DailyStreakView {
@@ -83,6 +105,8 @@ export class RecordTrainingSessionUseCase {
       avgResponseMs: input.avgResponseMs ?? null,
       bestResponseMs: input.bestResponseMs ?? null,
       xpAwarded,
+      deviceKind: input.deviceKind ?? 'simulated',
+      targets: (input.targets ?? []).map(toTargetPerformance),
     });
 
     // Treinar conta como o dia cumprido; um nível não concluído não mantém a

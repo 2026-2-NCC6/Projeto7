@@ -6,6 +6,7 @@ import { SessionStats } from '../../../domain/training-session/session-stats';
 import { TrainingSessionRepository } from '../../../domain/training-session/training-session-repository.port';
 import { DailyStreakOrmEntity } from '../entities/daily-streak.orm-entity';
 import { TrainingSessionOrmEntity } from '../entities/training-session.orm-entity';
+import { TrainingSessionTargetOrmEntity } from '../entities/training-session-target.orm-entity';
 import { UserProgressionOrmEntity } from '../entities/user-progression.orm-entity';
 
 interface StatsRow {
@@ -75,7 +76,14 @@ export class TypeOrmTrainingSessionRepository implements TrainingSessionReposito
         xpAwarded: session.xpAwarded,
         avgResponseMs: session.avgResponseMs,
         bestResponseMs: session.bestResponseMs,
+        deviceKind: session.deviceKind,
       });
+
+      if (session.targets.length > 0) {
+        await manager.getRepository(TrainingSessionTargetOrmEntity).insert(
+          session.targets.map((target) => ({ sessionId: session.id, ...target })),
+        );
+      }
 
       await manager
         .getRepository(UserProgressionOrmEntity)

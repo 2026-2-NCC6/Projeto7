@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryColumn } from 'typeorm';
 import { GameMode } from '../../../domain/game/game-mode';
+import { DeviceKind } from '../../../domain/training-session/device-kind';
 
 @Entity({ name: 'training_sessions' })
 @Index('ix_training_sessions_user_played_at', ['userId', 'playedAt'])
@@ -42,6 +43,9 @@ export class TrainingSessionOrmEntity {
 
   @Column({ type: 'int', name: 'best_response_ms', nullable: true })
   bestResponseMs: number | null;
+
+  @Column({ type: 'text', name: 'device_kind', default: 'simulated' })
+  deviceKind: DeviceKind;
 
   @CreateDateColumn({ type: 'timestamptz', name: 'played_at' })
   playedAt: Date;

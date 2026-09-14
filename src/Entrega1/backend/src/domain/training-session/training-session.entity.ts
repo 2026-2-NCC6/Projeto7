@@ -1,4 +1,7 @@
 import { GameMode } from '../game/game-mode';
+import { DeviceKind } from './device-kind';
+import { InvalidTrainingSessionError } from './errors';
+import { IMPACT_MAX_RAW, TargetPerformance, WALL_TARGET_COUNT } from './target-performance';
 
 export interface TrainingSessionProps {
   id: string;
@@ -14,7 +17,44 @@ export interface TrainingSessionProps {
   avgResponseMs: number | null;
   bestResponseMs: number | null;
   xpAwarded: number;
+  deviceKind: DeviceKind;
+  targets: TargetPerformance[];
   playedAt: Date;
+}
+
+function sumOf(targets: TargetPerformance[], pick: (target: TargetPerformance) => number): number {
+  return targets.reduce((total, target) => total + pick(target), 0);
+}
+
+function isImpactInRange(value: number | null): boolean {
+  return value === null || (value >= 0 && value <= IMPACT_MAX_RAW);
+}
+
+function assertConsistentTargets({ targets, hits, misses }: TrainingSessionProps): void {
+  const ids = targets.map((target) => target.targetId);
+
+  if (ids.some((id) => !Number.isInteger(id) || id < 1 || id > WALL_TARGET_COUNT)) {
+    throw new InvalidTrainingSessionError('alvo fora da parede.');
+  }
+  if (new Set(ids).size !== ids.length) {
+    throw new InvalidTrainingSessionError('alvo repetido.');
+  }
+  if (targets.some((target) => target.correctHits > target.attempts)) {
+    throw new InvalidTrainingSessionError('acertos acima das tentativas de um alvo.');
+  }
+  if (
+    targets.some(
+      (target) => !isImpactInRange(target.impactAverage) || !isImpactInRange(target.impactPeak),
+    )
+  ) {
+    throw new InvalidTrainingSessionError('impacto fora da escala do sensor.');
+  }
+  if (
+    sumOf(targets, (target) => target.correctHits) > hits ||
+    sumOf(targets, (target) => target.attempts) > hits + misses
+  ) {
+    throw new InvalidTrainingSessionError('alvos não batem com o total da sessão.');
+  }
 }
 
 export class TrainingSession {
@@ -25,7 +65,9 @@ export class TrainingSession {
   }
 
   static record(props: Omit<TrainingSessionProps, 'playedAt'>): TrainingSession {
-    return new TrainingSession({ ...props, playedAt: new Date() });
+    const session: TrainingSessionProps = { ...props, playedAt: new Date() };
+    assertConsistentTargets(session);
+    return new TrainingSession(session);
   }
 
   get id(): string {
@@ -78,6 +120,14 @@ export class TrainingSession {
 
   get xpAwarded(): number {
     return this.props.xpAwarded;
+  }
+
+  get deviceKind(): DeviceKind {
+    return this.props.deviceKind;
+  }
+
+  get targets(): TargetPerformance[] {
+    return this.props.targets;
   }
 
   get playedAt(): Date {
