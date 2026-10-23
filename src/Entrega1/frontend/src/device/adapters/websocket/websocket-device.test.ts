@@ -62,6 +62,30 @@ describe('WebSocketTargetDevice', () => {
   });
 
   it.each([
+    ['hit', 'acerto'],
+    ['miss', 'erro'],
+    ['levelCleared', 'nivel_concluido'],
+    ['levelFailed', 'nivel_falhou'],
+  ] as const)('asks the wall to play %s', async (feedback, resultado) => {
+    const { device, socket } = await connectedDevice();
+
+    device.signal(feedback);
+
+    expect(JSON.parse(socket.sent.at(-1)!)).toEqual({ cmd: 'feedback', resultado });
+    await device.disconnect();
+  });
+
+  it('stays quiet while the wall is not connected', async () => {
+    const device = new WebSocketTargetDevice('ws://wall.test:81');
+    await device.connect();
+
+    device.signal('hit');
+
+    expect(FakeSocket.last!.sent).toEqual([]);
+    await device.disconnect();
+  });
+
+  it.each([
     ['an old protocol version', { ...hello, protocolo: 1 }],
     ['a wall with another number of targets', { ...hello, alvos: 9 }],
   ])('reports %s as an incompatible wall', async (_, frame) => {

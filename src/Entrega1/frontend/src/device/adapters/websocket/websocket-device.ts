@@ -3,9 +3,10 @@ import type {
   DeviceDescriptor,
   DeviceUnsubscribe,
   TargetDevice,
+  WallFeedback,
 } from '../../contracts/target-device';
 import { DeviceEventPipeline } from '../../runtime/event-pipeline';
-import { controlFrameOf, helloMismatch, sessionCommand } from './wall-protocol';
+import { controlFrameOf, feedbackCommand, helloMismatch, sessionCommand } from './wall-protocol';
 
 const descriptor: DeviceDescriptor = {
   id: 'smash-wall',
@@ -66,6 +67,13 @@ export class WebSocketTargetDevice implements TargetDevice {
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  signal(feedback: WallFeedback): void {
+    // A feedback that arrives late is worse than none, so it is never queued.
+    if (this.socket && this.connectionStatus === 'connected') {
+      this.socket.send(feedbackCommand(feedback));
+    }
   }
 
   private open(): void {

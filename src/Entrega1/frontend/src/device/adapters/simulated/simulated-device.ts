@@ -77,6 +77,9 @@ export class SimulatedTargetDevice implements TargetDevice {
     };
   }
 
+  /** The simulator has no buzzer or lights; the phone's vibration is the feedback. */
+  signal(): void {}
+
   /** Simulator-only. Never part of `TargetDevice` — the engine cannot call it. */
   emitHit(targetId: TargetId): void {
     const target = wallTarget(targetId);

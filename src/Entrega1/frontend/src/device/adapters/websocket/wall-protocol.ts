@@ -1,3 +1,4 @@
+import type { WallFeedback } from '../../contracts/target-device';
 import { TARGET_IDS } from '../../contracts/target';
 
 /**
@@ -17,7 +18,7 @@ export interface WallControlFrame {
 }
 
 export interface WallCommand {
-  readonly cmd: 'session' | 'ping';
+  readonly cmd: 'session' | 'ping' | 'feedback';
   readonly [field: string]: unknown;
 }
 
@@ -50,4 +51,15 @@ export function helloMismatch(frame: WallControlFrame): string | null {
 
 export function sessionCommand(sessao: string): string {
   return JSON.stringify({ cmd: 'session', sessao });
+}
+
+const FEEDBACK_RESULT: Record<WallFeedback, string> = {
+  hit: 'acerto',
+  miss: 'erro',
+  levelCleared: 'nivel_concluido',
+  levelFailed: 'nivel_falhou',
+};
+
+export function feedbackCommand(feedback: WallFeedback): string {
+  return JSON.stringify({ cmd: 'feedback', resultado: FEEDBACK_RESULT[feedback] });
 }
