@@ -48,7 +48,7 @@ describe('TrainingSession.record', () => {
   it('keeps consistent per-target telemetry', () => {
     const targets = [
       target({ targetId: 1, attempts: 5, correctHits: 4, impactAverage: 1800, impactPeak: 4095 }),
-      target({ targetId: 9, attempts: 5, correctHits: 4 }),
+      target({ targetId: 6, attempts: 5, correctHits: 4 }),
     ];
 
     const session = recordWith({ deviceKind: 'websocket', targets });
@@ -58,7 +58,7 @@ describe('TrainingSession.record', () => {
   });
 
   it.each([
-    ['a target off the wall', [target({ targetId: 10 })]],
+    ['a target off the wall', [target({ targetId: 7 })]],
     ['a repeated target', [target({ targetId: 2 }), target({ targetId: 2 })]],
     ['more hits than attempts', [target({ attempts: 1, correctHits: 2 })]],
     ['an impact above the ADC range', [target({ impactPeak: 4096 })]],
