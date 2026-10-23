@@ -105,8 +105,8 @@ jumpers saem da coluna `a` do T2, ao lado dos pinos do ESP32 (as mesmas linhas
 | --- | --- | --- |
 | Jumper do buzzer | T2 · linha 11 · a (**GPIO 25**) | T1 · linha 40 · a |
 | Resistor 100 Ω | T1 · linha 40 · b | T1 · linha 43 · b |
-| Buzzer, perna **+** | T1 · linha 43 · d | |
-| Buzzer, perna **−** | T1 · linha 46 · d | |
+| Buzzer, perna **+** | T1 · linha 43 · e | |
+| Buzzer, perna **−** | T1 · linha 46 · e | |
 | Jumper GND do buzzer | T1 · linha 46 · a | D1 · linha 46 |
 | Jumper do LED verde | T2 · linha 10 · a (**GPIO 26**) | T1 · linha 50 · a |
 | Resistor 220 Ω | T1 · linha 50 · b | T1 · linha 52 · b |
