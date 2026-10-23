@@ -57,6 +57,7 @@ Para parar tudo: `Ctrl+C`.
 | `npm run backend` | só o backend |
 | `npm run app` | só o Metro (aperte `a` para abrir no Android) |
 | `npm run emulator` | só abre o emulador e espera o boot |
+| `npm run wall` | emulador da parede: servidor WebSocket na porta 8181, com o protocolo do firmware |
 | `npm run db:migrate` | aplica as migrations pendentes |
 | `npm run typecheck` | TypeScript dos dois projetos |
 | `npm run lint` | ESLint dos dois projetos |
@@ -214,9 +215,17 @@ em `gameplay/` muda.
 # simulador (padrão)
 npm run app
 
+# o emulador da parede (npm run wall em outro terminal), visto do emulador Android
+EXPO_PUBLIC_DEVICE_SOURCE=websocket EXPO_PUBLIC_DEVICE_URL=ws://10.0.2.2:8181 npm run app
+
 # a parede de verdade, no modo SoftAP
 EXPO_PUBLIC_DEVICE_SOURCE=websocket EXPO_PUBLIC_DEVICE_URL=ws://192.168.4.1:81 npm run app
 ```
+
+O emulador da parede (`scripts/wall-emulator.mjs`) fala o mesmo protocolo do
+firmware: as teclas `1`..`6` batem nos alvos, `m` manda uma mensagem malformada e
+`b` reinicia a parede. É o jeito de testar o caminho pela rede sem o ESP32 — o
+simulador do app nunca passa por um socket.
 
 As variáveis estão em `frontend/.env.example`. O firmware, o protocolo completo e
 a calibração dos sensores estão em **`backend/firmware/README.md`**.
