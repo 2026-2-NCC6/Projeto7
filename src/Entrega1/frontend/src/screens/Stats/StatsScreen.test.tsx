@@ -110,7 +110,7 @@ describe('StatsScreen', () => {
     expect(await screen.findByText('2h 05min')).toBeOnTheScreen();
     expect(screen.getByText('640 ms')).toBeOnTheScreen();
     expect(screen.getByText('Evolução da precisão')).toBeOnTheScreen();
-    expect(screen.getAllByTestId(/^wall-cell-/)).toHaveLength(9);
+    expect(screen.getAllByTestId(/^wall-cell-/)).toHaveLength(6);
     expect(screen.getByTestId('impact-5')).toHaveTextContent(/Média 1\.800 · Pico 3\.100/);
     expect(screen.getAllByTestId(/^mode-/)).toHaveLength(4);
     expect(screen.getAllByTestId('recent-session')).toHaveLength(10);

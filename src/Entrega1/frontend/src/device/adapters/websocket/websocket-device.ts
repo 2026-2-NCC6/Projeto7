@@ -5,7 +5,7 @@ import type {
   TargetDevice,
 } from '../../contracts/target-device';
 import { DeviceEventPipeline } from '../../runtime/event-pipeline';
-import { controlFrameOf, sessionCommand } from './wall-protocol';
+import { controlFrameOf, helloMismatch, sessionCommand } from './wall-protocol';
 
 const descriptor: DeviceDescriptor = {
   id: 'smash-wall',
@@ -137,7 +137,14 @@ export class WebSocketTargetDevice implements TargetDevice {
     }
 
     // A tagged frame is the wall talking about itself, never an impact.
-    if (controlFrameOf(message)) {
+    const control = controlFrameOf(message);
+
+    if (control) {
+      const mismatch = control.tipo === 'hello' ? helloMismatch(control) : null;
+
+      if (mismatch) {
+        this.publish({ kind: 'fault', code: 'incompatibleWall', detail: mismatch, at: Date.now() });
+      }
       return;
     }
 

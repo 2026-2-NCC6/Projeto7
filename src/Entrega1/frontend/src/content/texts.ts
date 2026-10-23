@@ -482,7 +482,7 @@ export const texts = {
       sessions === 1 ? 'Última sessão' : `Últimas ${sessions} sessões`,
     accuracyTrendEmpty: 'Sem tentativas registradas nas últimas sessões.',
     wall: 'Mapa da parede',
-    wallCaption: 'Onde você mais acerta na grade 3×3',
+    wallCaption: 'Onde você mais acerta na grade 3×2',
     wallEmpty: 'Os acertos por alvo aparecem depois da próxima sessão.',
     colorAccuracy: 'Precisão por cor',
     colors: {
@@ -525,6 +525,7 @@ export const texts = {
       duplicateEvent: 'Evento duplicado',
       staleEvent: 'Evento fora de ordem',
       transport: 'Falha de transporte',
+      incompatibleWall: 'Parede incompatível',
     } satisfies Record<DeviceFaultCode, string>,
     connection: 'Conexão',
     source: 'Fonte',

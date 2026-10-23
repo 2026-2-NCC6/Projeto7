@@ -5,9 +5,9 @@ describe('wallCells', () => {
   it('maps every wall target with its share of hits', () => {
     const cells = wallCells(fullStatistics().targets);
 
-    expect(cells).toHaveLength(9);
-    expect(cells[8]).toMatchObject({ intensity: 1, label: '20%' });
-    expect(cells[0].intensity).toBeCloseTo(1 / 9);
+    expect(cells).toHaveLength(6);
+    expect(cells[5]).toMatchObject({ intensity: 1, label: '29%' });
+    expect(cells[0].intensity).toBeCloseTo(1 / 6);
   });
 
   it('stays blank and safe without data', () => {

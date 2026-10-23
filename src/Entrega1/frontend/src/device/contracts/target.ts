@@ -1,28 +1,32 @@
 import type { TargetColor } from '../../types/game';
 
-export const TARGET_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
+/** The wall seen from the front: A1..A3 on the top row, A4..A6 below. */
+export const TARGET_IDS = [1, 2, 3, 4, 5, 6] as const;
 
 export type TargetId = (typeof TARGET_IDS)[number];
 
-export type GridIndex = 1 | 2 | 3;
+export const WALL_ROWS = [1, 2] as const;
+export const WALL_COLUMNS = [1, 2, 3] as const;
+
+export type RowIndex = (typeof WALL_ROWS)[number];
+export type ColumnIndex = (typeof WALL_COLUMNS)[number];
 
 export interface WallTarget {
   id: TargetId;
-  row: GridIndex;
-  column: GridIndex;
+  row: RowIndex;
+  column: ColumnIndex;
   color: TargetColor;
 }
 
 const COLOR_BY_POSITION: TargetColor[] = [
   'amber', 'blue', 'red',
-  'blue', 'red', 'amber',
   'red', 'amber', 'blue',
 ];
 
 export const WALL_TARGETS: readonly WallTarget[] = TARGET_IDS.map((id, index) => ({
   id,
-  row: (Math.floor(index / 3) + 1) as GridIndex,
-  column: ((index % 3) + 1) as GridIndex,
+  row: (Math.floor(index / WALL_COLUMNS.length) + 1) as RowIndex,
+  column: ((index % WALL_COLUMNS.length) + 1) as ColumnIndex,
   color: COLOR_BY_POSITION[index],
 }));
 

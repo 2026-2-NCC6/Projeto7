@@ -44,7 +44,7 @@ export const EMPTY_SUMMARY: ActivitySummary = {
 };
 
 export function emptyTargets(): TargetBreakdown[] {
-  return Array.from({ length: 9 }, (_, index) => ({
+  return Array.from({ length: 6 }, (_, index) => ({
     targetId: index + 1,
     attempts: 0,
     correctHits: 0,

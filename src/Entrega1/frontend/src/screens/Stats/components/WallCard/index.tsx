@@ -1,5 +1,6 @@
 import { useTheme } from 'styled-components/native';
 import { texts } from '../../../../content/texts';
+import { WALL_ROWS } from '../../../../device/contracts';
 import { MeterBar } from '../../../../gameplay/components/MeterBar';
 import type { TargetBreakdown } from '../../../../services/statistics/types';
 import { colorAccuracy, wallCells } from '../../data/wallMetrics';
@@ -21,7 +22,6 @@ import {
   Swatch,
 } from './styles';
 
-const GRID_ROWS = [1, 2, 3] as const;
 const STRONG_SHADE = 0.55;
 
 interface WallCardProps {
@@ -35,7 +35,7 @@ export function WallCard({ targets }: WallCardProps) {
   return (
     <StatsCard title={texts.stats.wall} caption={texts.stats.wallCaption}>
       <Grid>
-        {GRID_ROWS.map((row) => (
+        {WALL_ROWS.map((row) => (
           <GridRow key={row}>
             {cells
               .filter((cell) => cell.target.row === row)
