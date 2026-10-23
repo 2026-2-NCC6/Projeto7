@@ -233,8 +233,8 @@ a calibração dos sensores estão em **`backend/firmware/README.md`**.
 Impacto simulado nunca vira número na tela: as leituras carregam
 `impact.simulated: true` e a tela de resultado mostra `—`.
 
-A parede também responde ao jogador: um buzzer e dois LEDs tocam o retorno de
-cada jogada. A cada batida o app vibra o celular e manda `feedback` à parede
+A parede também responde ao jogador: o LED azul da placa do ESP32 (GPIO 2)
+pisca o retorno de cada jogada. A cada batida o app vibra o celular e manda `feedback` à parede
 (`acerto`, `erro`, `nivel_concluido`, `nivel_falhou`) pelo
 `TargetDevice.signal()`. No simulador isso não faz nada; no emulador da parede
 aparece como `[atuador] ...` no terminal.
