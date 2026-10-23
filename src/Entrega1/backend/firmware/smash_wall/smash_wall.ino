@@ -14,6 +14,7 @@
  */
 
 #include "config.h"
+#include "wall_actuator.h"
 #include "wall_link.h"
 #include "wall_sensors.h"
 
@@ -24,6 +25,7 @@ void setup() {
   Serial.println("[smash] parede iniciando");
 
   sensorsBegin();
+  actuatorBegin();
   linkBegin();
 
 #if CALIBRATION_MODE
@@ -35,6 +37,7 @@ void loop() {
   // O socket é servido em toda iteração: uma falha de rede não pode travar a
   // leitura dos sensores, e a leitura não pode atrasar a rede.
   linkLoop();
+  actuatorLoop();
 
 #if CALIBRATION_MODE
   sensorsCalibrationTick();
@@ -43,6 +46,11 @@ void loop() {
 
   if (sensorsPoll(impact)) {
     linkBroadcastImpact(impact);
+
+    // Sem app, a parede responde sozinha; com app, quem decide o som é o jogo.
+    if (!linkHasClients()) {
+      actuatorPlay(CUE_IMPACT);
+    }
   }
 #endif
 }
