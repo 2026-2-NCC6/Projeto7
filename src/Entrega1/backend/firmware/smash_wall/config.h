@@ -74,44 +74,34 @@ static const uint16_t TARGET_THRESHOLD[TARGET_COUNT] = {
 };
 
 // ---------------------------------------------------------------------------
-//  Atuador: buzzer e dois LEDs, no bloco T1 da protoboard
+//  Atuador: o LED azul da própria placa
 // ---------------------------------------------------------------------------
-//  Saídas comuns, longe dos pinos de boot (0, 2, 5, 12, 15) e dos piezos.
+//  Nas placas ESP32 com LED azul além do vermelho de energia, ele fica no
+//  GPIO 2. Sem esse LED na placa, um LED com resistor de 220 Ω entre o GPIO 2 e
+//  o GND faz o mesmo papel.
 
-static const uint8_t PIN_BUZZER = 25;
-static const uint8_t PIN_LED_GREEN = 26;
-static const uint8_t PIN_LED_RED = 27;
+static const uint8_t PIN_LED = 2;
 
-// 1 = buzzer passivo: toca a frequência de cada nota por PWM.
-// 0 = buzzer ativo: só liga e desliga, sempre no mesmo tom.
-#define BUZZER_PASSIVO 1
-
-// Cada som é uma lista de passos: frequência (0 = silêncio), duração e LED aceso.
-struct ToneStep {
-  uint16_t hz;
+// Cada sinal é uma lista de passos: LED aceso ou apagado, por quantos ms.
+struct BlinkStep {
+  bool on;
   uint16_t ms;
-  uint8_t led;
 };
-
-static const uint8_t LED_NONE = 0;
-static const uint8_t LED_GREEN = 1;
-static const uint8_t LED_RED = 2;
 
 // Batida detectada sem app conectado: o firmware responde sozinho.
-static const ToneStep CUE_IMPACT_STEPS[] = {{1500, 40, LED_GREEN}, {0, 60, LED_GREEN}};
+static const BlinkStep CUE_IMPACT_STEPS[] = {{true, 80}};
 
 // Os quatro abaixo vêm do app, pelo comando `feedback`.
-static const ToneStep CUE_HIT_STEPS[] = {{2000, 80, LED_GREEN}, {0, 70, LED_GREEN}};
-static const ToneStep CUE_MISS_STEPS[] = {{400, 200, LED_RED}, {0, 50, LED_RED}};
-static const ToneStep CUE_LEVEL_CLEARED_STEPS[] = {
-    {1047, 120, LED_GREEN}, {0, 60, LED_NONE},
-    {1319, 120, LED_GREEN}, {0, 60, LED_NONE},
-    {1568, 200, LED_GREEN},
+static const BlinkStep CUE_HIT_STEPS[] = {{true, 250}};
+static const BlinkStep CUE_MISS_STEPS[] = {
+    {true, 60}, {false, 60}, {true, 60}, {false, 60}, {true, 60},
 };
-static const ToneStep CUE_LEVEL_FAILED_STEPS[] = {
-    {784, 150, LED_RED}, {0, 60, LED_NONE},
-    {523, 250, LED_RED}, {0, 60, LED_NONE},
-    {0, 150, LED_RED},
+static const BlinkStep CUE_LEVEL_CLEARED_STEPS[] = {
+    {true, 250}, {false, 120}, {true, 250}, {false, 120}, {true, 600},
+};
+static const BlinkStep CUE_LEVEL_FAILED_STEPS[] = {
+    {true, 80}, {false, 80}, {true, 80}, {false, 80},
+    {true, 80}, {false, 80}, {true, 80}, {false, 80},
 };
 
 // ---------------------------------------------------------------------------

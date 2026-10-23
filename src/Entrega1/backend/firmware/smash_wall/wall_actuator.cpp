@@ -6,54 +6,31 @@
 
 namespace {
 
-const ToneStep* steps = nullptr;
+const BlinkStep* steps = nullptr;
 uint8_t stepCount = 0;
 uint8_t stepIndex = 0;
 uint32_t stepStartedAt = 0;
 
 template <size_t N>
-void load(const ToneStep (&pattern)[N]) {
+void load(const BlinkStep (&pattern)[N]) {
   steps = pattern;
   stepCount = N;
 }
 
-void sound(uint16_t hz) {
-#if BUZZER_PASSIVO
-  ledcWriteTone(PIN_BUZZER, hz);
-#else
-  digitalWrite(PIN_BUZZER, hz > 0 ? HIGH : LOW);
-#endif
-}
-
-void light(uint8_t led) {
-  digitalWrite(PIN_LED_GREEN, led == LED_GREEN ? HIGH : LOW);
-  digitalWrite(PIN_LED_RED, led == LED_RED ? HIGH : LOW);
-}
-
 void startStep(uint32_t now) {
   stepStartedAt = now;
-  sound(steps[stepIndex].hz);
-  light(steps[stepIndex].led);
+  digitalWrite(PIN_LED, steps[stepIndex].on ? HIGH : LOW);
 }
 
 void stop() {
   steps = nullptr;
-  sound(0);
-  light(LED_NONE);
+  digitalWrite(PIN_LED, LOW);
 }
 
 }  // namespace
 
 void actuatorBegin() {
-  pinMode(PIN_LED_GREEN, OUTPUT);
-  pinMode(PIN_LED_RED, OUTPUT);
-
-#if BUZZER_PASSIVO
-  ledcAttach(PIN_BUZZER, 2000, 8);
-#else
-  pinMode(PIN_BUZZER, OUTPUT);
-#endif
-
+  pinMode(PIN_LED, OUTPUT);
   stop();
 }
 

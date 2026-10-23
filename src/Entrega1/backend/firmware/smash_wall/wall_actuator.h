@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-/** O que a parede pode tocar. CUE_NONE é "nenhum comando de som". */
+/** Os sinais que o LED da placa sabe dar. CUE_NONE é "nenhum sinal". */
 enum WallCue : uint8_t {
   CUE_NONE,
   CUE_IMPACT,
@@ -14,11 +14,11 @@ enum WallCue : uint8_t {
 
 void actuatorBegin();
 
-/** Começa um som agora, interrompendo o que estiver tocando. */
+/** Começa um sinal agora, interrompendo o que estiver piscando. */
 void actuatorPlay(WallCue cue);
 
 /**
- * Avança o som em andamento. Não bloqueia: compara millis(), como a máquina
+ * Avança o sinal em andamento. Não bloqueia: compara millis(), como a máquina
  * de detecção, para nunca atrasar a leitura dos piezos.
  */
 void actuatorLoop();

@@ -47,7 +47,7 @@ void loop() {
   if (sensorsPoll(impact)) {
     linkBroadcastImpact(impact);
 
-    // Sem app, a parede responde sozinha; com app, quem decide o som é o jogo.
+    // Sem app, a parede responde sozinha; com app, quem decide o sinal é o jogo.
     if (!linkHasClients()) {
       actuatorPlay(CUE_IMPACT);
     }

@@ -24,7 +24,7 @@ String errorFrame(const char* detail);
 /**
  * Interpreta um comando do app. Devolve false e preenche `error` quando a
  * mensagem não presta — nunca derruba a parede por causa de um quadro inválido.
- * Um `feedback` válido preenche `cue` com o som a tocar; os outros deixam CUE_NONE.
+ * Um `feedback` válido preenche `cue` com o sinal a dar; os outros deixam CUE_NONE.
  */
 bool applyCommand(const uint8_t* payload, size_t length, String& session, WallCue& cue,
                   String& error);
