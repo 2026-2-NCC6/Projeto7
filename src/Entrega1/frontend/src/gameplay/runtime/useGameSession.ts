@@ -96,15 +96,18 @@ export function useGameSession<TState>({
     if (feedback && feedback.seq !== feedbackSeq.current) {
       feedbackSeq.current = feedback.seq;
       pulseFor(feedback.verdict);
+      device.signal(feedback.verdict === 'correct' ? 'hit' : 'miss');
     }
-  }, [session?.feedback]);
+  }, [session?.feedback, device]);
 
   useEffect(() => {
     if (session && isTerminal(session.phase) && !outcomeAnnounced.current) {
       outcomeAnnounced.current = true;
-      pulseOutcome(session.phase.kind === 'levelCleared');
+      const cleared = session.phase.kind === 'levelCleared';
+      pulseOutcome(cleared);
+      device.signal(cleared ? 'levelCleared' : 'levelFailed');
     }
-  }, [session]);
+  }, [session, device]);
 
   const result = useMemo<SessionResult | null>(() => {
     if (!session || !config || !isTerminal(session.phase)) {

@@ -3,8 +3,9 @@
  * Emulador da parede Smash — o mesmo protocolo do firmware, sem ESP32.
  *
  * Sobe um servidor WebSocket que se comporta como backend/firmware/smash_wall:
- * manda `hello` ao conectar, `status` a cada 2 s, responde `session` e `ping`
- * e publica impactos no formato `Impacto`. Serve para testar o app pela rede,
+ * manda `hello` ao conectar, `status` a cada 2 s, responde `session`, `ping` e
+ * `feedback` e publica impactos no formato `Impacto`. O que o LED da placa
+ * faria aparece no terminal como `[atuador] ...`. Serve para testar o app pela rede,
  * do mesmo jeito que ele vai falar com a parede de verdade.
  *
  *   npm run wall               porta 8181 (a 81 do ESP32 exige root no Linux)
@@ -27,6 +28,19 @@ let bootedAt = Date.now();
 let session = newSession();
 
 const millis = () => Date.now() - bootedAt;
+
+/** Como o LED da placa (GPIO 2) pisca em cada sinal (config.h). */
+const CUES = {
+  impacto: 'LED pisca curto',
+  acerto: 'LED acende 250 ms',
+  erro: 'LED pisca 3× rápido',
+  nivel_concluido: 'LED pisca 3× longo',
+  nivel_falhou: 'LED pisca 4× rápido',
+};
+
+function play(cue) {
+  console.log(`[atuador] ${cue} · ${CUES[cue]}`);
+}
 
 function newSession() {
   return `${WALL_ID}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -65,6 +79,17 @@ function applyCommand(raw) {
       return 'sessao ausente';
     }
     session = doc.sessao;
+    return null;
+  }
+
+  if (doc.cmd === 'feedback') {
+    if (typeof doc.resultado !== 'string') {
+      return 'resultado ausente';
+    }
+    if (doc.resultado === 'impacto' || !(doc.resultado in CUES)) {
+      return 'resultado desconhecido';
+    }
+    play(doc.resultado);
     return null;
   }
 
@@ -108,7 +133,12 @@ function hit(target) {
   };
 
   broadcast(impact);
-  console.log(JSON.stringify(impact), server.clients.size === 0 ? '(ninguém conectado)' : '');
+  console.log(JSON.stringify(impact));
+
+  // Sem app, a parede responde sozinha; com app, quem decide o sinal é o jogo.
+  if (server.clients.size === 0) {
+    play('impacto');
+  }
 }
 
 /** Como um brownout: os sockets caem e o relógio volta para zero. */

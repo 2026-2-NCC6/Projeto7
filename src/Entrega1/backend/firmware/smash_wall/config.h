@@ -74,6 +74,37 @@ static const uint16_t TARGET_THRESHOLD[TARGET_COUNT] = {
 };
 
 // ---------------------------------------------------------------------------
+//  Atuador: o LED azul da própria placa
+// ---------------------------------------------------------------------------
+//  Nas placas ESP32 com LED azul além do vermelho de energia, ele fica no
+//  GPIO 2. Sem esse LED na placa, um LED com resistor de 220 Ω entre o GPIO 2 e
+//  o GND faz o mesmo papel.
+
+static const uint8_t PIN_LED = 2;
+
+// Cada sinal é uma lista de passos: LED aceso ou apagado, por quantos ms.
+struct BlinkStep {
+  bool on;
+  uint16_t ms;
+};
+
+// Batida detectada sem app conectado: o firmware responde sozinho.
+static const BlinkStep CUE_IMPACT_STEPS[] = {{true, 80}};
+
+// Os quatro abaixo vêm do app, pelo comando `feedback`.
+static const BlinkStep CUE_HIT_STEPS[] = {{true, 250}};
+static const BlinkStep CUE_MISS_STEPS[] = {
+    {true, 60}, {false, 60}, {true, 60}, {false, 60}, {true, 60},
+};
+static const BlinkStep CUE_LEVEL_CLEARED_STEPS[] = {
+    {true, 250}, {false, 120}, {true, 250}, {false, 120}, {true, 600},
+};
+static const BlinkStep CUE_LEVEL_FAILED_STEPS[] = {
+    {true, 80}, {false, 80}, {true, 80}, {false, 80},
+    {true, 80}, {false, 80}, {true, 80}, {false, 80},
+};
+
+// ---------------------------------------------------------------------------
 //  Tempos (ms, exceto onde indicado)
 // ---------------------------------------------------------------------------
 

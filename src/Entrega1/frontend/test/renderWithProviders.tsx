@@ -16,6 +16,7 @@ export function fakeDeviceContext(
     connect: jest.fn(async () => undefined),
     disconnect: jest.fn(async () => undefined),
     subscribe: jest.fn(() => () => undefined),
+    signal: jest.fn(),
   };
 
   return {

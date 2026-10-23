@@ -11,3 +11,6 @@ void linkBegin();
 void linkLoop();
 
 void linkBroadcastImpact(const WallImpact& impact);
+
+/** Algum app está conectado agora? */
+bool linkHasClients();

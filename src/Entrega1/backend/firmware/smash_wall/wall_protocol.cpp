@@ -62,7 +62,9 @@ String errorFrame(const char* detail) {
   return serialize(doc);
 }
 
-bool applyCommand(const uint8_t* payload, size_t length, String& session, String& error) {
+bool applyCommand(const uint8_t* payload, size_t length, String& session, WallCue& cue,
+                  String& error) {
+  cue = CUE_NONE;
   JsonDocument doc;
   const DeserializationError failure = deserializeJson(doc, payload, length);
 
@@ -93,6 +95,31 @@ bool applyCommand(const uint8_t* payload, size_t length, String& session, String
   }
 
   if (strcmp(command, "ping") == 0) {
+    return true;
+  }
+
+  // O app decide se a batida foi certa; a parede só dá o retorno ao jogador.
+  if (strcmp(command, "feedback") == 0) {
+    const char* result = doc["resultado"];
+
+    if (result == nullptr) {
+      error = "resultado ausente";
+      return false;
+    }
+
+    if (strcmp(result, "acerto") == 0) {
+      cue = CUE_HIT;
+    } else if (strcmp(result, "erro") == 0) {
+      cue = CUE_MISS;
+    } else if (strcmp(result, "nivel_concluido") == 0) {
+      cue = CUE_LEVEL_CLEARED;
+    } else if (strcmp(result, "nivel_falhou") == 0) {
+      cue = CUE_LEVEL_FAILED;
+    } else {
+      error = "resultado desconhecido";
+      return false;
+    }
+
     return true;
   }
 

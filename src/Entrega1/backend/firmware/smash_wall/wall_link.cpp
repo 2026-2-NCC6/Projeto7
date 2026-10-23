@@ -37,14 +37,17 @@ void onWebSocketEvent(uint8_t client, WStype_t type, uint8_t* payload, size_t le
 
     case WStype_TEXT: {
       String error;
+      WallCue cue;
 
-      if (!applyCommand(payload, length, session, error)) {
+      if (!applyCommand(payload, length, session, cue, error)) {
         const String rejection = errorFrame(error.c_str());
         server.sendTXT(client, rejection.c_str());
         return;
       }
 
-      // Tanto `session` quanto `ping` são respondidos com o estado atual.
+      actuatorPlay(cue);
+
+      // Todo comando aceito é respondido com o estado atual.
       const String state =
           statusFrame(session.c_str(), server.connectedClients(), WiFi.RSSI());
       server.sendTXT(client, state.c_str());
@@ -148,3 +151,7 @@ void linkBroadcastImpact(const WallImpact& impact) {
 #endif
 }
 
+
+bool linkHasClients() {
+  return server.connectedClients() > 0;
+}

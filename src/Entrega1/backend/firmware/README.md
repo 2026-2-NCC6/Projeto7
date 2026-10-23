@@ -13,6 +13,7 @@ backend/firmware/
     config.h              ← o único arquivo que você edita
     secrets_example.h     modelo das credenciais Wi-Fi (copie para secrets.h)
     wall_sensors.h/.cpp   varredura do ADC, janela de pico, máquina de estados
+    wall_actuator.h/.cpp  LED da placa: pisca os sinais sem bloquear o loop()
     wall_link.h/.cpp      Wi-Fi, mDNS, servidor WebSocket, reconexão
     wall_protocol.h/.cpp  monta as mensagens e interpreta os comandos
 ```
@@ -36,6 +37,8 @@ bola bate no alvo
           │                                                       e t_ms fora de ordem
           └─ app: gameplay/domain/game-session.ts                 aplica as regras
               └─ tela: pontuação, barra de tempo, vibração
+              └─ app → parede: {"cmd":"feedback","resultado":"acerto"}
+                  └─ wall_actuator.cpp  LED da placa acende (ou pisca 3× rápido no erro)
               └─ fim da sessão: POST /me/sessions -> XP e ofensiva
 ```
 
@@ -86,6 +89,24 @@ A parede vista de frente:
 
 Na serigrafia da placa, o 36 e o 39 podem aparecer como `VP`/`VN` ou
 `SVP`/`SVN`. O número do alvo é o `alvo` que vai no protocolo.
+
+### Atuador — o LED da própria placa
+
+O atuador é o **LED azul da placa do ESP32**, ligado no GPIO 2. Nenhuma peça
+nova: o firmware acende e apaga esse LED para dar retorno ao jogador. Muitas
+placas ESP32 têm esse LED ao lado do vermelho de energia, perto do USB.
+
+Se a sua placa só tiver o LED vermelho (que fica sempre aceso e não é
+controlável), um LED comum resolve: perna longa no GPIO 2, perna curta num
+resistor de 220 Ω até o GND. O firmware não muda.
+
+| Sinal | Quando | O LED |
+| --- | --- | --- |
+| impacto | batida detectada, sem app conectado | pisca curto (80 ms) |
+| acerto | o app avisa que a batida foi certa | acende 250 ms |
+| erro | o app avisa que a batida foi errada | pisca 3× rápido |
+| nível concluído | fim do nível, venceu | pisca 3× longo |
+| nível falhou | fim do nível, perdeu | pisca 4× rápido |
 
 ### Três coisas que queimam tempo (ou a placa)
 
@@ -140,6 +161,8 @@ Tudo o que você precisa mexer está em **`config.h`**.
 | `TARGET_COLUMNS` | 3 | alvos por linha da parede |
 | `TARGET_PIN[6]` | 32, 33, 34, 36, 39, 35 | pino de cada alvo, na ordem A1..A6 |
 | `TARGET_THRESHOLD[6]` | 150 cada | **limiar por alvo — calibre (seção 5)** |
+| `PIN_LED` | 2 | o LED azul da placa, o atuador |
+| `CUE_*_STEPS` | — | cada sinal: LED aceso ou apagado e por quantos ms, passo a passo |
 | `PEAK_WINDOW_MS` | 20 | janela em que o pico de todos os alvos é medido |
 | `DEBOUNCE_MS` | 200 | silêncio depois de um impacto |
 | `STATUS_INTERVAL_MS` | 2000 | intervalo do batimento enviado ao app |
@@ -288,6 +311,24 @@ padrão. Elas estão documentadas em `frontend/.env.example`.
 
 ---
 
+### 6.3 Evidência em vídeo
+
+Duas cenas curtas, cada uma provando uma exigência do enunciado:
+
+1. **Sensor → atuador, sem rede** (Sistemas Embarcados, Entrega 2: ler um sensor
+   e controlar um atuador). Só o USB ligado, nenhum app conectado. Bata em
+   alvos diferentes: cada batida pisca o LED azul da placa, e a linha
+   JSON aparece no Monitor Serial. Filme a parede e a tela do Serial juntas.
+2. **Orientar e recompensar** (RF08). App conectado, um nível do Color Mode.
+   Acerte uma cor e erre a seguinte: o acerto acende o LED, o erro faz ele
+   piscar 3× rápido. Termine o nível e o LED pisca 3× longo.
+   Filme o celular e a parede no mesmo quadro.
+
+Sem a parede, o `npm run wall` mostra no terminal o que o atuador faria
+(`[atuador] acerto · LED acende 250 ms`).
+
+---
+
 ## 7. O protocolo
 
 WebSocket sobre Wi-Fi, **a parede é o servidor**, porta 81, uma mensagem JSON por
@@ -343,6 +384,12 @@ conexão.
 | --- | --- |
 | `{"cmd":"session","sessao":"app-1789015370"}` | o app manda o id da sessão de treino ao conectar; a parede passa a repetir esse valor em `sessao` |
 | `{"cmd":"ping"}` | respondido com um `status` na hora |
+| `{"cmd":"feedback","resultado":"acerto"}` | toca o retorno da jogada: `acerto`, `erro`, `nivel_concluido` ou `nivel_falhou` |
+
+O `feedback` é acréscimo, por isso o protocolo continua na versão 2: um firmware
+sem atuador só responde `erro` com `comando desconhecido`, e o app ignora. O app
+nunca guarda um `feedback` para mandar depois — um sinal atrasado é pior que
+nenhum.
 
 ### Confirmação de recebimento: não existe
 
@@ -407,6 +454,10 @@ DEBOUNCE ──(200 ms)──────────────────> I
 
 As transições dependem só de duas coisas: cruzar o limiar e o tempo passar.
 
+O atuador (`wall_actuator.cpp`) fica **fora** desta máquina: é um sequenciador
+à parte, que só pisca o sinal que recebe. Detecção e retorno não se misturam, e o
+diagrama de Teoria da Computação continua valendo.
+
 **Por que a janela de pico existe.** Quando a bola bate no alvo 5, a vibração
 vaza para o 4 e o 6, que também cruzam o limiar. Durante 20 ms o firmware mede o
 pico dos **seis** canais e escolhe o maior (`argmax`): o alvo golpeado tem o
@@ -434,4 +485,6 @@ servidor WebSocket é atendido a cada volta.
 | O app conecta e cai sozinho | batimento não chega | confira se o `loop()` roda; qualquer `delay()` longo derruba o link |
 | Enxurrada de eventos descartados como atrasados | a parede reiniciou no meio da sessão | é esperado: o app zera o controle a cada reconexão. Se persistir, veja brownout |
 | Estatísticas mostram "Parede incompatível" | a placa roda um firmware antigo (protocolo 1, 9 alvos) | grave o firmware desta pasta de novo |
+| O LED não pisca nunca | a placa não tem o LED azul no GPIO 2 | ligue um LED com resistor de 220 Ω no GPIO 2 (seção 2) |
+| A batida pisca, mas acerto e erro não | o app não está conectado, ou é o simulador | com o app conectado é ele quem manda; confira `EXPO_PUBLIC_DEVICE_SOURCE=websocket` |
 | O app mostra "—" no impacto | você está no simulador | leitura simulada nunca vira número na tela; use `EXPO_PUBLIC_DEVICE_SOURCE=websocket` |
