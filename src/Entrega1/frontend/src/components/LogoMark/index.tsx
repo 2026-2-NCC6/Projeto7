@@ -1,6 +1,6 @@
 import { Cell, Grid } from './styles';
 
-const CELL_COUNT = 9;
+const CELL_COUNT = 6;
 const HIGHLIGHTED_INDEX = 4;
 
 export function LogoMark() {
