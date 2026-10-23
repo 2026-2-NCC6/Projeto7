@@ -21,13 +21,13 @@ Projeto 7 - 6º CCOMP
 
 O **Smash** transforma uma parede comum em uma superfície de treino instrumentada para tênis. Seis alvos de MDF, dispostos em uma matriz 3×2 (três colunas, duas linhas), têm uma pastilha piezoelétrica colada na parte de trás. Quando a bola acerta um alvo, o sistema identifica qual foi atingido, mede a intensidade do impacto e registra o evento — sem câmera e sem visão computacional: o sinal é o próprio impacto físico, convertido em tensão pelo piezo.
 
-Um microcontrolador **ESP32** varre continuamente os seis sensores, cada um ligado direto num pino analógico, aplica limiar e debounce por canal e decide, por comparação de pico, qual alvo foi realmente atingido. O evento chega em tempo real ao aplicativo mobile via **WebSocket**, para uma sessão de treino guiada por níveis e desafios, e ao backend via **MQTT**, para histórico e estatísticas no dashboard web.
+Um microcontrolador **ESP32** varre continuamente os seis sensores, cada um ligado direto num pino analógico, aplica limiar e debounce por canal e decide, por comparação de pico, qual alvo foi realmente atingido. O evento chega em tempo real ao aplicativo mobile via **WebSocket**, para uma sessão de treino guiada por níveis e desafios, e o app envia cada sessão terminada ao backend por **HTTP**, para histórico, ranking e estatísticas.
 
 O projeto integra, na prática, os conteúdos de quatro disciplinas do 6º semestre de Ciência da Computação:
 
 - **Sistemas Embarcados e Robótica** — leitura analógica dos piezos, um pino ADC por alvo, e firmware em C++ no ESP32;
 - **Teoria da Computação e Linguagens Formais** — a detecção por alvo modelada como máquina de estados finitos (`IDLE → ARMED → MEASURING_PEAK → EVENT_EMITTED → DEBOUNCE`);
-- **Redes de Computadores e Cibersegurança** — comunicação WebSocket e MQTT entre parede, app e backend, e autenticação do jogador;
+- **Redes de Computadores e Cibersegurança** — comunicação WebSocket entre parede e app, HTTP entre app e backend, e autenticação do jogador;
 - **Inovação e Empreendedorismo** — viabilidade do produto para clubes, escolas de tênis e jogadores amadores.
 
 # 📋 Detalhes

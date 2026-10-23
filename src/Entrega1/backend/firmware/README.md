@@ -385,10 +385,10 @@ Qualquer mudança que quebre um app publicado aumenta `hello.protocolo`.
 
 ### MQTT
 
-Requisito da disciplina e o caminho para o backend. O mesmo JSON será publicado
-em `smash/{wall_id}/impacto` num broker Mosquitto, com o backend assinando e
-persistindo. **Ainda não está implementado** — não existe broker nem assinante —
-e WebSocket e MQTT não são alternativas: são destinos diferentes do mesmo evento.
+**Não é exigido e não está no plano.** O enunciado do PI cita MQTT só como uma
+das opções de comunicação (ao lado de HTTP/HTTPS, WebSocket, BLE e Wi-Fi), com
+justificativa técnica; nenhuma entrega pede MQTT. A parede fala WebSocket com o
+app, e o app manda cada sessão terminada ao backend por HTTP.
 
 ---
 
