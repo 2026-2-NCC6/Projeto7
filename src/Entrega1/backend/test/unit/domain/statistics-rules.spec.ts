@@ -73,7 +73,7 @@ describe('statistics rules', () => {
     expect(modes[0]).toMatchObject({ sessions: 0, bestScore: null });
   });
 
-  it('lists all nine wall targets in order', () => {
+  it('lists all six wall targets in order', () => {
     const targets = completeTargetBreakdown([
       {
         targetId: 5,
@@ -85,7 +85,7 @@ describe('statistics rules', () => {
       },
     ]);
 
-    expect(targets.map((target) => target.targetId)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(targets.map((target) => target.targetId)).toEqual([1, 2, 3, 4, 5, 6]);
     expect(targets[4].attempts).toBe(3);
     expect(targets[0].accuracyPercent).toBeNull();
   });

@@ -49,7 +49,7 @@ describe('toRecordSessionRequest', () => {
         [
           target({ targetId: 1, attempts: 4, correctHits: 3, impact: impact(false) }),
           target({ targetId: 2 }),
-          target({ targetId: 9, color: 'blue', attempts: 2, correctHits: 2 }),
+          target({ targetId: 6, color: 'blue', attempts: 2, correctHits: 2 }),
         ],
         'websocket',
       ),
@@ -63,7 +63,7 @@ describe('toRecordSessionRequest', () => {
       bestResponseMs: 301,
       targets: [
         { targetId: 1, attempts: 4, correctHits: 3, impactAverage: 1500, impactPeak: 2900 },
-        { targetId: 9, attempts: 2, correctHits: 2, impactAverage: null, impactPeak: null },
+        { targetId: 6, attempts: 2, correctHits: 2, impactAverage: null, impactPeak: null },
       ],
     });
   });

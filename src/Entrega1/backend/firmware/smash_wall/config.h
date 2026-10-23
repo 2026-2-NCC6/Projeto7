@@ -34,32 +34,43 @@ static const char* SOFTAP_PASSWORD = "smash1234";
 // ---------------------------------------------------------------------------
 //  Só ADC1 (GPIO 32..39): com o Wi-Fi ligado o ADC2 devolve lixo sem avisar.
 //  GPIO 34..39 são apenas de entrada — perfeitos para os piezos.
-
-static const uint8_t PIN_MUX_S0 = 25;  // seleção do multiplexador 74HC4051
-static const uint8_t PIN_MUX_S1 = 26;
-static const uint8_t PIN_MUX_S2 = 27;
-static const uint8_t PIN_MUX_Z = 34;   // saída do mux -> alvos 1..8
-static const uint8_t PIN_TARGET_9 = 35;  // nono alvo, ligado direto
+//
+//  Cada alvo tem o seu pino, sem multiplexador. Parede vista de frente:
+//
+//      A1 · IO32    A2 · IO33    A3 · IO34
+//      A4 · IO36    A5 · IO39    A6 · IO35
+//
+//  IO36 e IO39 aparecem na placa como VP e VN (ou SVP e SVN).
 
 // ---------------------------------------------------------------------------
 //  Alvos
 // ---------------------------------------------------------------------------
 
-static const uint8_t TARGET_COUNT = 9;
+static const uint8_t TARGET_COUNT = 6;
+
+// Alvos por linha da parede. A1..A3 são a linha de cima, A4..A6 a de baixo.
+static const uint8_t TARGET_COLUMNS = 3;
+
+// Pino de cada alvo, na ordem A1..A6.
+static const uint8_t TARGET_PIN[TARGET_COUNT] = {
+    32,  // A1 · cima, esquerda
+    33,  // A2 · cima, centro
+    34,  // A3 · cima, direita
+    36,  // A4 · baixo, esquerda   (VP)
+    39,  // A5 · baixo, centro     (VN)
+    35,  // A6 · baixo, direita
+};
 
 // Limiar de cada alvo, em contagens do ADC (0..4095). NÃO use um valor único:
 // a espessura da cola muda a resposta de cada piezo. Ligue CALIBRATION_MODE
 // abaixo, bata em cada alvo e use ~60% do pico observado.
 static const uint16_t TARGET_THRESHOLD[TARGET_COUNT] = {
-    450,  // alvo 1
-    450,  // alvo 2
-    450,  // alvo 3
-    450,  // alvo 4
-    450,  // alvo 5
-    450,  // alvo 6
-    450,  // alvo 7
-    450,  // alvo 8
-    450,  // alvo 9
+    150,  // A1
+    150,  // A2
+    150,  // A3
+    150,  // A4
+    150,  // A5
+    150,  // A6
 };
 
 // ---------------------------------------------------------------------------
@@ -71,9 +82,6 @@ static const uint32_t PEAK_WINDOW_MS = 20;
 
 // Silêncio depois de um impacto, para o mesmo golpe não virar dois eventos.
 static const uint32_t DEBOUNCE_MS = 200;
-
-// Tempo para a saída do mux estabilizar depois de trocar de canal.
-static const uint16_t MUX_SETTLE_US = 8;
 
 // Batimento enviado ao app; é assim que ele sabe que a parede continua viva.
 static const uint32_t STATUS_INTERVAL_MS = 2000;

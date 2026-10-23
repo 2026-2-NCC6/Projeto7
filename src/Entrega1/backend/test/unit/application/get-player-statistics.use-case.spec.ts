@@ -68,7 +68,7 @@ describe('GetPlayerStatisticsUseCase', () => {
     });
     expect(view.summary).toEqual(EMPTY_SUMMARY);
     expect(view.modes).toHaveLength(4);
-    expect(view.targets).toHaveLength(9);
+    expect(view.targets).toHaveLength(6);
     expect(view.activity).toHaveLength(ACTIVITY_WINDOW_DAYS);
     expect(view.recentSessions).toEqual([]);
     expect(view.streak).toEqual({ current: 0, longest: 0 });
@@ -97,7 +97,7 @@ describe('GetPlayerStatisticsUseCase', () => {
         activity: [{ day: '2026-09-14', sessions: 12, score: 999, accuracyPercent: 80 }],
         targets: [
           {
-            targetId: 7,
+            targetId: 5,
             attempts: 10,
             correctHits: 8,
             accuracyPercent: 80,
@@ -118,7 +118,7 @@ describe('GetPlayerStatisticsUseCase', () => {
     expect(view.streak).toEqual({ current: 3, longest: 8 });
     expect(view.rank).toEqual({ position: 2, total: 40 });
     expect(view.activity[ACTIVITY_WINDOW_DAYS - 1].sessions).toBe(12);
-    expect(view.targets[6].attempts).toBe(10);
+    expect(view.targets[4].attempts).toBe(10);
     expect(view.targets[0].attempts).toBe(0);
     expect(view.recentSessions).toHaveLength(RECENT_SESSIONS_LIMIT);
   });

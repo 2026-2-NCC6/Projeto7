@@ -1,4 +1,4 @@
-export const WALL_TARGET_COUNT = 9;
+export const WALL_TARGET_COUNT = 6;
 
 export const IMPACT_MAX_RAW = 4095;
 

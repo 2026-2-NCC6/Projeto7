@@ -1,6 +1,7 @@
 # Firmware da parede — ESP32
 
-Nove alvos de MDF, um piezo colado atrás de cada um. Este firmware lê os piezos,
+Seis alvos de MDF numa grade 3×2, um piezo colado atrás de cada um e cada piezo
+no seu próprio pino do ESP32. Este firmware lê os piezos,
 decide **qual** alvo foi atingido, mede a intensidade e publica o evento para o
 app por WebSocket. Ele não sabe o que é um jogo: só existe impacto, alvo e
 intensidade.
@@ -23,7 +24,7 @@ backend/firmware/
 ```
 bola bate no alvo
   └─ piezo gera tensão
-      └─ wall_sensors.cpp   cruza o limiar, mede o pico dos 9 canais por 20 ms,
+      └─ wall_sensors.cpp   cruza o limiar, mede o pico dos 6 canais por 20 ms,
       │                     escolhe o maior (argmax) e aplica o debounce
       └─ wall_protocol.cpp  monta {"alvo":5,"linha":2,"coluna":2,...}
       └─ wall_link.cpp      envia por WebSocket (e imprime no Serial)
@@ -50,11 +51,16 @@ Se algo assim aparecer no app, a fronteira foi violada.
 | Item | Quantidade | Observação |
 | --- | --- | --- |
 | ESP32 (DevKit 38 pinos) | 1 | |
-| Piezo de 27 mm | 9 | um por alvo |
-| Multiplexador 74HC4051 | 1 | atende os alvos 1..8 |
-| Resistor 1 MΩ | 9 | um por piezo, para GND |
-| Diodo 1N4148 | 18 | dois por piezo |
-| Placa de MDF | 9 | os alvos |
+| Piezo de 27 mm | 6 | um por alvo |
+| Resistor 1 MΩ | 6 | um por piezo, para GND |
+| Diodo 1N4148 | 12 | dois por piezo |
+| Placa de MDF | 6 | os alvos |
+| Cabo de rede (par trançado) | 2 trechos | cabo 1 leva A1..A4, cabo 2 leva o A5; o A6 tem o seu |
+
+Não há multiplexador. Cada alvo funcionava sozinho e o problema só aparecia
+quando o mux trocava de canal, então cada piezo foi para um pino próprio — e o
+ESP32 tem exatamente seis entradas ADC1 que funcionam com o Wi-Fi ligado. É por
+isso que a parede é 3×2, e não 3×3.
 
 ### Circuito de proteção — obrigatório, um por alvo
 
@@ -65,17 +71,21 @@ ele mata a entrada do ESP32.
 piezo (+) ──┬── 1 MΩ ── GND          descarrega a carga do piezo
             ├── 1N4148 ── 3,3 V      corta o que passar de 3,3 V
             ├── 1N4148 ── GND        corta o que descer abaixo de 0 V (cátodo no piezo)
-            └── entrada do mux / GPIO 35
+            └── pino do alvo (tabela abaixo)
 piezo (−) ──── GND
 ```
 
 ### Pinos
 
-| Sinal | GPIO | Papel |
-| --- | --- | --- |
-| `S0` `S1` `S2` | 25, 26, 27 | seleção do canal do multiplexador |
-| `MUX_Z` | 34 | saída do mux → alvos 1..8 |
-| `ALVO_9` | 35 | nono alvo, ligado direto |
+A parede vista de frente:
+
+| | Esquerda | Centro | Direita |
+| --- | --- | --- | --- |
+| **Cima** (linha 1) | A1 · GPIO 32 | A2 · GPIO 33 | A3 · GPIO 34 |
+| **Baixo** (linha 2) | A4 · GPIO 36 (VP) | A5 · GPIO 39 (VN) | A6 · GPIO 35 |
+
+Na serigrafia da placa, o 36 e o 39 podem aparecer como `VP`/`VN` ou
+`SVP`/`SVN`. O número do alvo é o `alvo` que vai no protocolo.
 
 ### Três coisas que queimam tempo (ou a placa)
 
@@ -88,7 +98,7 @@ piezo (−) ──── GND
 
 E o maior risco do projeto não é software: **é isolamento mecânico**. Se a
 vibração vazar demais entre placas vizinhas, nenhum algoritmo compensa. Valide
-dois alvos lado a lado antes de montar os nove.
+dois alvos lado a lado antes de montar os seis.
 
 ---
 
@@ -126,14 +136,12 @@ Tudo o que você precisa mexer está em **`config.h`**.
 | `WALL_WS_PORT` | `81` | porta do WebSocket |
 | `SOFTAP_SSID` / `SOFTAP_PASSWORD` | `smash-wall` / `smash1234` | rede criada no modo SoftAP (senha ≥ 8 caracteres) |
 | `WIFI_SSID` / `WIFI_PASSWORD` | — | **em `secrets.h`**, só no modo Station |
-| `PIN_MUX_S0/S1/S2` | 25, 26, 27 | seleção do multiplexador |
-| `PIN_MUX_Z` | 34 | entrada dos alvos 1..8 |
-| `PIN_TARGET_9` | 35 | entrada do alvo 9 |
-| `TARGET_COUNT` | 9 | número de alvos |
-| `TARGET_THRESHOLD[9]` | 450 cada | **limiar por alvo — calibre (seção 5)** |
+| `TARGET_COUNT` | 6 | número de alvos |
+| `TARGET_COLUMNS` | 3 | alvos por linha da parede |
+| `TARGET_PIN[6]` | 32, 33, 34, 36, 39, 35 | pino de cada alvo, na ordem A1..A6 |
+| `TARGET_THRESHOLD[6]` | 150 cada | **limiar por alvo — calibre (seção 5)** |
 | `PEAK_WINDOW_MS` | 20 | janela em que o pico de todos os alvos é medido |
 | `DEBOUNCE_MS` | 200 | silêncio depois de um impacto |
-| `MUX_SETTLE_US` | 8 | espera para a saída do mux estabilizar |
 | `STATUS_INTERVAL_MS` | 2000 | intervalo do batimento enviado ao app |
 | `WIFI_RETRY_MS` | 3000 | intervalo entre tentativas de reconexão |
 | `SERIAL_BAUD` | 115200 | velocidade do monitor serial |
@@ -153,7 +161,7 @@ cp secrets_example.h secrets.h   # secrets.h não vai para o Git
 
 ## 5. Calibrar os limiares
 
-`TARGET_THRESHOLD` é um vetor de nove posições porque **cada alvo responde
+`TARGET_THRESHOLD` é um vetor de seis posições porque **cada alvo responde
 diferente** — a espessura da cola do piezo varia. Um valor global não funciona.
 
 1. Em `config.h`, coloque `#define CALIBRATION_MODE 1`.
@@ -161,10 +169,11 @@ diferente** — a espessura da cola do piezo varia. Um valor global não funcion
 3. Bata em cada alvo com a força de um treino normal. A cada 250 ms sai:
 
    ```
-   picos: 1=812 2=95 3=41 4=120 5=38 6=22 7=31 8=17 9=25
+   picos: 1=812 2=95 3=41 4=120 5=38 6=22
    ```
 
-   Aqui o alvo 1 foi golpeado (812) e os vizinhos só sentiram a vibração.
+   Aqui o alvo 1 foi golpeado (812) e os vizinhos só sentiram a vibração. O
+   repouso deve ficar bem abaixo de 100; o 150 de fábrica é só para começar.
 4. Para cada alvo, anote o pico do golpe e use **cerca de 60 %** dele como
    limiar. No exemplo, alvo 1 → `~490`.
 5. Volte `CALIBRATION_MODE` para `0` e envie de novo.
@@ -175,48 +184,114 @@ golpe mais fraco que você quer contar.
 
 ---
 
-## 6. Enviar e testar
+## 6. Teste ponta a ponta
 
-### Sem rede nenhuma (o plano B da apresentação)
+Duas trilhas. A primeira roda hoje, sem a parede; a segunda é o checklist do dia
+em que a parede estiver na mesa. Em cada passo: o que fazer, o que tem que
+aparecer e, se não aparecer, onde olhar.
 
-Envie o sketch, abra o Monitor Serial em 115200 e bata na parede. Cada impacto
-sai como uma linha JSON:
+### 6.1 Sem a parede: o emulador
 
-```
-[smash] parede iniciando
-[wifi] SoftAP smash-wall em ws://192.168.4.1:81
-[ws] servidor na porta 81
-{"alvo":5,"linha":2,"coluna":2,"intensidade":1873,"t_ms":41230,"sessao":"wall-1-04821"}
-```
+`npm run wall` sobe um servidor WebSocket que fala **exatamente** o protocolo
+desta pasta (`hello` v2 com 6 alvos, `status` a cada 2 s, `session`, `ping`,
+`erro`). Ele prova o caminho pela rede, que o simulador do app nunca percorre.
 
-Um cabo USB e um terminal já provam que a detecção funciona.
-
-### Com o app
-
-**Modo SoftAP** (padrão, e o recomendado para demonstrar):
-
-1. Ligue a parede.
-2. No celular, conecte no Wi-Fi **`smash-wall`** (senha `smash1234`).
-3. Rode o app apontando para a parede:
+1. **Backend e emulador da parede**, cada um num terminal, em `src/Entrega1`:
 
    ```bash
-   cd src/Entrega1
-   EXPO_PUBLIC_DEVICE_SOURCE=websocket EXPO_PUBLIC_DEVICE_URL=ws://192.168.4.1:81 npm run app
+   npm run backend
+   npm run wall
    ```
 
-**Modo Station** (quando o backend também precisa dos dados): ponha
-`WALL_MODE_SOFTAP 0`, preencha `secrets.h`, e use o IP que a parede imprime no
-Serial — ou `ws://smash.local:81`, se o mDNS funcionar no seu aparelho.
+   O `wall` imprime as URLs: `ws://10.0.2.2:8181` para o emulador Android e
+   `ws://<ip-do-notebook>:8181` para um celular na mesma rede.
+2. **App apontando para o emulador da parede** (emulador Android):
 
-Sem essas variáveis o app continua no **simulador**, que é o padrão. Elas estão
-documentadas em `frontend/.env.example`.
+   ```bash
+   EXPO_PUBLIC_DEVICE_SOURCE=websocket EXPO_PUBLIC_DEVICE_URL=ws://10.0.2.2:8181 npm run app
+   ```
+
+   No terminal do `wall` tem que aparecer `[ws] cliente conectado (1)`.
+   _Se não aparecer:_ o emulador Android pode estar sem rede (ícone do Wi-Fi com
+   "!"). Use `adb reverse tcp:8181 tcp:8181` (e `8081`, `3000`) e troque os
+   endereços por `127.0.0.1` — veja o CLAUDE.md.
+3. **Jogue um nível do Color Mode** com as teclas do `wall`. As cores da parede:
+
+   ```
+   1 âmbar     2 azul      3 vermelho
+   4 vermelho  5 âmbar     6 azul
+   ```
+
+   Cada tecla certa avança a sequência. No fim, a tela de resultado mostra um
+   número em **Impacto médio** — só leitura da parede vira número; no simulador
+   aparece `—`.
+4. **Reinicie a parede** com `b` no meio de um nível. O app mostra a conexão
+   perdida, reconecta sozinho (`[ws] cliente conectado` de novo) e as batidas
+   seguintes continuam valendo, mesmo com o `t_ms` de volta perto de zero.
+5. **Mensagem quebrada** com `m`: o app não cai, conta uma falha em
+   Estatísticas → Hardware e sistema.
+
+### 6.2 Com a parede: checklist
+
+Antes de tudo, as bibliotecas da seção 3 instaladas e a parede montada como no
+guia de montagem 3×2.
+
+1. **Repouso.** `CALIBRATION_MODE 1`, envie, Monitor Serial em 115200, sem
+   tocar em nada. Os seis valores de `picos:` ficam baixos (bem abaixo de 100).
+   _Se um alvo ficar alto parado:_ a ligação dele está aberta (pino flutuando).
+2. **Um alvo por vez.** Bata em cada um com força de jogo, 5 vezes. Só ele sobe
+   bastante; os vizinhos ficam baixos. Anote o pico de cada um.
+   _Se o vizinho sobe quase igual:_ vazamento mecânico — veja a seção 9.
+3. **Limiares.** Em `TARGET_THRESHOLD`, cerca de 60 % do pico de cada alvo.
+   Volte `CALIBRATION_MODE 0` e envie de novo.
+4. **Detecção sem rede.** Ainda no Serial, bata em cada alvo: sai uma linha
+   JSON com o `alvo` certo (`"alvo":6,"linha":2,"coluna":3` para o canto de
+   baixo à direita). Bata 20 vezes em cada um e conte os acertos — esse número
+   vai para o relatório de validação.
+5. **Rede.** No celular, entre no Wi-Fi **`smash-wall`** (senha `smash1234`) e
+   aceite ficar conectado "sem internet". Desligue os dados móveis, senão o
+   Android manda o tráfego pelo 4G. **O notebook também entra no `smash-wall`**:
+   é ele que roda o backend e o Metro. Anote o IP que o notebook recebeu
+   (`192.168.4.x`).
+6. **App na parede.**
+
+   ```bash
+   npm run backend
+   ```
+
+   E, num segundo terminal, em `src/Entrega1/frontend`:
+
+   ```bash
+   EXPO_PUBLIC_API_URL=http://192.168.4.x:3000 EXPO_PUBLIC_DEVICE_SOURCE=websocket EXPO_PUBLIC_DEVICE_URL=ws://192.168.4.1:81 npx expo start --offline
+   ```
+
+   Abra no Expo Go pelo QR code. No Serial da parede aparece
+   `[ws] cliente 0 conectado`. `--offline` porque o `smash-wall` não tem
+   internet. _Se em Estatísticas → Hardware e sistema a "Última falha" for
+   "Parede incompatível":_ a placa está com um firmware antigo (protocolo 1 ou
+   9 alvos) — grave este de novo.
+7. **Uma sessão de verdade.** Entre com uma conta, jogue um nível do Color Mode
+   na parede e termine. O resultado mostra **Impacto médio**, e em Estatísticas o
+   mapa da parede 3×2 marca os alvos que você acertou — sinal de que a sessão
+   chegou no backend.
+
+**Plano B da apresentação:** se a rede falhar, o passo 4 sozinho — um cabo USB e
+o Monitor Serial — já prova que a detecção funciona.
+
+**Modo Station** (a parede entra numa rede existente): ponha
+`WALL_MODE_SOFTAP 0`, preencha `secrets.h` e use o IP que a parede imprime no
+Serial — ou `ws://smash.local:81`, se o mDNS funcionar no seu aparelho. Redes de
+faculdade costumam isolar os aparelhos entre si; por isso o SoftAP é o padrão.
+
+Sem as variáveis `EXPO_PUBLIC_DEVICE_*` o app continua no **simulador**, que é o
+padrão. Elas estão documentadas em `frontend/.env.example`.
 
 ---
 
 ## 7. O protocolo
 
 WebSocket sobre Wi-Fi, **a parede é o servidor**, porta 81, uma mensagem JSON por
-quadro de texto.
+quadro de texto. Versão atual: **2** (a parede 3×2).
 
 **Por que WebSocket:** o React Native tem `WebSocket` como global, então custa
 zero módulo nativo e o projeto continua rodando no Expo Go no Android e no iOS.
@@ -235,8 +310,8 @@ reconhece um impacto.
 
 | Campo | Tipo | Obrigatório | Regra |
 | --- | --- | --- | --- |
-| `alvo` | inteiro | sim | 1..9 |
-| `linha` | inteiro | sim | 1..3 |
+| `alvo` | inteiro | sim | 1..6 |
+| `linha` | inteiro | sim | 1..2 |
 | `coluna` | inteiro | sim | 1..3 |
 | `intensidade` | inteiro | sim | 0..4095, pico do ADC |
 | `t_ms` | inteiro | sim | `millis()` desde o boot, sempre crescente |
@@ -255,6 +330,10 @@ não precisa de relógio sincronizado.
 | Quadro | Quando | Conteúdo |
 | --- | --- | --- |
 | `hello` | ao conectar | `protocolo`, `parede`, `alvos`, `sessao`, `t_ms` |
+
+O app confere o `hello`: com `protocolo` diferente de 2 ou `alvos` diferente de
+6, ele registra a falha `incompatibleWall` ("Parede incompatível") sem derrubar a
+conexão.
 | `status` | a cada 2 s | `sessao`, `clientes`, `rssi`, `t_ms` |
 | `erro` | comando recusado | `detalhe`, `t_ms` |
 
@@ -306,10 +385,10 @@ Qualquer mudança que quebre um app publicado aumenta `hello.protocolo`.
 
 ### MQTT
 
-Requisito da disciplina e o caminho para o backend. O mesmo JSON será publicado
-em `smash/{wall_id}/impacto` num broker Mosquitto, com o backend assinando e
-persistindo. **Ainda não está implementado** — não existe broker nem assinante —
-e WebSocket e MQTT não são alternativas: são destinos diferentes do mesmo evento.
+**Não é exigido e não está no plano.** O enunciado do PI cita MQTT só como uma
+das opções de comunicação (ao lado de HTTP/HTTPS, WebSocket, BLE e Wi-Fi), com
+justificativa técnica; nenhuma entrega pede MQTT. A parede fala WebSocket com o
+app, e o app manda cada sessão terminada ao backend por HTTP.
 
 ---
 
@@ -330,10 +409,10 @@ As transições dependem só de duas coisas: cruzar o limiar e o tempo passar.
 
 **Por que a janela de pico existe.** Quando a bola bate no alvo 5, a vibração
 vaza para o 4 e o 6, que também cruzam o limiar. Durante 20 ms o firmware mede o
-pico dos **nove** canais e escolhe o maior (`argmax`): o alvo golpeado tem o
+pico dos **seis** canais e escolhe o maior (`argmax`): o alvo golpeado tem o
 maior pico, os vizinhos só o eco. É isso que resolve o falso positivo.
 
-Complexidade `O(n)` por varredura, com `n = 9`. Uma varredura completa leva menos
+Complexidade `O(n)` por varredura, com `n = 6`. Uma varredura completa leva menos
 de 1 ms, com folga confortável para não perder nenhum impacto — e nada no `loop()`
 bloqueia: não existe `delay()`, todas as transições comparam `millis()`, e o
 servidor WebSocket é atendido a cada volta.
@@ -344,7 +423,7 @@ servidor WebSocket é atendido a cada volta.
 
 | Sintoma | Causa provável | O que fazer |
 | --- | --- | --- |
-| Nenhuma batida é detectada | limiar alto demais, ou piezo/mux mal ligado | `CALIBRATION_MODE 1` e confira se o pico sobe ao bater |
+| Nenhuma batida é detectada | limiar alto demais, ou piezo mal ligado | `CALIBRATION_MODE 1` e confira se o pico sobe ao bater |
 | Impactos fantasma, sem ninguém bater | limiar baixo demais, ou falta o diodo de proteção | suba o limiar; confira o grampeamento em 3,3 V |
 | **Toda batida é atribuída ao mesmo alvo** | vibração vazando entre as placas | isolamento mecânico: separe as placas, use borracha nos apoios. Nenhum ajuste de software resolve |
 | Uma batida vira dois eventos | `DEBOUNCE_MS` curto para a sua montagem | aumente para 250–300 ms |
@@ -354,4 +433,5 @@ servidor WebSocket é atendido a cada volta.
 | `smash.local` não resolve | o Android resolve mDNS mal | use o IP direto: `EXPO_PUBLIC_DEVICE_URL=ws://192.168.4.1:81` |
 | O app conecta e cai sozinho | batimento não chega | confira se o `loop()` roda; qualquer `delay()` longo derruba o link |
 | Enxurrada de eventos descartados como atrasados | a parede reiniciou no meio da sessão | é esperado: o app zera o controle a cada reconexão. Se persistir, veja brownout |
+| Estatísticas mostram "Parede incompatível" | a placa roda um firmware antigo (protocolo 1, 9 alvos) | grave o firmware desta pasta de novo |
 | O app mostra "—" no impacto | você está no simulador | leitura simulada nunca vira número na tela; use `EXPO_PUBLIC_DEVICE_SOURCE=websocket` |

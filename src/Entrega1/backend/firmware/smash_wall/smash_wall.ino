@@ -1,7 +1,8 @@
 /**
  * Smash — firmware da parede instrumentada de treino de tênis.
  *
- * Nove alvos de MDF, um piezo atrás de cada um. Este sketch lê os piezos,
+ * Seis alvos de MDF numa grade 3×2, um piezo atrás de cada um, cada piezo no
+ * seu próprio pino. Este sketch lê os piezos,
  * identifica qual alvo foi atingido e publica o evento no formato que o app
  * espera. Ele não sabe o que é um jogo: só existe impacto, alvo e intensidade.
  *

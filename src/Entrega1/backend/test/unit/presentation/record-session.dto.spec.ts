@@ -33,7 +33,7 @@ describe('RecordSessionDto telemetry', () => {
         deviceKind: 'websocket',
         targets: [
           { targetId: 1, attempts: 3, correctHits: 2, impactAverage: 1200, impactPeak: 4095 },
-          { targetId: 9, attempts: 1, correctHits: 1, impactAverage: null, impactPeak: null },
+          { targetId: 6, attempts: 1, correctHits: 1, impactAverage: null, impactPeak: null },
         ],
       }),
     ).resolves.toEqual([]);
@@ -41,7 +41,8 @@ describe('RecordSessionDto telemetry', () => {
 
   it.each([
     ['an unknown device kind', { deviceKind: 'bluetooth' }],
-    ['a target outside 1..9', { targets: [{ targetId: 0, attempts: 1, correctHits: 1 }] }],
+    ['a target below 1', { targets: [{ targetId: 0, attempts: 1, correctHits: 1 }] }],
+    ['a target beyond the six on the wall', { targets: [{ targetId: 7, attempts: 1, correctHits: 1 }] }],
     [
       'a repeated target',
       {
@@ -56,10 +57,10 @@ describe('RecordSessionDto telemetry', () => {
       { targets: [{ targetId: 4, attempts: 1, correctHits: 1, impactPeak: 5000 }] },
     ],
     [
-      'more than nine targets',
+      'more than six targets',
       {
-        targets: Array.from({ length: 10 }, (_, index) => ({
-          targetId: (index % 9) + 1,
+        targets: Array.from({ length: 7 }, (_, index) => ({
+          targetId: (index % 6) + 1,
           attempts: 0,
           correctHits: 0,
         })),

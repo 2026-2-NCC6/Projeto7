@@ -1,6 +1,6 @@
 import type { TargetColor } from '../../types/game';
 import type { ImpactReading } from './impact';
-import type { GridIndex, TargetId } from './target';
+import type { ColumnIndex, RowIndex, TargetId } from './target';
 
 export type DeviceConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'lost';
 
@@ -10,8 +10,8 @@ export interface TargetHitEvent {
   readonly deviceId: string;
   readonly targetId: TargetId;
   readonly color: TargetColor;
-  readonly row: GridIndex;
-  readonly column: GridIndex;
+  readonly row: RowIndex;
+  readonly column: ColumnIndex;
   readonly impact: ImpactReading | null;
   readonly deviceUptimeMs: number;
   readonly receivedAt: number;
@@ -29,7 +29,8 @@ export type DeviceFaultCode =
   | 'unknownTarget'
   | 'duplicateEvent'
   | 'staleEvent'
-  | 'transport';
+  | 'transport'
+  | 'incompatibleWall';
 
 export interface DeviceFaultEvent {
   readonly kind: 'fault';
