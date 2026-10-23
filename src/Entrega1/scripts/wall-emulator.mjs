@@ -4,8 +4,8 @@
  *
  * Sobe um servidor WebSocket que se comporta como backend/firmware/smash_wall:
  * manda `hello` ao conectar, `status` a cada 2 s, responde `session`, `ping` e
- * `feedback` e publica impactos no formato `Impacto`. O que o buzzer e os LEDs
- * fariam aparece no terminal como `[atuador] ...`. Serve para testar o app pela rede,
+ * `feedback` e publica impactos no formato `Impacto`. O que o LED da placa
+ * faria aparece no terminal como `[atuador] ...`. Serve para testar o app pela rede,
  * do mesmo jeito que ele vai falar com a parede de verdade.
  *
  *   npm run wall               porta 8181 (a 81 do ESP32 exige root no Linux)
@@ -29,13 +29,13 @@ let session = newSession();
 
 const millis = () => Date.now() - bootedAt;
 
-/** O que a parede real toca para cada som (config.h). */
+/** Como o LED da placa (GPIO 2) pisca em cada sinal (config.h). */
 const CUES = {
-  impacto: 'clique 1,5 kHz + LED verde',
-  acerto: 'bip agudo 2 kHz + LED verde',
-  erro: 'bip grave 400 Hz + LED vermelho',
-  nivel_concluido: '3 notas subindo + LED verde pisca 3×',
-  nivel_falhou: '2 notas descendo + LED vermelho pisca 3×',
+  impacto: 'LED pisca curto',
+  acerto: 'LED acende 250 ms',
+  erro: 'LED pisca 3× rápido',
+  nivel_concluido: 'LED pisca 3× longo',
+  nivel_falhou: 'LED pisca 4× rápido',
 };
 
 function play(cue) {
@@ -135,7 +135,7 @@ function hit(target) {
   broadcast(impact);
   console.log(JSON.stringify(impact));
 
-  // Sem app, a parede responde sozinha; com app, quem decide o som é o jogo.
+  // Sem app, a parede responde sozinha; com app, quem decide o sinal é o jogo.
   if (server.clients.size === 0) {
     play('impacto');
   }
