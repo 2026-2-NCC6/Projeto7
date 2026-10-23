@@ -12,18 +12,9 @@ uint32_t windowStartedAt = 0;
 uint32_t debounceStartedAt = 0;
 uint32_t calibrationPrintedAt = 0;
 
-/** Alvos 1..8 passam pelo multiplexador; o nono tem pino próprio. */
+/** Cada alvo tem o seu pino: a leitura é direta, sem trocar de canal. */
 uint16_t readTarget(uint8_t index) {
-  if (index >= TARGET_COUNT - 1) {
-    return analogRead(PIN_TARGET_9);
-  }
-
-  digitalWrite(PIN_MUX_S0, index & 0x01 ? HIGH : LOW);
-  digitalWrite(PIN_MUX_S1, index & 0x02 ? HIGH : LOW);
-  digitalWrite(PIN_MUX_S2, index & 0x04 ? HIGH : LOW);
-  delayMicroseconds(MUX_SETTLE_US);
-
-  return analogRead(PIN_MUX_Z);
+  return analogRead(TARGET_PIN[index]);
 }
 
 void resetPeaks() {
@@ -73,15 +64,13 @@ uint8_t loudestTarget() {
 }  // namespace
 
 void sensorsBegin() {
-  pinMode(PIN_MUX_S0, OUTPUT);
-  pinMode(PIN_MUX_S1, OUTPUT);
-  pinMode(PIN_MUX_S2, OUTPUT);
-
   // 12 bits e atenuação máxima: 0..4095 sobre a faixa inteira de 0..3,3 V,
   // exatamente a escala que o contrato Impacto declara.
   analogReadResolution(12);
-  analogSetPinAttenuation(PIN_MUX_Z, ADC_11db);
-  analogSetPinAttenuation(PIN_TARGET_9, ADC_11db);
+
+  for (uint8_t i = 0; i < TARGET_COUNT; i++) {
+    analogSetPinAttenuation(TARGET_PIN[i], ADC_11db);
+  }
 
   resetPeaks();
   state = WALL_IDLE;
@@ -117,8 +106,8 @@ bool sensorsPoll(WallImpact& impact) {
       const uint8_t index = loudestTarget();
 
       impact.target = index + 1;
-      impact.row = index / 3 + 1;
-      impact.column = index % 3 + 1;
+      impact.row = index / TARGET_COLUMNS + 1;
+      impact.column = index % TARGET_COLUMNS + 1;
       impact.intensity = peak[index];
       impact.atMs = now;
 

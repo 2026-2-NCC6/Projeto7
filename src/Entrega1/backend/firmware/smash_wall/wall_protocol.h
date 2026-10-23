@@ -6,9 +6,10 @@
 
 /**
  * Versão do protocolo. Campo novo e opcional não muda esse número; qualquer
- * coisa que quebre um app já publicado, muda.
+ * coisa que quebre um app já publicado, muda. A versão 2 é a parede 3×2:
+ * `alvo` 1..6, `linha` 1..2, `coluna` 1..3.
  */
-static const uint8_t WALL_PROTOCOL_VERSION = 1;
+static const uint8_t WALL_PROTOCOL_VERSION = 2;
 
 /** O contrato Impacto, sem `tipo` — é assim que o app reconhece um impacto. */
 String impactFrame(const WallImpact& impact, const char* session);
