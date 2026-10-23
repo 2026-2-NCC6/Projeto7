@@ -13,6 +13,7 @@ backend/firmware/
     config.h              ← o único arquivo que você edita
     secrets_example.h     modelo das credenciais Wi-Fi (copie para secrets.h)
     wall_sensors.h/.cpp   varredura do ADC, janela de pico, máquina de estados
+    wall_actuator.h/.cpp  buzzer e LEDs: toca os sons sem bloquear o loop()
     wall_link.h/.cpp      Wi-Fi, mDNS, servidor WebSocket, reconexão
     wall_protocol.h/.cpp  monta as mensagens e interpreta os comandos
 ```
@@ -36,6 +37,8 @@ bola bate no alvo
           │                                                       e t_ms fora de ordem
           └─ app: gameplay/domain/game-session.ts                 aplica as regras
               └─ tela: pontuação, barra de tempo, vibração
+              └─ app → parede: {"cmd":"feedback","resultado":"acerto"}
+                  └─ wall_actuator.cpp  bip agudo + LED verde (ou grave + vermelho no erro)
               └─ fim da sessão: POST /me/sessions -> XP e ofensiva
 ```
 
@@ -55,6 +58,11 @@ Se algo assim aparecer no app, a fronteira foi violada.
 | Resistor 1 MΩ | 6 | um por piezo, para GND |
 | Diodo 1N4148 | 12 | dois por piezo |
 | Placa de MDF | 6 | os alvos |
+| Buzzer (passivo, de preferência) | 1 | o atuador: toca o retorno de cada batida |
+| LED verde e LED vermelho | 1 de cada | acerto e erro |
+| Resistor 220 Ω | 2 | um por LED |
+| Resistor 100 Ω | 1 | buzzer ligado direto no pino |
+| Transistor NPN BC547 ou 2N2222 + resistor 1 kΩ | 1 (opcional) | buzzer mais alto |
 | Cabo de rede (par trançado) | 2 trechos | cabo 1 leva A1..A4, cabo 2 leva o A5; o A6 tem o seu |
 
 Não há multiplexador. Cada alvo funcionava sozinho e o problema só aparecia
@@ -86,6 +94,48 @@ A parede vista de frente:
 
 Na serigrafia da placa, o 36 e o 39 podem aparecer como `VP`/`VN` ou
 `SVP`/`SVN`. O número do alvo é o `alvo` que vai no protocolo.
+
+### Atuador — buzzer e LEDs no bloco T1
+
+O bloco T1 ficou vazio quando o multiplexador saiu; o atuador mora ali. Os três
+jumpers saem da coluna `a` do T2, ao lado dos pinos do ESP32 (as mesmas linhas
+9, 10 e 11 que antes levavam S0..S2).
+
+| Peça | Uma ponta | Outra ponta |
+| --- | --- | --- |
+| Jumper do buzzer | T2 · linha 11 · a (**GPIO 25**) | T1 · linha 40 · a |
+| Resistor 100 Ω | T1 · linha 40 · b | T1 · linha 43 · b |
+| Buzzer, perna **+** | T1 · linha 43 · d | |
+| Buzzer, perna **−** | T1 · linha 46 · d | |
+| Jumper GND do buzzer | T1 · linha 46 · a | D1 · linha 46 |
+| Jumper do LED verde | T2 · linha 10 · a (**GPIO 26**) | T1 · linha 50 · a |
+| Resistor 220 Ω | T1 · linha 50 · b | T1 · linha 52 · b |
+| LED verde, perna **longa** | T1 · linha 52 · d | |
+| LED verde, perna curta | T1 · linha 53 · d | |
+| Jumper GND do LED verde | T1 · linha 53 · a | D1 · linha 53 |
+| Jumper do LED vermelho | T2 · linha 9 · a (**GPIO 27**) | T1 · linha 57 · a |
+| Resistor 220 Ω | T1 · linha 57 · b | T1 · linha 59 · b |
+| LED vermelho, perna **longa** | T1 · linha 59 · d | |
+| LED vermelho, perna curta | T1 · linha 60 · d | |
+| Jumper GND do LED vermelho | T1 · linha 60 · a | D1 · linha 61 |
+| Jumper D3 → D1 | D3 · linha 58 | D1 · linha 58 |
+
+O último jumper devolve o GND ao trilho D1, que ficou solto quando o mux saiu.
+Confira com o multímetro no bipe: D1 e D3 têm que ser o mesmo ponto.
+
+**Com transistor (mais alto):** troque o resistor de 100 Ω e o fio do buzzer por
+este esquema. O firmware não muda.
+
+```
+GPIO 25 ── 1 kΩ ── base (BC547)
+                   emissor ── GND
+                   coletor ── buzzer (−)
+                   buzzer (+) ── 3,3 V  (ou o pino 5V, se o buzzer for de 5 V)
+```
+
+Buzzer **passivo** toca as notas de cada som; buzzer **ativo** só apita num tom.
+Para o ativo, coloque `BUZZER_PASSIVO 0` em `config.h`. Para descobrir qual é o
+seu: ligado direto em 3,3 V, o ativo apita e o passivo só estala.
 
 ### Três coisas que queimam tempo (ou a placa)
 
@@ -140,6 +190,9 @@ Tudo o que você precisa mexer está em **`config.h`**.
 | `TARGET_COLUMNS` | 3 | alvos por linha da parede |
 | `TARGET_PIN[6]` | 32, 33, 34, 36, 39, 35 | pino de cada alvo, na ordem A1..A6 |
 | `TARGET_THRESHOLD[6]` | 150 cada | **limiar por alvo — calibre (seção 5)** |
+| `PIN_BUZZER` / `PIN_LED_GREEN` / `PIN_LED_RED` | 25 / 26 / 27 | pinos do atuador |
+| `BUZZER_PASSIVO` | `1` | `1` = toca notas (passivo). `0` = só liga e desliga (ativo) |
+| `CUE_*_STEPS` | — | cada som: frequência, duração e LED de cada passo |
 | `PEAK_WINDOW_MS` | 20 | janela em que o pico de todos os alvos é medido |
 | `DEBOUNCE_MS` | 200 | silêncio depois de um impacto |
 | `STATUS_INTERVAL_MS` | 2000 | intervalo do batimento enviado ao app |
@@ -288,6 +341,24 @@ padrão. Elas estão documentadas em `frontend/.env.example`.
 
 ---
 
+### 6.3 Evidência em vídeo
+
+Duas cenas curtas, cada uma provando uma exigência do enunciado:
+
+1. **Sensor → atuador, sem rede** (Sistemas Embarcados, Entrega 2: ler um sensor
+   e controlar um atuador). Só o USB ligado, nenhum app conectado. Bata em
+   alvos diferentes: cada batida dá um clique e pisca o LED verde, e a linha
+   JSON aparece no Monitor Serial. Filme a parede e a tela do Serial juntas.
+2. **Orientar e recompensar** (RF08). App conectado, um nível do Color Mode.
+   Acerte uma cor e erre a seguinte: o acerto dá bip agudo e LED verde, o erro
+   bip grave e LED vermelho. Termine o nível e a parede toca as 3 notas subindo.
+   Filme o celular e a parede no mesmo quadro.
+
+Sem a parede, o `npm run wall` mostra no terminal o que o atuador faria
+(`[atuador] acerto · bip agudo 2 kHz + LED verde`).
+
+---
+
 ## 7. O protocolo
 
 WebSocket sobre Wi-Fi, **a parede é o servidor**, porta 81, uma mensagem JSON por
@@ -343,6 +414,12 @@ conexão.
 | --- | --- |
 | `{"cmd":"session","sessao":"app-1789015370"}` | o app manda o id da sessão de treino ao conectar; a parede passa a repetir esse valor em `sessao` |
 | `{"cmd":"ping"}` | respondido com um `status` na hora |
+| `{"cmd":"feedback","resultado":"acerto"}` | toca o retorno da jogada: `acerto`, `erro`, `nivel_concluido` ou `nivel_falhou` |
+
+O `feedback` é acréscimo, por isso o protocolo continua na versão 2: um firmware
+sem atuador só responde `erro` com `comando desconhecido`, e o app ignora. O app
+nunca guarda um `feedback` para mandar depois — um bip atrasado é pior que
+nenhum.
 
 ### Confirmação de recebimento: não existe
 
@@ -407,6 +484,10 @@ DEBOUNCE ──(200 ms)──────────────────> I
 
 As transições dependem só de duas coisas: cruzar o limiar e o tempo passar.
 
+O atuador (`wall_actuator.cpp`) fica **fora** desta máquina: é um sequenciador
+à parte, que só toca o som que recebe. Detecção e retorno não se misturam, e o
+diagrama de Teoria da Computação continua valendo.
+
 **Por que a janela de pico existe.** Quando a bola bate no alvo 5, a vibração
 vaza para o 4 e o 6, que também cruzam o limiar. Durante 20 ms o firmware mede o
 pico dos **seis** canais e escolhe o maior (`argmax`): o alvo golpeado tem o
@@ -434,4 +515,7 @@ servidor WebSocket é atendido a cada volta.
 | O app conecta e cai sozinho | batimento não chega | confira se o `loop()` roda; qualquer `delay()` longo derruba o link |
 | Enxurrada de eventos descartados como atrasados | a parede reiniciou no meio da sessão | é esperado: o app zera o controle a cada reconexão. Se persistir, veja brownout |
 | Estatísticas mostram "Parede incompatível" | a placa roda um firmware antigo (protocolo 1, 9 alvos) | grave o firmware desta pasta de novo |
+| O buzzer não toca nada | buzzer ativo com `BUZZER_PASSIVO 1`, ou ao contrário | troque o valor em `config.h` |
+| O buzzer toca baixo demais | ligado direto no pino | use o esquema com transistor da seção 2 |
+| A batida apita, mas acerto e erro não | o app não está conectado, ou é o simulador | com o app conectado é ele quem manda; confira `EXPO_PUBLIC_DEVICE_SOURCE=websocket` |
 | O app mostra "—" no impacto | você está no simulador | leitura simulada nunca vira número na tela; use `EXPO_PUBLIC_DEVICE_SOURCE=websocket` |
