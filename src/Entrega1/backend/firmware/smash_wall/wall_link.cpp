@@ -71,6 +71,7 @@ void startSoftAp() {
 
 #if !WALL_MODE_SOFTAP
 uint32_t wifiCheckedAt = 0;
+bool stationAnnounced = false;
 
 void startStation() {
   WiFi.mode(WIFI_STA);
@@ -91,9 +92,17 @@ void keepStationAlive() {
   wifiCheckedAt = now;
 
   if (WiFi.status() == WL_CONNECTED) {
+    // O app precisa deste IP em EXPO_PUBLIC_DEVICE_URL: o Android resolve mal o smash.local.
+    if (!stationAnnounced) {
+      stationAnnounced = true;
+      Serial.print("[wifi] conectado em ws://");
+      Serial.print(WiFi.localIP());
+      Serial.printf(":%u\n", WALL_WS_PORT);
+    }
     return;
   }
 
+  stationAnnounced = false;
   Serial.println("[wifi] sem conexao, tentando de novo");
   WiFi.disconnect();
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
