@@ -132,7 +132,9 @@ function onDeviceStatus<TState>(
   session: GameSession<TState>,
   status: DeviceConnectionStatus,
 ): GameSession<TState> {
-  if (isTerminal(session.phase)) {
+  // A paused level only records the wall's status: the countdown must not start
+  // while the phone is in the background. `resume` reads it on the way back.
+  if (isTerminal(session.phase) || session.phase.kind === 'paused') {
     return { ...session, deviceStatus: status };
   }
 
@@ -253,11 +255,20 @@ export function applyInput<TConfig extends LevelConfig, TState>(
       return onTick(session, input.deltaMs, rules, config);
 
     case 'pause':
-      return isPlaying(session.phase) ? { ...session, phase: { kind: 'paused' } } : session;
+      return isPlaying(session.phase) || session.phase.kind === 'deviceLost'
+        ? { ...session, phase: { kind: 'paused' } }
+        : session;
 
     case 'resume':
-      return session.phase.kind === 'paused'
-        ? { ...session, phase: { kind: 'preparing', remainingMs: PREPARE_COUNTDOWN_MS } }
-        : session;
+      if (session.phase.kind !== 'paused') {
+        return session;
+      }
+      return {
+        ...session,
+        phase:
+          session.deviceStatus === 'connected'
+            ? { kind: 'preparing', remainingMs: PREPARE_COUNTDOWN_MS }
+            : { kind: 'deviceLost' },
+      };
   }
 }
