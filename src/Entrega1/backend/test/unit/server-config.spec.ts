@@ -9,6 +9,7 @@ describe('buildServerConfig', () => {
       port: 3000,
       corsOrigins: [],
       https: null,
+      trustProxy: false,
     });
   });
 

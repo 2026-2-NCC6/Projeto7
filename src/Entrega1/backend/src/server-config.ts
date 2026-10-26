@@ -6,6 +6,8 @@ export interface ServerConfig {
   /** Browser origins allowed by CORS. Empty disables CORS: the mobile app sends no Origin. */
   corsOrigins: string[];
   https: { key: Buffer; cert: Buffer } | null;
+  /** Behind a reverse proxy the client address comes from X-Forwarded-For, or every request shares one IP. */
+  trustProxy: boolean;
 }
 
 function listOf(value: string | undefined): string[] {
@@ -35,5 +37,6 @@ export function buildServerConfig(
     port: Number(env.PORT ?? 3000),
     corsOrigins: listOf(env.CORS_ORIGINS),
     https: keyPath && certPath ? { key: readFile(keyPath), cert: readFile(certPath) } : null,
+    trustProxy: env.TRUST_PROXY === 'true',
   };
 }

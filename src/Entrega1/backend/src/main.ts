@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { DomainErrorFilter } from './presentation/http/domain-error.filter';
 import { buildServerConfig } from './server-config';
@@ -16,10 +17,13 @@ async function bootstrap(): Promise<void> {
   });
 
   const config = buildServerConfig();
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     httpsOptions: config.https ?? undefined,
   });
 
+  if (config.trustProxy) {
+    app.set('trust proxy', 1);
+  }
   if (config.corsOrigins.length > 0) {
     app.enableCors({ origin: config.corsOrigins });
   }

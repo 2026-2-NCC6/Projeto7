@@ -1,4 +1,5 @@
-import { Body, Controller, HttpCode, HttpStatus, Inject, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Inject, Post, UseGuards } from '@nestjs/common';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthenticateUserUseCase } from '../../application/use-cases/authenticate-user.use-case';
 import { AuthenticatedUser } from '../../application/use-cases/authenticated-user';
 import { CreateUserUseCase } from '../../application/use-cases/create-user.use-case';
@@ -6,6 +7,7 @@ import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 
 @Controller('auth')
+@UseGuards(ThrottlerGuard)
 export class AuthController {
   constructor(
     @Inject(CreateUserUseCase) private readonly createUser: CreateUserUseCase,

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthenticateUserUseCase } from '../../application/use-cases/authenticate-user.use-case';
 import { CreateUserUseCase } from '../../application/use-cases/create-user.use-case';
 import { ID_GENERATOR, IdGenerator } from '../../application/ports/id-generator.port';
@@ -6,8 +7,10 @@ import { PASSWORD_HASHER, PasswordHasher } from '../../application/ports/passwor
 import { TOKEN_ISSUER, TokenIssuer } from '../../application/ports/token-issuer.port';
 import { USER_REPOSITORY, UserRepository } from '../../domain/user/user-repository.port';
 import { AuthController } from './auth.controller';
+import { AUTH_THROTTLING } from './auth-throttling';
 
 @Module({
+  imports: [ThrottlerModule.forRoot(AUTH_THROTTLING)],
   controllers: [AuthController],
   providers: [
     {
