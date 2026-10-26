@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DomainErrorFilter } from './presentation/http/domain-error.filter';
+import { buildServerConfig } from './server-config';
 
 // O ValidationPipe carrega class-validator sob demanda. No Node 22, quando o
 // projeto está em um caminho com acentos, a resolução de módulos falha depois
@@ -14,14 +15,19 @@ async function bootstrap(): Promise<void> {
     transform: true,
   });
 
-  const app = await NestFactory.create(AppModule);
+  const config = buildServerConfig();
+  const app = await NestFactory.create(AppModule, {
+    httpsOptions: config.https ?? undefined,
+  });
 
-  app.enableCors();
+  if (config.corsOrigins.length > 0) {
+    app.enableCors({ origin: config.corsOrigins });
+  }
   app.enableShutdownHooks();
   app.useGlobalPipes(validationPipe);
   app.useGlobalFilters(new DomainErrorFilter());
 
-  await app.listen(Number(process.env.PORT ?? 3000), '0.0.0.0');
+  await app.listen(config.port, config.host);
 }
 
 void bootstrap();
