@@ -64,6 +64,16 @@ async function apiTests() {
     statuses.slice(0, 5).every((s) => s === 401) && statuses.slice(5).every((s) => s === 429),
     statuses.join(', '));
 
+  // R27 — o bloqueio por conta vale também para e-mail sem conta, então não revela quem tem conta.
+  // A janela por endereço (10 por minuto) precisa recomeçar antes, ou ela bloquearia primeiro.
+  await wait(61_000);
+  const ghost = [];
+  for (let attempt = 1; attempt <= 6; attempt += 1) {
+    ghost.push((await call('POST', '/auth/sign-in', { body: { email: emailFor('inexistente'), password: 'errada-123' } })).status);
+  }
+  check('R27', '6 logins num e-mail que não tem conta',
+    ghost.slice(0, 5).every((s) => s === 401) && ghost[5] === 429, `${ghost.join(', ')} (igual a uma conta real)`);
+
   // R27 — o cadastro revela se o e-mail já tem conta (risco aceito, registrado)
   const duplicate = await call('POST', '/auth/sign-up', {
     body: { name: 'Teste repetido', email: emailFor('senha'), password: PASSWORD },
