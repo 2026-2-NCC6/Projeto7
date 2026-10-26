@@ -10,13 +10,24 @@ import { AddSessionDetail1757270000000 } from './migrations/1757270000000-AddSes
 import { AddSessionTelemetry1757280000000 } from './migrations/1757280000000-AddSessionTelemetry';
 import { ShrinkWallToSixTargets1757290000000 } from './migrations/1757290000000-ShrinkWallToSixTargets';
 
+/** Credentials have no fallback: a missing one stops the API instead of trying a known password. */
+function required(env: NodeJS.ProcessEnv, name: string): string {
+  const value = env[name];
+
+  if (!value) {
+    throw new Error(`${name} não definido. Copie backend/.env.example para backend/.env.`);
+  }
+
+  return value;
+}
+
 export function buildDataSourceOptions(env: NodeJS.ProcessEnv = process.env): DataSourceOptions {
   return {
     type: 'postgres',
     host: env.DB_HOST ?? '127.0.0.1',
     port: Number(env.DB_PORT ?? 5433),
-    username: env.DB_USER ?? 'smash',
-    password: env.DB_PASSWORD ?? 'smash',
+    username: required(env, 'DB_USER'),
+    password: required(env, 'DB_PASSWORD'),
     database: env.DB_NAME ?? 'smash_entrega1',
     entities: [
       UserOrmEntity,
