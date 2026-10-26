@@ -11,6 +11,8 @@
     "typecheck": "tsc --noEmit",
     "db:migrate": "typeorm-ts-node-commonjs migration:run -d src/infrastructure/database/data-source.ts",
     "db:migrate:revert": "typeorm-ts-node-commonjs migration:revert -d src/infrastructure/database/data-source.ts",
+    "demo:accounts": "ts-node src/infrastructure/database/demo-accounts.ts create",
+    "demo:clean": "ts-node src/infrastructure/database/demo-accounts.ts clean",
     "test": "jest",
     "lint": "eslint ."
   },
