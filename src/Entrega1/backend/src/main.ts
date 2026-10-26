@@ -2,6 +2,8 @@ import 'reflect-metadata';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { NextFunction, Request, Response } from 'express';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { DomainErrorFilter } from './presentation/http/domain-error.filter';
 import { buildServerConfig } from './server-config';
@@ -21,6 +23,13 @@ async function bootstrap(): Promise<void> {
     httpsOptions: config.https ?? undefined,
   });
 
+  // Cabeçalhos de segurança (nosniff, isolamento de origem, sem X-Powered-By) e
+  // nenhuma resposta guardada em cache: várias trazem dados do jogador.
+  app.use(helmet());
+  app.use((_request: Request, response: Response, next: NextFunction) => {
+    response.setHeader('Cache-Control', 'no-store');
+    next();
+  });
   if (config.trustProxy) {
     app.set('trust proxy', 1);
   }
