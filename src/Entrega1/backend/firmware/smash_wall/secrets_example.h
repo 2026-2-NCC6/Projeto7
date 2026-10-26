@@ -5,9 +5,10 @@
 //
 //     cp secrets_example.h secrets.h
 //
-// Uma senha forte por parede, gerada na hora, por exemplo:
+// Uma senha forte por parede, gerada na hora:
 //
-//     openssl rand -base64 18
+//     openssl rand -base64 18    senha do Wi-Fi
+//     openssl rand -hex 16       segredo de pareamento (só letras e números)
 
 // Senha do Wi-Fi que a parede cria no modo SoftAP. Mínimo de 8 caracteres;
 // use 16 ou mais. Troque antes de cada apresentação.

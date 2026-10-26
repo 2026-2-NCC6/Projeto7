@@ -182,8 +182,12 @@ de exemplo — sem ele o firmware não compila:
 ```bash
 cd smash_wall
 cp secrets_example.h secrets.h   # secrets.h não vai para o Git
-openssl rand -base64 18          # rode duas vezes: uma senha do Wi-Fi, um segredo de pareamento
+openssl rand -base64 18          # senha do Wi-Fi (SOFTAP_PASSWORD)
+openssl rand -hex 16             # segredo de pareamento (WALL_PAIRING_TOKEN): só letras e números
 ```
+
+O segredo de pareamento vai no endereço da conexão, então use só letras e números
+(o `-hex` garante isso): `+`, `/` e `=` chegam codificados e a parede recusa o app.
 
 Use uma senha e um segredo diferentes por parede e troque os dois antes de cada
 apresentação. O segredo de pareamento vai também no app, em
