@@ -8,6 +8,7 @@ export class UserMapper {
       name: row.name,
       email: row.email,
       passwordHash: row.passwordHash,
+      tokenVersion: row.tokenVersion,
       createdAt: row.createdAt,
     });
   }
@@ -18,6 +19,7 @@ export class UserMapper {
     row.name = user.name;
     row.email = user.email;
     row.passwordHash = user.passwordHash;
+    row.tokenVersion = user.tokenVersion;
     row.createdAt = user.createdAt;
     return row;
   }

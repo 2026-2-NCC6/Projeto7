@@ -1,15 +1,17 @@
 import { CanActivate, ExecutionContext, Inject, Injectable } from '@nestjs/common';
-import { TOKEN_VERIFIER, TokenVerifier } from '../../application/ports/token-issuer.port';
+import { VerifyAccessTokenUseCase } from '../../application/use-cases/verify-access-token.use-case';
 import { AuthenticatedRequest, extractBearerToken } from './jwt-auth.guard';
 
 @Injectable()
 export class OptionalJwtAuthGuard implements CanActivate {
-  constructor(@Inject(TOKEN_VERIFIER) private readonly tokens: TokenVerifier) {}
+  constructor(
+    @Inject(VerifyAccessTokenUseCase) private readonly verifyAccessToken: VerifyAccessTokenUseCase,
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const token = extractBearerToken(request);
-    request.userId = token ? this.tokens.verify(token)?.sub : undefined;
+    request.userId = (token ? await this.verifyAccessToken.execute(token) : null) ?? undefined;
     return true;
   }
 }

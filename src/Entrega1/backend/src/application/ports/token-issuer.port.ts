@@ -1,6 +1,8 @@
 export interface TokenPayload {
   sub: string;
   email: string;
+  /** The user's token version when the token was issued; a newer one revokes it. */
+  ver: number;
 }
 
 export interface TokenIssuer {

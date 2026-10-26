@@ -14,6 +14,9 @@ export class UserOrmEntity {
   @Column({ type: 'text', name: 'password_hash' })
   passwordHash: string;
 
+  @Column({ type: 'int', name: 'token_version', default: 0 })
+  tokenVersion: number;
+
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt: Date;
 }

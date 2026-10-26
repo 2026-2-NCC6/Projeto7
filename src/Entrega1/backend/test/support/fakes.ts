@@ -30,6 +30,7 @@ export function aUser(id: string, name = `Player ${id}`): User {
     name,
     email: `${id}@smash.test`,
     passwordHash: 'hash',
+    tokenVersion: 0,
     createdAt: new Date('2026-01-10T12:00:00.000Z'),
   });
 }
@@ -47,6 +48,22 @@ export class InMemoryUserRepository implements UserRepository {
 
   async register(account: Account): Promise<void> {
     this.users.push(account.user);
+  }
+
+  async revokeTokens(userId: string): Promise<void> {
+    const index = this.users.findIndex((user) => user.id === userId);
+    const user = this.users[index];
+
+    if (user) {
+      this.users[index] = User.restore({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        passwordHash: user.passwordHash,
+        tokenVersion: user.tokenVersion + 1,
+        createdAt: user.createdAt,
+      });
+    }
   }
 }
 

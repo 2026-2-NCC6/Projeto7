@@ -3,6 +3,8 @@ export interface UserProps {
   name: string;
   email: string;
   passwordHash: string;
+  /** Bumped to revoke every access token issued before, e.g. on sign-out. */
+  tokenVersion: number;
   createdAt: Date;
 }
 
@@ -19,6 +21,7 @@ export class User {
       name: params.name.trim(),
       email: User.normalizeEmail(params.email),
       passwordHash: params.passwordHash,
+      tokenVersion: 0,
       createdAt: new Date(),
     });
   }
@@ -41,6 +44,10 @@ export class User {
 
   get passwordHash(): string {
     return this.props.passwordHash;
+  }
+
+  get tokenVersion(): number {
+    return this.props.tokenVersion;
   }
 
   get createdAt(): Date {

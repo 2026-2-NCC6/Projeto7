@@ -1,11 +1,16 @@
 import { ExecutionContext } from '@nestjs/common';
-import { TokenVerifier } from '../../../src/application/ports/token-issuer.port';
+import { VerifyAccessTokenUseCase } from '../../../src/application/use-cases/verify-access-token.use-case';
 import { AuthenticatedRequest } from '../../../src/presentation/http/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../../../src/presentation/http/optional-jwt-auth.guard';
+import { aUser, InMemoryUserRepository } from '../../support/fakes';
 
-const verifier: TokenVerifier = {
-  verify: (token) => (token === 'valid' ? { sub: 'user-1', email: 'user@smash.test' } : null),
-};
+const verifyAccessToken = new VerifyAccessTokenUseCase(
+  {
+    verify: (token) =>
+      token === 'valid' ? { sub: 'user-1', email: 'user-1@smash.test', ver: 0 } : null,
+  },
+  new InMemoryUserRepository([aUser('user-1')]),
+);
 
 function contextWith(authorization?: string): {
   context: ExecutionContext;
@@ -19,12 +24,12 @@ function contextWith(authorization?: string): {
 }
 
 describe('OptionalJwtAuthGuard', () => {
-  const guard = new OptionalJwtAuthGuard(verifier);
+  const guard = new OptionalJwtAuthGuard(verifyAccessToken);
 
-  it('identifies a player with a valid token', () => {
+  it('identifies a player with a valid token', async () => {
     const { context, request } = contextWith('Bearer valid');
 
-    expect(guard.canActivate(context)).toBe(true);
+    await expect(guard.canActivate(context)).resolves.toBe(true);
     expect(request.userId).toBe('user-1');
   });
 
@@ -32,10 +37,10 @@ describe('OptionalJwtAuthGuard', () => {
     ['no header', undefined],
     ['an invalid token', 'Bearer expired'],
     ['a malformed header', 'Token valid'],
-  ])('lets a request with %s through anonymously', (_case, header) => {
+  ])('lets a request with %s through anonymously', async (_case, header) => {
     const { context, request } = contextWith(header);
 
-    expect(guard.canActivate(context)).toBe(true);
+    await expect(guard.canActivate(context)).resolves.toBe(true);
     expect(request.userId).toBeUndefined();
   });
 });

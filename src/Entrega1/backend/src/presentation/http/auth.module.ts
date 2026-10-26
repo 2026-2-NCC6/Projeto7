@@ -2,17 +2,20 @@ import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthenticateUserUseCase } from '../../application/use-cases/authenticate-user.use-case';
 import { CreateUserUseCase } from '../../application/use-cases/create-user.use-case';
+import { SignOutUseCase } from '../../application/use-cases/sign-out.use-case';
 import { ID_GENERATOR, IdGenerator } from '../../application/ports/id-generator.port';
 import { PASSWORD_HASHER, PasswordHasher } from '../../application/ports/password-hasher.port';
 import { TOKEN_ISSUER, TokenIssuer } from '../../application/ports/token-issuer.port';
 import { USER_REPOSITORY, UserRepository } from '../../domain/user/user-repository.port';
 import { AuthController } from './auth.controller';
 import { AUTH_THROTTLING } from './auth-throttling';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Module({
   imports: [ThrottlerModule.forRoot(AUTH_THROTTLING)],
   controllers: [AuthController],
   providers: [
+    JwtAuthGuard,
     {
       provide: CreateUserUseCase,
       inject: [USER_REPOSITORY, PASSWORD_HASHER, TOKEN_ISSUER, ID_GENERATOR],
@@ -28,6 +31,11 @@ import { AUTH_THROTTLING } from './auth-throttling';
       inject: [USER_REPOSITORY, PASSWORD_HASHER, TOKEN_ISSUER],
       useFactory: (users: UserRepository, hasher: PasswordHasher, tokens: TokenIssuer) =>
         new AuthenticateUserUseCase(users, hasher, tokens),
+    },
+    {
+      provide: SignOutUseCase,
+      inject: [USER_REPOSITORY],
+      useFactory: (users: UserRepository) => new SignOutUseCase(users),
     },
   ],
 })

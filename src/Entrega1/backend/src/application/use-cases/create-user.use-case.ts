@@ -37,6 +37,6 @@ export class CreateUserUseCase {
 
     await this.users.register(openAccountFor(user));
 
-    return toAuthenticatedUser(user, this.tokens.issue({ sub: user.id, email: user.email }));
+    return toAuthenticatedUser(user, this.tokens.issue({ sub: user.id, email: user.email, ver: user.tokenVersion }));
   }
 }

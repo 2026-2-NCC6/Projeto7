@@ -10,4 +10,9 @@ export const authService = {
   signIn(request: SignInRequest): Promise<AuthenticatedUser> {
     return post<AuthenticatedUser>(endpoints.signIn, request);
   },
+
+  /** Revokes the token on the server, so a copy of it stops working too. */
+  async signOut(accessToken: string): Promise<void> {
+    await post<unknown>(endpoints.signOut, {}, accessToken);
+  },
 };

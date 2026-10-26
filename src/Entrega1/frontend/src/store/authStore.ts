@@ -15,7 +15,7 @@ interface AuthState {
   signOut: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   session: 'none',
   user: null,
   accessToken: null,
@@ -35,6 +35,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signOut() {
+    const { accessToken } = get();
+
+    // Leaving never waits on the network: an offline phone still signs out, and
+    // the token then simply expires on its own.
+    if (accessToken) {
+      authService.signOut(accessToken).catch(() => undefined);
+    }
+
     set({ session: 'none', user: null, accessToken: null });
   },
 }));

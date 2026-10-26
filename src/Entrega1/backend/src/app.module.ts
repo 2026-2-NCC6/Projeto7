@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
+import { AccessTokenModule } from './presentation/http/access-token.module';
 import { AuthModule } from './presentation/http/auth.module';
 import { HomeModule } from './presentation/http/home.module';
 import { ProfileModule } from './presentation/http/profile.module';
@@ -13,6 +14,7 @@ import { StatisticsModule } from './presentation/http/statistics.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     InfrastructureModule,
+    AccessTokenModule,
     AuthModule,
     HomeModule,
     ProfileModule,

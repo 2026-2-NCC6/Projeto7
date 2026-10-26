@@ -24,6 +24,10 @@ export class TypeOrmUserRepository implements UserRepository {
     return row ? UserMapper.toDomain(row) : null;
   }
 
+  async revokeTokens(userId: string): Promise<void> {
+    await this.repository.increment({ id: userId }, 'tokenVersion', 1);
+  }
+
   async register({ user, progressions, dailyStreak }: Account): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
       await manager.getRepository(UserOrmEntity).insert(UserMapper.toPersistence(user));

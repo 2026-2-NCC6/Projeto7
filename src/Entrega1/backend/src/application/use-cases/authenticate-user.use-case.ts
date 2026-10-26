@@ -24,6 +24,6 @@ export class AuthenticateUserUseCase {
       throw new InvalidCredentialsError();
     }
 
-    return toAuthenticatedUser(user, this.tokens.issue({ sub: user.id, email: user.email }));
+    return toAuthenticatedUser(user, this.tokens.issue({ sub: user.id, email: user.email, ver: user.tokenVersion }));
   }
 }

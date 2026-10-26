@@ -76,7 +76,7 @@ const JWT_TOKEN_SERVICE = Symbol('JwtTokenService');
       useFactory: (config: ConfigService) =>
         new JwtTokenService(
           config.getOrThrow<string>('JWT_SECRET'),
-          config.get<string>('JWT_EXPIRES_IN') ?? '7d',
+          config.get<string>('JWT_EXPIRES_IN') ?? '12h',
         ),
     },
     {
