@@ -10,7 +10,8 @@ void linkBegin();
 /** Serve o socket, mantém o Wi-Fi de pé e manda o batimento. Não bloqueia. */
 void linkLoop();
 
+/** Manda o impacto ao app pareado e, com SERIAL_ECHO, ao Serial. */
 void linkBroadcastImpact(const WallImpact& impact);
 
-/** Algum app está conectado agora? */
+/** Algum app está pareado agora? */
 bool linkHasClients();

@@ -6,7 +6,14 @@ import type {
   WallFeedback,
 } from '../../contracts/target-device';
 import { DeviceEventPipeline } from '../../runtime/event-pipeline';
-import { controlFrameOf, feedbackCommand, helloMismatch, sessionCommand } from './wall-protocol';
+import {
+  controlFrameOf,
+  feedbackCommand,
+  helloMismatch,
+  pairedUrl,
+  pairingRefusalOf,
+  sessionCommand,
+} from './wall-protocol';
 
 const descriptor: DeviceDescriptor = {
   id: 'smash-wall',
@@ -42,7 +49,10 @@ export class WebSocketTargetDevice implements TargetDevice {
   private retryDelayMs = FIRST_RETRY_MS;
   private wanted = false;
 
-  constructor(private readonly url: string) {}
+  constructor(
+    private readonly url: string,
+    private readonly pairingToken = '',
+  ) {}
 
   get status(): DeviceConnectionStatus {
     return this.connectionStatus;
@@ -81,7 +91,7 @@ export class WebSocketTargetDevice implements TargetDevice {
     this.closeSocket();
     this.setStatus('connecting');
 
-    const socket = new WebSocket(this.url);
+    const socket = new WebSocket(pairedUrl(this.url, this.pairingToken));
     this.socket = socket;
 
     socket.onopen = () => {
@@ -149,9 +159,13 @@ export class WebSocketTargetDevice implements TargetDevice {
 
     if (control) {
       const mismatch = control.tipo === 'hello' ? helloMismatch(control) : null;
+      const refusal = pairingRefusalOf(control);
 
       if (mismatch) {
         this.publish({ kind: 'fault', code: 'incompatibleWall', detail: mismatch, at: Date.now() });
+      }
+      if (refusal) {
+        this.publish({ kind: 'fault', code: 'pairingRefused', detail: refusal, at: Date.now() });
       }
       return;
     }

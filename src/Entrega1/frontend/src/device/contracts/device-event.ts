@@ -30,7 +30,8 @@ export type DeviceFaultCode =
   | 'duplicateEvent'
   | 'staleEvent'
   | 'transport'
-  | 'incompatibleWall';
+  | 'incompatibleWall'
+  | 'pairingRefused';
 
 export interface DeviceFaultEvent {
   readonly kind: 'fault';

@@ -28,7 +28,7 @@ class FakeSocket {
 const hello = { tipo: 'hello', protocolo: 2, parede: 'wall-1', alvos: 6, sessao: 'app-1', t_ms: 10 };
 
 async function connectedDevice() {
-  const device = new WebSocketTargetDevice('ws://wall.test:81');
+  const device = new WebSocketTargetDevice('ws://wall.test:81', 'segredo');
   const events: DeviceEvent[] = [];
   device.subscribe((event) => events.push(event));
   await device.connect();
@@ -47,6 +47,34 @@ describe('WebSocketTargetDevice', () => {
   afterEach(() => {
     jest.useRealTimers();
     (globalThis as { WebSocket: unknown }).WebSocket = realWebSocket;
+  });
+
+  it('pairs with the secret in the path it connects to', async () => {
+    const { device, socket } = await connectedDevice();
+
+    expect(socket.url).toBe('ws://wall.test:81/?token=segredo');
+    await device.disconnect();
+  });
+
+  it.each([
+    ['nao autorizado', 'segredo de pareamento recusado pela parede'],
+    ['parede ocupada', 'outro app já está usando a parede'],
+  ])('reports a wall that refuses to pair (%s)', async (detalhe, detail) => {
+    const { device, events, socket } = await connectedDevice();
+
+    socket.receive({ tipo: 'erro', detalhe, t_ms: 1 });
+
+    expect(events.at(-1)).toMatchObject({ kind: 'fault', code: 'pairingRefused', detail });
+    await device.disconnect();
+  });
+
+  it('ignores an ordinary command error', async () => {
+    const { device, events, socket } = await connectedDevice();
+
+    socket.receive({ tipo: 'erro', detalhe: 'comando desconhecido', t_ms: 1 });
+
+    expect(events.filter((event) => event.kind === 'fault')).toEqual([]);
+    await device.disconnect();
   });
 
   it('sends the session id and turns impacts into hits', async () => {

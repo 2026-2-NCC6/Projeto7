@@ -5,6 +5,7 @@
 //  Este é o ÚNICO arquivo que você precisa editar.
 // ===========================================================================
 
+#include <stddef.h>
 #include <stdint.h>
 
 // ---------------------------------------------------------------------------
@@ -15,7 +16,10 @@
 //     a parede sempre responde em ws://192.168.4.1:81. É o modo da apresentação:
 //     não depende do Wi-Fi do local.
 // 0 = a parede entra na rede local (Station). Necessário quando o backend também
-//     precisa receber os dados. As credenciais vêm de secrets.h.
+//     precisa receber os dados.
+//
+// Senhas e o segredo de pareamento ficam em secrets.h, nunca aqui: este arquivo
+// vai para o Git.
 #define WALL_MODE_SOFTAP 1
 
 static const char* WALL_ID = "wall-1";
@@ -25,9 +29,25 @@ static const char* WALL_HOSTNAME = "smash";
 
 static const uint16_t WALL_WS_PORT = 81;
 
-// Só usados quando WALL_MODE_SOFTAP é 1. A senha precisa de 8 caracteres ou mais.
+// Só usado quando WALL_MODE_SOFTAP é 1. A senha está em secrets.h.
 static const char* SOFTAP_SSID = "smash-wall";
-static const char* SOFTAP_PASSWORD = "smash1234";
+
+// ---------------------------------------------------------------------------
+//  Limites da conexão
+// ---------------------------------------------------------------------------
+//  A parede atende um app por vez: o primeiro que conecta com o segredo de
+//  pareamento certo fica com ela até sair; os outros são desconectados na hora.
+
+// Maior comando aceito, em bytes. O maior comando real tem uns 60.
+static const size_t MAX_COMMAND_BYTES = 256;
+
+// Comandos por segundo do app. Um jogo manda no máximo uns 5.
+static const uint8_t MAX_COMMANDS_PER_SECOND = 20;
+
+// Ping do WebSocket: um app que não responde 2 vezes seguidas é desconectado.
+static const uint32_t PING_INTERVAL_MS = 5000;
+static const uint32_t PONG_TIMEOUT_MS = 3000;
+static const uint8_t PONG_MISSES_TO_DROP = 2;
 
 // ---------------------------------------------------------------------------
 //  Pinos

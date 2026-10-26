@@ -12,6 +12,6 @@ export function createTargetDevice(config: DeviceConfig): TargetDevice {
     case 'simulated':
       return new SimulatedTargetDevice();
     case 'websocket':
-      return new WebSocketTargetDevice(config.wallUrl);
+      return new WebSocketTargetDevice(config.wallUrl, config.pairingToken);
   }
 }

@@ -49,6 +49,28 @@ export function helloMismatch(frame: WallControlFrame): string | null {
   return null;
 }
 
+/** The wall reads its pairing secret from the path it is asked for. */
+export function pairedUrl(url: string, pairingToken: string): string {
+  return `${url.replace(/\/+$/, '')}/?token=${encodeURIComponent(pairingToken)}`;
+}
+
+const PAIRING_REFUSALS: Record<string, string> = {
+  nao_autorizado: 'segredo de pareamento recusado pela parede',
+  parede_ocupada: 'outro app já está usando a parede',
+};
+
+/**
+ * Why the wall refused to pair with this app, or null when the frame is not a
+ * refusal. The wall sends it right before hanging up.
+ */
+export function pairingRefusalOf(frame: WallControlFrame): string | null {
+  if (frame.tipo !== 'erro' || typeof frame.detalhe !== 'string') {
+    return null;
+  }
+
+  return PAIRING_REFUSALS[frame.detalhe.replace(' ', '_')] ?? null;
+}
+
 export function sessionCommand(sessao: string): string {
   return JSON.stringify({ cmd: 'session', sessao });
 }

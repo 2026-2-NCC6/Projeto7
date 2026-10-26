@@ -527,6 +527,7 @@ export const texts = {
       staleEvent: 'Evento fora de ordem',
       transport: 'Falha de transporte',
       incompatibleWall: 'Parede incompatível',
+      pairingRefused: 'Pareamento recusado',
     } satisfies Record<DeviceFaultCode, string>,
     connection: 'Conexão',
     source: 'Fonte',

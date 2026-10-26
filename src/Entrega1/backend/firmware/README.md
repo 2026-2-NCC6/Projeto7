@@ -11,7 +11,7 @@ backend/firmware/
   smash_wall/
     smash_wall.ino        setup() e loop() — só orquestra
     config.h              ← o único arquivo que você edita
-    secrets_example.h     modelo das credenciais Wi-Fi (copie para secrets.h)
+    secrets_example.h     modelo das senhas e do segredo de pareamento (copie para secrets.h)
     wall_sensors.h/.cpp   varredura do ADC, janela de pico, máquina de estados
     wall_actuator.h/.cpp  LED da placa: pisca os sinais sem bloquear o loop()
     wall_link.h/.cpp      Wi-Fi, mDNS, servidor WebSocket, reconexão
@@ -28,7 +28,7 @@ bola bate no alvo
       └─ wall_sensors.cpp   cruza o limiar, mede o pico dos 6 canais por 20 ms,
       │                     escolhe o maior (argmax) e aplica o debounce
       └─ wall_protocol.cpp  monta {"alvo":5,"linha":2,"coluna":2,...}
-      └─ wall_link.cpp      envia por WebSocket (e imprime no Serial)
+      └─ wall_link.cpp      envia por WebSocket ao app pareado (e imprime no Serial)
           └─ app: device/adapters/websocket/websocket-device.ts   recebe o texto
           └─ app: device/parsing/impacto.schema.ts                valida com zod
           └─ app: device/runtime/event-pipeline.ts                descarta alvo
@@ -155,8 +155,13 @@ Tudo o que você precisa mexer está em **`config.h`**.
 | `WALL_ID` | `"wall-1"` | identifica esta parede |
 | `WALL_HOSTNAME` | `"smash"` | nome no mDNS → `smash.local` |
 | `WALL_WS_PORT` | `81` | porta do WebSocket |
-| `SOFTAP_SSID` / `SOFTAP_PASSWORD` | `smash-wall` / `smash1234` | rede criada no modo SoftAP (senha ≥ 8 caracteres) |
+| `SOFTAP_SSID` | `smash-wall` | nome da rede criada no modo SoftAP |
+| `SOFTAP_PASSWORD` | — | **em `secrets.h`**: senha dessa rede (≥ 8 caracteres; use 16 ou mais) |
+| `WALL_PAIRING_TOKEN` | — | **em `secrets.h`**: segredo que o app precisa mandar para parear |
 | `WIFI_SSID` / `WIFI_PASSWORD` | — | **em `secrets.h`**, só no modo Station |
+| `MAX_COMMAND_BYTES` | 256 | maior comando aceito do app |
+| `MAX_COMMANDS_PER_SECOND` | 20 | acima disso, o comando é recusado |
+| `PING_INTERVAL_MS` / `PONG_TIMEOUT_MS` / `PONG_MISSES_TO_DROP` | 5000 / 3000 / 2 | ping que derruba um app que sumiu sem fechar a conexão |
 | `TARGET_COUNT` | 6 | número de alvos |
 | `TARGET_COLUMNS` | 3 | alvos por linha da parede |
 | `TARGET_PIN[6]` | 32, 33, 34, 36, 39, 35 | pino de cada alvo, na ordem A1..A6 |
@@ -171,14 +176,22 @@ Tudo o que você precisa mexer está em **`config.h`**.
 | `SERIAL_ECHO` | `1` | imprime cada impacto no Serial |
 | `CALIBRATION_MODE` | `0` | `1` = só imprime picos, não joga |
 
-No modo Station, antes de compilar:
+**Antes de compilar, em qualquer modo**, crie o `secrets.h` e troque os valores
+de exemplo — sem ele o firmware não compila:
 
 ```bash
 cd smash_wall
 cp secrets_example.h secrets.h   # secrets.h não vai para o Git
+openssl rand -base64 18          # rode duas vezes: uma senha do Wi-Fi, um segredo de pareamento
 ```
 
-**Nunca comite credenciais.** `secrets.h` está no `.gitignore`.
+Use uma senha e um segredo diferentes por parede e troque os dois antes de cada
+apresentação. O segredo de pareamento vai também no app, em
+`EXPO_PUBLIC_DEVICE_TOKEN` (`frontend/.env`).
+
+**Nunca comite credenciais.** `secrets.h` está no `.gitignore`. A senha antiga
+(`smash1234`) ficou no histórico público do repositório: nenhuma parede deve
+usá-la.
 
 ---
 
@@ -231,10 +244,13 @@ desta pasta (`hello` v2 com 6 alvos, `status` a cada 2 s, `session`, `ping`,
 2. **App apontando para o emulador da parede** (emulador Android):
 
    ```bash
-   EXPO_PUBLIC_DEVICE_SOURCE=websocket EXPO_PUBLIC_DEVICE_URL=ws://10.0.2.2:8181 npm run app
+   EXPO_PUBLIC_DEVICE_SOURCE=websocket EXPO_PUBLIC_DEVICE_URL=ws://10.0.2.2:8181 EXPO_PUBLIC_DEVICE_TOKEN=emulador-local npm run app
    ```
 
-   No terminal do `wall` tem que aparecer `[ws] cliente conectado (1)`.
+   No terminal do `wall` tem que aparecer `[ws] cliente pareado`.
+   _Se aparecer `cliente recusado: nao autorizado`:_ o `EXPO_PUBLIC_DEVICE_TOKEN`
+   não bate com o segredo do emulador (`emulador-local`, ou o `WALL_TOKEN` que
+   você passou).
    _Se não aparecer:_ o emulador Android pode estar sem rede (ícone do Wi-Fi com
    "!"). Use `adb reverse tcp:8181 tcp:8181` (e `8081`, `3000`) e troque os
    endereços por `127.0.0.1` — veja o CLAUDE.md.
@@ -249,7 +265,7 @@ desta pasta (`hello` v2 com 6 alvos, `status` a cada 2 s, `session`, `ping`,
    número em **Impacto médio** — só leitura da parede vira número; no simulador
    aparece `—`.
 4. **Reinicie a parede** com `b` no meio de um nível. O app mostra a conexão
-   perdida, reconecta sozinho (`[ws] cliente conectado` de novo) e as batidas
+   perdida, reconecta sozinho (`[ws] cliente pareado` de novo) e as batidas
    seguintes continuam valendo, mesmo com o `t_ms` de volta perto de zero.
 5. **Mensagem quebrada** com `m`: o app não cai, conta uma falha em
    Estatísticas → Hardware e sistema.
@@ -271,7 +287,7 @@ guia de montagem 3×2.
    JSON com o `alvo` certo (`"alvo":6,"linha":2,"coluna":3` para o canto de
    baixo à direita). Bata 20 vezes em cada um e conte os acertos — esse número
    vai para o relatório de validação.
-5. **Rede.** No celular, entre no Wi-Fi **`smash-wall`** (senha `smash1234`) e
+5. **Rede.** No celular, entre no Wi-Fi **`smash-wall`** (a `SOFTAP_PASSWORD` do seu `secrets.h`) e
    aceite ficar conectado "sem internet". Desligue os dados móveis, senão o
    Android manda o tráfego pelo 4G. **O notebook também entra no `smash-wall`**:
    é ele que roda o backend e o Metro. Anote o IP que o notebook recebeu
@@ -285,11 +301,12 @@ guia de montagem 3×2.
    E, num segundo terminal, em `src/Entrega1/frontend`:
 
    ```bash
-   EXPO_PUBLIC_API_URL=http://192.168.4.x:3000 EXPO_PUBLIC_DEVICE_SOURCE=websocket EXPO_PUBLIC_DEVICE_URL=ws://192.168.4.1:81 npx expo start --offline
+   EXPO_PUBLIC_API_URL=http://192.168.4.x:3000 EXPO_PUBLIC_DEVICE_SOURCE=websocket EXPO_PUBLIC_DEVICE_URL=ws://192.168.4.1:81 EXPO_PUBLIC_DEVICE_TOKEN=<o WALL_PAIRING_TOKEN do secrets.h> npx expo start --offline
    ```
 
    Abra no Expo Go pelo QR code. No Serial da parede aparece
-   `[ws] cliente 0 conectado`. `--offline` porque o `smash-wall` não tem
+   `[ws] cliente 0 pareado`. _Se aparecer `recusado: nao autorizado`:_ o
+   segredo do app não é o do `secrets.h`. `--offline` porque o `smash-wall` não tem
    internet. _Se em Estatísticas → Hardware e sistema a "Última falha" for
    "Parede incompatível":_ a placa está com um firmware antigo (protocolo 1 ou
    9 alvos) — grave este de novo.
@@ -333,6 +350,28 @@ Sem a parede, o `npm run wall` mostra no terminal o que o atuador faria
 
 WebSocket sobre Wi-Fi, **a parede é o servidor**, porta 81, uma mensagem JSON por
 quadro de texto. Versão atual: **2** (a parede 3×2).
+
+### Pareamento
+
+O app conecta em `ws://<parede>:81/?token=<WALL_PAIRING_TOKEN>`. A parede só
+atende **um app por vez**:
+
+- segredo errado ou ausente → `{"tipo":"erro","detalhe":"nao autorizado"}` e a
+  conexão é fechada;
+- segredo certo, mas outro app já pareado → `{"tipo":"erro","detalhe":"parede ocupada"}`
+  e a conexão é fechada;
+- segredo certo e parede livre → `hello`, e só esse app recebe impactos e
+  `status` e pode mandar comandos.
+
+Quando o app pareado sai, a parede volta ao id de sessão da inicialização e fica
+livre para o próximo. Um app que some sem fechar a conexão é derrubado pelo ping
+do WebSocket (2 pings sem resposta). Comando com mais de 256 bytes ou acima de 20
+por segundo é recusado com `erro`. No app, as duas recusas de pareamento viram a
+falha `pairingRefused` ("Pareamento recusado").
+
+O segredo vai no caminho em texto claro, porque o ESP32 não serve `wss://` com
+folga. O que protege o segredo é a rede: a parede cria a própria rede Wi-Fi com
+WPA2 e senha forte, e só quem entrou nela vê o tráfego.
 
 **Por que WebSocket:** o React Native tem `WebSocket` como global, então custa
 zero módulo nativo e o projeto continua rodando no Expo Go no Android e no iOS.
@@ -481,6 +520,8 @@ servidor WebSocket é atendido a cada volta.
 | Leituras aleatórias, mesmo sem bater | pino do ADC2 com Wi-Fi ligado | use só GPIO 32..39 (ADC1) |
 | A placa reinicia ao ligar o Wi-Fi | fonte fraca (brownout) | alimente por uma USB de 1 A ou mais; não use 5V e USB juntos |
 | O app não acha a parede | celular na rede errada | no SoftAP, o celular tem que estar no Wi-Fi `smash-wall` |
+| "Pareamento recusado" em Estatísticas | segredo do app diferente do `secrets.h`, ou outro celular já pareado | confira `EXPO_PUBLIC_DEVICE_TOKEN`; feche o app no outro celular |
+| `Falta secrets.h` ao compilar | o `secrets.h` não foi criado | `cp secrets_example.h secrets.h` e troque os valores (seção 4) |
 | `smash.local` não resolve | o Android resolve mDNS mal | use o IP direto: `EXPO_PUBLIC_DEVICE_URL=ws://192.168.4.1:81` |
 | O app conecta e cai sozinho | batimento não chega | confira se o `loop()` roda; qualquer `delay()` longo derruba o link |
 | Enxurrada de eventos descartados como atrasados | a parede reiniciou no meio da sessão | é esperado: o app zera o controle a cada reconexão. Se persistir, veja brownout |

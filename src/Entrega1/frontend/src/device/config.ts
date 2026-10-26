@@ -10,6 +10,8 @@ function resolveDeviceSource(): DeviceKind {
 export const deviceConfig = {
   source: resolveDeviceSource(),
   wallUrl: process.env.EXPO_PUBLIC_DEVICE_URL ?? DEFAULT_WALL_URL,
+  /** Must match WALL_PAIRING_TOKEN in the firmware's secrets.h, or the wall hangs up. */
+  pairingToken: process.env.EXPO_PUBLIC_DEVICE_TOKEN ?? '',
 } as const;
 
 export type DeviceConfig = typeof deviceConfig;
