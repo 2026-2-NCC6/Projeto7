@@ -20,6 +20,7 @@ import { TypeOrmStatisticsRepository } from './database/repositories/typeorm-sta
 import { TypeOrmTrainingSessionRepository } from './database/repositories/typeorm-training-session.repository';
 import { TypeOrmUserRepository } from './database/repositories/typeorm-user.repository';
 import { BcryptPasswordHasher } from './security/bcrypt-password-hasher';
+import { requireStrongSecret } from './security/jwt-secret';
 import { JwtSessionTickets } from './security/jwt-session-tickets';
 import { JwtTokenService } from './security/jwt-token-service';
 import { UuidIdGenerator } from './security/uuid-id-generator';
@@ -77,7 +78,7 @@ const JWT_TOKEN_SERVICE = Symbol('JwtTokenService');
       inject: [ConfigService],
       useFactory: (config: ConfigService) =>
         new JwtTokenService(
-          config.getOrThrow<string>('JWT_SECRET'),
+          requireStrongSecret(config.getOrThrow<string>('JWT_SECRET')),
           config.get<string>('JWT_EXPIRES_IN') ?? '12h',
         ),
     },
@@ -85,7 +86,7 @@ const JWT_TOKEN_SERVICE = Symbol('JwtTokenService');
       provide: SESSION_TICKETS,
       inject: [ConfigService],
       useFactory: (config: ConfigService) =>
-        new JwtSessionTickets(config.getOrThrow<string>('JWT_SECRET')),
+        new JwtSessionTickets(requireStrongSecret(config.getOrThrow<string>('JWT_SECRET'))),
     },
     {
       provide: TOKEN_ISSUER,

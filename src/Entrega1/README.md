@@ -30,6 +30,8 @@ sudo -u postgres psql -p 5433 \
 ```bash
 cd src/Entrega1
 cp backend/.env.example backend/.env
+# troque o JWT_SECRET do .env por um valor aleatório: a API não sobe com o de exemplo
+openssl rand -base64 48
 npm install
 npm run setup
 ```
