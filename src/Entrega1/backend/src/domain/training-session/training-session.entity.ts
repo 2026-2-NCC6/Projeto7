@@ -5,6 +5,8 @@ import { IMPACT_MAX_RAW, TargetPerformance, WALL_TARGET_COUNT } from './target-p
 
 export interface TrainingSessionProps {
   id: string;
+  /** The ticket the session was opened with; null only for sessions recorded before tickets. */
+  ticketId: string | null;
   userId: string;
   mode: GameMode;
   level: number;
@@ -58,6 +60,24 @@ function assertConsistentTargets({ targets, hits, misses }: TrainingSessionProps
   }
 }
 
+/** The wall's debounce: it never reports two impacts closer than this. */
+export const MIN_ATTEMPT_INTERVAL_MS = 200;
+/**
+ * Well above the richest hit in any level table (40 points at a 3x streak
+ * multiplier). A table that pays more per hit has to raise it.
+ */
+export const MAX_POINTS_PER_HIT = 150;
+
+/** Numbers no real session can produce, whatever the client claims. */
+function assertPlausible({ hits, misses, score, durationMs }: TrainingSessionProps): void {
+  if (hits + misses > Math.floor(durationMs / MIN_ATTEMPT_INTERVAL_MS) + 1) {
+    throw new InvalidTrainingSessionError('mais batidas do que cabem na duração.');
+  }
+  if (score > hits * MAX_POINTS_PER_HIT) {
+    throw new InvalidTrainingSessionError('pontuação acima do máximo possível.');
+  }
+}
+
 export class TrainingSession {
   private constructor(private readonly props: TrainingSessionProps) {}
 
@@ -68,11 +88,16 @@ export class TrainingSession {
   static record(props: Omit<TrainingSessionProps, 'playedAt'>): TrainingSession {
     const session: TrainingSessionProps = { ...props, playedAt: new Date() };
     assertConsistentTargets(session);
+    assertPlausible(session);
     return new TrainingSession(session);
   }
 
   get id(): string {
     return this.props.id;
+  }
+
+  get ticketId(): string | null {
+    return this.props.ticketId;
   }
 
   get userId(): string {

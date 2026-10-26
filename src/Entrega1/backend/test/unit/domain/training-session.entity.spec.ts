@@ -8,6 +8,7 @@ import {
 function recordWith(overrides: Partial<Omit<TrainingSessionProps, 'playedAt'>>): TrainingSession {
   return TrainingSession.record({
     id: 'session-1',
+    ticketId: 'ticket-1',
     userId: 'user-1',
     mode: 'level_color',
     level: 1,
@@ -67,5 +68,23 @@ describe('TrainingSession.record', () => {
     ['more target attempts than session attempts', [target({ attempts: 11, correctHits: 1 })]],
   ])('rejects %s', (_reason, targets) => {
     expect(() => recordWith({ targets })).toThrow(InvalidTrainingSessionError);
+  });
+});
+
+describe('TrainingSession.record plausibility', () => {
+  it('refuses more attempts than the wall can report in the duration', () => {
+    expect(() => recordWith({ hits: 40, misses: 0, durationMs: 5_000, score: 400 })).toThrow(
+      InvalidTrainingSessionError,
+    );
+  });
+
+  it('refuses a score no level table can pay for that many hits', () => {
+    expect(() => recordWith({ hits: 2, misses: 0, score: 10_000 })).toThrow(
+      InvalidTrainingSessionError,
+    );
+  });
+
+  it('accepts a fast but possible session', () => {
+    expect(() => recordWith({ hits: 25, misses: 0, durationMs: 5_000, score: 1_000 })).not.toThrow();
   });
 });

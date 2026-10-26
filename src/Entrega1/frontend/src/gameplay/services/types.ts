@@ -9,7 +9,19 @@ export interface TargetPerformanceRequest {
   impactPeak: number | null;
 }
 
+export interface StartSessionRequest {
+  mode: GameModeId;
+  level: number;
+}
+
+export interface StartedSession {
+  ticket: string;
+  startedAt: string;
+}
+
 export interface RecordSessionRequest {
+  /** Issued when the session was opened; the server refuses a result without it. */
+  ticket: string;
   mode: GameModeId;
   level: number;
   cleared: boolean;

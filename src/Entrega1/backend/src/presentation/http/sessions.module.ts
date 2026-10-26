@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { RecordTrainingSessionUseCase } from '../../application/use-cases/record-training-session.use-case';
+import { StartTrainingSessionUseCase } from '../../application/use-cases/start-training-session.use-case';
 import { ID_GENERATOR, IdGenerator } from '../../application/ports/id-generator.port';
+import { SESSION_TICKETS, SessionTickets } from '../../application/ports/session-ticket.port';
 import {
   DAILY_STREAK_REPOSITORY,
   DailyStreakRepository,
@@ -22,6 +24,16 @@ import { SessionsController } from './sessions.controller';
   providers: [
     JwtAuthGuard,
     {
+      provide: StartTrainingSessionUseCase,
+      inject: [USER_REPOSITORY, TRAINING_SESSION_REPOSITORY, SESSION_TICKETS, ID_GENERATOR],
+      useFactory: (
+        users: UserRepository,
+        sessions: TrainingSessionRepository,
+        tickets: SessionTickets,
+        ids: IdGenerator,
+      ) => new StartTrainingSessionUseCase(users, sessions, tickets, ids),
+    },
+    {
       provide: RecordTrainingSessionUseCase,
       inject: [
         USER_REPOSITORY,
@@ -29,6 +41,7 @@ import { SessionsController } from './sessions.controller';
         DAILY_STREAK_REPOSITORY,
         TRAINING_SESSION_REPOSITORY,
         ID_GENERATOR,
+        SESSION_TICKETS,
       ],
       useFactory: (
         users: UserRepository,
@@ -36,8 +49,9 @@ import { SessionsController } from './sessions.controller';
         dailyStreaks: DailyStreakRepository,
         sessions: TrainingSessionRepository,
         ids: IdGenerator,
+        tickets: SessionTickets,
       ) =>
-        new RecordTrainingSessionUseCase(users, progressions, dailyStreaks, sessions, ids),
+        new RecordTrainingSessionUseCase(users, progressions, dailyStreaks, sessions, ids, tickets),
     },
   ],
 })

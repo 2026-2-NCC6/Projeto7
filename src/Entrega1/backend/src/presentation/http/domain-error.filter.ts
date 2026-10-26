@@ -1,5 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
+import { SessionAlreadyRecordedError } from '../../domain/training-session/errors';
 import {
   DomainError,
   EmailAlreadyInUseError,
@@ -11,6 +12,7 @@ const STATUS_BY_ERROR = new Map<unknown, HttpStatus>([
   [EmailAlreadyInUseError, HttpStatus.CONFLICT],
   [InvalidCredentialsError, HttpStatus.UNAUTHORIZED],
   [UserNotFoundError, HttpStatus.NOT_FOUND],
+  [SessionAlreadyRecordedError, HttpStatus.CONFLICT],
 ]);
 
 @Catch(DomainError)

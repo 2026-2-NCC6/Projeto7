@@ -340,6 +340,7 @@ export const texts = {
     xpAwarded: (xp: number) => `+${xp.toLocaleString('pt-BR')} XP`,
     levelUp: (level: number) => `Você chegou ao nível ${level}!`,
     saveError: 'Não foi possível salvar esta sessão.',
+    sessionNotOpened: 'Esta partida não foi aberta no servidor, então não pode ser salva.',
     guestNotice: 'Entre na sua conta para guardar seu progresso.',
     runEnded: 'Fim da série',
     runEndedSubtitle: 'O tempo acabou. Sua pontuação foi registrada.',

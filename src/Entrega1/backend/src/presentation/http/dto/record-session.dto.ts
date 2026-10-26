@@ -6,7 +6,10 @@ import {
   IsBoolean,
   IsIn,
   IsInt,
+  IsNotEmpty,
   IsOptional,
+  IsString,
+  MaxLength,
   Max,
   Min,
   ValidateNested,
@@ -23,6 +26,7 @@ const MAX_SCORE = 1_000_000;
 const MAX_ATTEMPTS = 100_000;
 const MAX_DURATION_MS = 6 * 60 * 60 * 1000;
 const MAX_RESPONSE_MS = 10 * 60 * 1000;
+const NOT_OPENED = 'A sessão precisa ser iniciada antes de ser registrada.';
 
 export class TargetPerformanceDto {
   @IsInt()
@@ -54,6 +58,11 @@ export class TargetPerformanceDto {
 }
 
 export class RecordSessionDto {
+  @IsString({ message: NOT_OPENED })
+  @MaxLength(2048, { message: NOT_OPENED })
+  @IsNotEmpty({ message: NOT_OPENED })
+  ticket: string;
+
   @IsIn(GAME_MODES as unknown as string[], { message: 'Modo de jogo inválido.' })
   mode: GameMode;
 

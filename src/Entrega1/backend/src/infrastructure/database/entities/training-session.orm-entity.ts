@@ -8,6 +8,9 @@ export class TrainingSessionOrmEntity {
   @PrimaryColumn({ type: 'uuid' })
   id: string;
 
+  @Column({ type: 'uuid', name: 'ticket_id', nullable: true, unique: true })
+  ticketId: string | null;
+
   @Column({ type: 'uuid', name: 'user_id' })
   userId: string;
 

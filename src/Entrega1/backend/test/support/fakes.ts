@@ -1,4 +1,5 @@
 import { IdGenerator } from '../../src/application/ports/id-generator.port';
+import { SessionTicket, SessionTickets } from '../../src/application/ports/session-ticket.port';
 import { DailyStreak } from '../../src/domain/daily-streak/daily-streak.entity';
 import { DailyStreakRepository } from '../../src/domain/daily-streak/daily-streak-repository.port';
 import { ProgressionTrack } from '../../src/domain/game/game-mode';
@@ -17,6 +18,7 @@ import {
   TargetBreakdown,
 } from '../../src/domain/statistics/training-statistics';
 import { CompletedTraining } from '../../src/domain/training-session/completed-training';
+import { SessionAlreadyRecordedError } from '../../src/domain/training-session/errors';
 import { EMPTY_SESSION_INSIGHTS, SessionInsights } from '../../src/domain/training-session/session-insights';
 import { EMPTY_SESSION_STATS, SessionStats } from '../../src/domain/training-session/session-stats';
 import { TrainingSessionRepository } from '../../src/domain/training-session/training-session-repository.port';
@@ -94,16 +96,38 @@ export class InMemoryDailyStreakRepository implements DailyStreakRepository {
 export class InMemoryTrainingSessionRepository implements TrainingSessionRepository {
   readonly committed: CompletedTraining[] = [];
 
+  constructor(private readonly insights: SessionInsights = EMPTY_SESSION_INSIGHTS) {}
+
   async statsFor(): Promise<SessionStats> {
     return EMPTY_SESSION_STATS;
   }
 
   async insightsFor(): Promise<SessionInsights> {
-    return EMPTY_SESSION_INSIGHTS;
+    return this.insights;
   }
 
   async commit(completed: CompletedTraining): Promise<void> {
+    const { ticketId } = completed.session;
+
+    if (ticketId && this.committed.some(({ session }) => session.ticketId === ticketId)) {
+      throw new SessionAlreadyRecordedError();
+    }
     this.committed.push(completed);
+  }
+}
+
+/** Tickets are kept by token, so a test can forge a stale or foreign one directly. */
+export class InMemorySessionTickets implements SessionTickets {
+  private readonly issued = new Map<string, SessionTicket>();
+
+  issue(ticket: SessionTicket): string {
+    const token = `ticket-${ticket.id}`;
+    this.issued.set(token, ticket);
+    return token;
+  }
+
+  verify(token: string): SessionTicket | null {
+    return this.issued.get(token) ?? null;
   }
 }
 

@@ -6,6 +6,7 @@ export const endpoints = {
   signOut: '/auth/sign-out',
   home: '/me/home',
   profile: '/me/profile',
+  startSession: '/me/sessions/start',
   recordSession: '/me/sessions',
   statistics: '/me/statistics',
   ranking: (category: RankingCategory) => `/rankings/${category}`,

@@ -1,6 +1,7 @@
-import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
+import { DataSource, QueryFailedError, Repository, SelectQueryBuilder } from 'typeorm';
 import { GAME_MODES, GameMode, LEVEL_MODES } from '../../../domain/game/game-mode';
 import { CompletedTraining } from '../../../domain/training-session/completed-training';
+import { SessionAlreadyRecordedError } from '../../../domain/training-session/errors';
 import { SessionInsights } from '../../../domain/training-session/session-insights';
 import { SessionStats } from '../../../domain/training-session/session-stats';
 import { TrainingSessionRepository } from '../../../domain/training-session/training-session-repository.port';
@@ -23,6 +24,11 @@ type InsightsRow = {
   longestHitStreak: string | null;
 } & Record<GameMode, string | null> &
   Record<`cleared_${GameMode}`, string | null>;
+
+function isTicketReuse(error: unknown): boolean {
+  const driverError = error instanceof QueryFailedError ? error.driverError : null;
+  return driverError?.code === '23505' && driverError?.constraint === 'uq_training_sessions_ticket';
+}
 
 function toNullableNumber(value: string | null | undefined): number | null {
   return value === null || value === undefined ? null : Number(value);
@@ -60,10 +66,19 @@ export class TypeOrmTrainingSessionRepository implements TrainingSessionReposito
     this.repository = dataSource.getRepository(TrainingSessionOrmEntity);
   }
 
-  async commit({ session, progression, dailyStreak }: CompletedTraining): Promise<void> {
+  async commit(completed: CompletedTraining): Promise<void> {
+    try {
+      await this.insert(completed);
+    } catch (error) {
+      throw isTicketReuse(error) ? new SessionAlreadyRecordedError() : error;
+    }
+  }
+
+  private async insert({ session, progression, dailyStreak }: CompletedTraining): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
       await manager.getRepository(TrainingSessionOrmEntity).insert({
         id: session.id,
+        ticketId: session.ticketId,
         userId: session.userId,
         mode: session.mode,
         level: session.level,

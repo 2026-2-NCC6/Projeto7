@@ -1,10 +1,13 @@
+import { texts } from '../../content/texts';
 import { endpoints } from '../../services/api/endpoints';
-import { post } from '../../services/api/httpClient';
+import { ApiError, post } from '../../services/api/httpClient';
 import type { TargetMetrics } from '../domain/metrics/session-metrics';
 import type { SessionResult } from '../domain/metrics/session-result';
 import type {
   RecordedSession,
   RecordSessionRequest,
+  StartedSession,
+  StartSessionRequest,
   TargetPerformanceRequest,
 } from './types';
 
@@ -25,14 +28,12 @@ function toTargetPerformance({
   };
 }
 
-export function toRecordSessionRequest({
-  mode,
-  level,
-  cleared,
-  deviceKind,
-  metrics,
-}: SessionResult): RecordSessionRequest {
+export function toRecordSessionRequest(
+  { mode, level, cleared, deviceKind, metrics }: SessionResult,
+  ticket: string,
+): RecordSessionRequest {
   return {
+    ticket,
     mode,
     level,
     cleared,
@@ -52,8 +53,36 @@ export function toRecordSessionRequest({
   };
 }
 
+/**
+ * The ticket of the session being played, keyed by when it started. Only one
+ * session runs at a time, so opening a new one forgets the previous ticket.
+ */
+const openTickets = new Map<number, Promise<string>>();
+
 export const sessionService = {
-  record(result: SessionResult, accessToken: string): Promise<RecordedSession> {
-    return post<RecordedSession>(endpoints.recordSession, toRecordSessionRequest(result), accessToken);
+  /** Opens the session on the server as play starts, without holding the game up. */
+  open(request: StartSessionRequest, startedAt: number, accessToken: string): void {
+    const ticket = post<StartedSession>(endpoints.startSession, request, accessToken).then(
+      (started) => started.ticket,
+    );
+
+    // A failure surfaces when the result is recorded, not as an unhandled rejection now.
+    ticket.catch(() => undefined);
+    openTickets.clear();
+    openTickets.set(startedAt, ticket);
+  },
+
+  async record(result: SessionResult, accessToken: string): Promise<RecordedSession> {
+    const ticket = openTickets.get(result.startedAt);
+
+    if (!ticket) {
+      throw new ApiError(texts.results.sessionNotOpened, 0);
+    }
+
+    return post<RecordedSession>(
+      endpoints.recordSession,
+      toRecordSessionRequest(result, await ticket),
+      accessToken,
+    );
   },
 };

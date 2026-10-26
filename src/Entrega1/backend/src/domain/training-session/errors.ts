@@ -5,3 +5,9 @@ export class InvalidTrainingSessionError extends DomainError {
     super(`Sessão de treino inválida: ${reason}`);
   }
 }
+
+export class SessionAlreadyRecordedError extends DomainError {
+  constructor() {
+    super('Esta sessão de treino já foi registrada.');
+  }
+}

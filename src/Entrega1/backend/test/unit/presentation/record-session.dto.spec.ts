@@ -3,6 +3,7 @@ import { validate } from 'class-validator';
 import { RecordSessionDto } from '../../../src/presentation/http/dto/record-session.dto';
 
 const validSession = {
+  ticket: 'ticket-emitido-pelo-servidor',
   mode: 'level_color',
   level: 1,
   cleared: true,
@@ -22,8 +23,12 @@ async function errorsFor(body: object): Promise<string[]> {
 }
 
 describe('RecordSessionDto telemetry', () => {
-  it('keeps accepting the payload older app builds send', async () => {
+  it('accepts a session without telemetry', async () => {
     await expect(errorsFor(validSession)).resolves.toEqual([]);
+  });
+
+  it('refuses a result that was never opened on the server', async () => {
+    await expect(errorsFor({ ...validSession, ticket: undefined })).resolves.toEqual(['ticket']);
   });
 
   it('accepts a device kind and per-target readings', async () => {

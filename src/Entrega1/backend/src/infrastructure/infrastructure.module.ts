@@ -4,6 +4,7 @@ import { ModuleRef } from '@nestjs/core';
 import { DataSource } from 'typeorm';
 import { ID_GENERATOR } from '../application/ports/id-generator.port';
 import { PASSWORD_HASHER } from '../application/ports/password-hasher.port';
+import { SESSION_TICKETS } from '../application/ports/session-ticket.port';
 import { TOKEN_ISSUER, TOKEN_VERIFIER } from '../application/ports/token-issuer.port';
 import { DAILY_STREAK_REPOSITORY } from '../domain/daily-streak/daily-streak-repository.port';
 import { PROGRESSION_REPOSITORY } from '../domain/progression/progression-repository.port';
@@ -19,6 +20,7 @@ import { TypeOrmStatisticsRepository } from './database/repositories/typeorm-sta
 import { TypeOrmTrainingSessionRepository } from './database/repositories/typeorm-training-session.repository';
 import { TypeOrmUserRepository } from './database/repositories/typeorm-user.repository';
 import { BcryptPasswordHasher } from './security/bcrypt-password-hasher';
+import { JwtSessionTickets } from './security/jwt-session-tickets';
 import { JwtTokenService } from './security/jwt-token-service';
 import { UuidIdGenerator } from './security/uuid-id-generator';
 
@@ -80,6 +82,12 @@ const JWT_TOKEN_SERVICE = Symbol('JwtTokenService');
         ),
     },
     {
+      provide: SESSION_TICKETS,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) =>
+        new JwtSessionTickets(config.getOrThrow<string>('JWT_SECRET')),
+    },
+    {
       provide: TOKEN_ISSUER,
       inject: [JWT_TOKEN_SERVICE],
       useFactory: (service: JwtTokenService) => service,
@@ -102,6 +110,7 @@ const JWT_TOKEN_SERVICE = Symbol('JwtTokenService');
     ID_GENERATOR,
     TOKEN_ISSUER,
     TOKEN_VERIFIER,
+    SESSION_TICKETS,
   ],
 })
 export class InfrastructureModule implements OnApplicationShutdown {

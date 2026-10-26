@@ -1,6 +1,12 @@
 import type { SessionMetrics, TargetMetrics } from '../domain/metrics/session-metrics';
 import type { SessionResult } from '../domain/metrics/session-result';
-import { toRecordSessionRequest } from './sessionService';
+import { post } from '../../services/api/httpClient';
+import { sessionService, toRecordSessionRequest } from './sessionService';
+
+jest.mock('../../services/api/httpClient', () => ({
+  ...jest.requireActual('../../services/api/httpClient'),
+  post: jest.fn(),
+}));
 
 function target(overrides: Partial<TargetMetrics>): TargetMetrics {
   return { targetId: 1, color: 'amber', attempts: 0, correctHits: 0, impact: null, ...overrides };
@@ -53,9 +59,11 @@ describe('toRecordSessionRequest', () => {
         ],
         'websocket',
       ),
+      'ticket-1',
     );
 
     expect(request).toMatchObject({
+      ticket: 'ticket-1',
       deviceKind: 'websocket',
       score: 900,
       durationMs: 30_401,
@@ -71,10 +79,57 @@ describe('toRecordSessionRequest', () => {
   it('never persists simulated impact readings', () => {
     const request = toRecordSessionRequest(
       resultWith([target({ attempts: 3, correctHits: 3, impact: impact(true) })], 'simulated'),
+      'ticket-1',
     );
 
     expect(request.targets).toEqual([
       { targetId: 1, attempts: 3, correctHits: 3, impactAverage: null, impactPeak: null },
     ]);
+  });
+});
+
+describe('sessionService', () => {
+  const result = resultWith([], 'simulated');
+
+  beforeEach(() => jest.mocked(post).mockReset());
+
+  it('records the result with the ticket the session was opened with', async () => {
+    jest
+      .mocked(post)
+      .mockResolvedValueOnce({ ticket: 'ticket-9', startedAt: '2026-10-25T12:00:00.000Z' })
+      .mockResolvedValueOnce({ xpAwarded: 120 });
+
+    sessionService.open({ mode: 'level_color', level: 2 }, result.startedAt, 'token');
+    await sessionService.record(result, 'token');
+
+    expect(post).toHaveBeenNthCalledWith(
+      1,
+      '/me/sessions/start',
+      { mode: 'level_color', level: 2 },
+      'token',
+    );
+    expect(post).toHaveBeenNthCalledWith(
+      2,
+      '/me/sessions',
+      expect.objectContaining({ ticket: 'ticket-9' }),
+      'token',
+    );
+  });
+
+  it('refuses to record a session that was never opened', async () => {
+    jest.mocked(post).mockResolvedValueOnce({ ticket: 'ticket-1', startedAt: '' });
+    sessionService.open({ mode: 'level_color', level: 2 }, 1, 'token');
+
+    await expect(sessionService.record({ ...result, startedAt: 2 }, 'token')).rejects.toThrow(
+      'não foi aberta no servidor',
+    );
+  });
+
+  it('reports why the session could not be opened', async () => {
+    jest.mocked(post).mockRejectedValueOnce(new Error('Não foi possível conectar ao servidor.'));
+
+    sessionService.open({ mode: 'level_color', level: 2 }, result.startedAt, 'token');
+
+    await expect(sessionService.record(result, 'token')).rejects.toThrow('conectar ao servidor');
   });
 });

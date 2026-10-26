@@ -7,16 +7,23 @@ import { Progression } from '../../domain/progression/progression.entity';
 import { ProgressionRepository } from '../../domain/progression/progression-repository.port';
 import { xpForSession } from '../../domain/progression/session-reward';
 import { DeviceKind } from '../../domain/training-session/device-kind';
+import { InvalidTrainingSessionError } from '../../domain/training-session/errors';
 import { TargetPerformance } from '../../domain/training-session/target-performance';
 import { TrainingSession } from '../../domain/training-session/training-session.entity';
 import { TrainingSessionRepository } from '../../domain/training-session/training-session-repository.port';
 import { UserNotFoundError } from '../../domain/user/errors';
 import { UserRepository } from '../../domain/user/user-repository.port';
 import { IdGenerator } from '../ports/id-generator.port';
+import { SessionTicket, SessionTickets } from '../ports/session-ticket.port';
 import { toTrackProgressView, TrackProgressView } from './track-progress';
+
+/** The app starts its clock a moment before the ticket comes back; this covers the round trip. */
+const CLOCK_TOLERANCE_MS = 5_000;
 
 export interface RecordTrainingSessionInput {
   userId: string;
+  /** Returned by StartTrainingSessionUseCase when the session was opened. */
+  ticket: string;
   mode: GameMode;
   level: number;
   cleared: boolean;
@@ -69,7 +76,25 @@ export class RecordTrainingSessionUseCase {
     private readonly dailyStreaks: DailyStreakRepository,
     private readonly sessions: TrainingSessionRepository,
     private readonly ids: IdGenerator,
+    private readonly tickets: SessionTickets,
   ) {}
+
+  /** The session must be the one opened on the server, and no longer than the time since then. */
+  private openedTicketFor(input: RecordTrainingSessionInput): SessionTicket {
+    const ticket = this.tickets.verify(input.ticket);
+
+    if (!ticket || ticket.userId !== input.userId) {
+      throw new InvalidTrainingSessionError('a sessão não foi iniciada no servidor.');
+    }
+    if (ticket.mode !== input.mode || ticket.level !== input.level) {
+      throw new InvalidTrainingSessionError('modo ou nível diferente do iniciado.');
+    }
+    if (input.durationMs > Date.now() - ticket.startedAt.getTime() + CLOCK_TOLERANCE_MS) {
+      throw new InvalidTrainingSessionError('duração maior que o tempo desde o início.');
+    }
+
+    return ticket;
+  }
 
   async execute(input: RecordTrainingSessionInput): Promise<RecordedSessionView> {
     const user = await this.users.findById(input.userId);
@@ -77,6 +102,8 @@ export class RecordTrainingSessionUseCase {
     if (!user) {
       throw new UserNotFoundError();
     }
+
+    const ticket = this.openedTicketFor(input);
 
     const track = TRACK_BY_MODE[input.mode];
     const [existingProgression, existingStreak] = await Promise.all([
@@ -93,6 +120,7 @@ export class RecordTrainingSessionUseCase {
 
     const session = TrainingSession.record({
       id: this.ids.generate(),
+      ticketId: ticket.id,
       userId: input.userId,
       mode: input.mode,
       level: input.level,

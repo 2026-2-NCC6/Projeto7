@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { useDevice } from '../../device/runtime/useDevice';
+import { useAuthStore } from '../../store/authStore';
 import type { PlayableModeId } from '../../types/game';
 import {
   applyInput,
@@ -14,6 +15,7 @@ import { collectSessionMetrics } from '../domain/metrics/metrics-collector';
 import type { SessionResult } from '../domain/metrics/session-result';
 import { isTerminal } from '../domain/session-phase';
 import { rulesFor } from '../modes/registry';
+import { sessionService } from '../services/sessionService';
 import { pulseFor, pulseOutcome } from './haptics';
 
 const TICK_MS = 100;
@@ -57,16 +59,24 @@ export function useGameSession<TState>({
 
     feedbackSeq.current = 0;
     outcomeAnnounced.current = false;
+    const startedAt = Date.now();
     setSession(
       startSession({
         rules,
         config,
         random: Math.random,
         deviceStatus: device.status,
-        startedAt: Date.now(),
+        startedAt,
       }),
     );
-  }, [config, rules, device]);
+
+    // Only a signed-in player's session is recorded, so only theirs is opened.
+    const { accessToken } = useAuthStore.getState();
+
+    if (accessToken) {
+      sessionService.open({ mode, level: config.level }, startedAt, accessToken);
+    }
+  }, [config, rules, device, mode]);
 
   useEffect(() => {
     return device.subscribe((event) => dispatch({ kind: 'deviceEvent', event }));
