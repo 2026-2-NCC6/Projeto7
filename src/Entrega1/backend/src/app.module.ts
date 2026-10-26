@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { AuthModule } from './presentation/http/auth.module';
 import { HomeModule } from './presentation/http/home.module';
 import { ProfileModule } from './presentation/http/profile.module';
 import { RankingsModule } from './presentation/http/rankings.module';
+import { SecurityAuditMiddleware } from './presentation/http/security-audit';
 import { SessionsModule } from './presentation/http/sessions.module';
 import { StatisticsModule } from './presentation/http/statistics.module';
 
@@ -20,4 +21,8 @@ import { StatisticsModule } from './presentation/http/statistics.module';
     StatisticsModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(SecurityAuditMiddleware).forRoutes('*path');
+  }
+}
