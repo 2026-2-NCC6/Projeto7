@@ -17,6 +17,7 @@
  *         b reinicia a parede · q sai
  */
 import { networkInterfaces } from 'node:os';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { WebSocketServer } from 'ws';
 
 const PROTOCOL_VERSION = 2;
@@ -87,6 +88,12 @@ function tokenOf(url) {
   return new URL(url ?? '/', 'ws://parede').searchParams.get('token') ?? '';
 }
 
+/** Compara sem parar no primeiro caractere diferente, como matchesPairingToken no firmware. */
+function matchesPairingToken(given) {
+  const digest = (value) => createHash('sha256').update(value).digest();
+  return timingSafeEqual(digest(given), digest(TOKEN));
+}
+
 function withinCommandRate() {
   const now = Date.now();
 
@@ -136,7 +143,7 @@ function applyCommand(raw) {
 }
 
 server.on('connection', (client, request) => {
-  if (tokenOf(request.url) !== TOKEN) {
+  if (!matchesPairingToken(tokenOf(request.url))) {
     refuse(client, 'nao autorizado');
     return;
   }
