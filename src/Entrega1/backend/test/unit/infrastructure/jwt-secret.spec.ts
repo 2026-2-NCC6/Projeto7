@@ -1,8 +1,10 @@
+import { randomBytes } from 'node:crypto';
+
 import { requireStrongSecret } from '../../../src/infrastructure/security/jwt-secret';
 
 describe('requireStrongSecret', () => {
   it('accepts a long random secret', () => {
-    const secret = 'k3Q9v7XxZt2pLwR8mN4bC6yH1sD5fG0jUaEiOoPq';
+    const secret = randomBytes(48).toString('base64');
 
     expect(requireStrongSecret(secret)).toBe(secret);
   });
