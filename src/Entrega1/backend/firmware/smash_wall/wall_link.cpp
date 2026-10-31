@@ -3,6 +3,7 @@
 #include <ESPmDNS.h>
 #include <WebSocketsServer.h>
 #include <WiFi.h>
+#include <esp_random.h>
 
 #include "config.h"
 
@@ -201,7 +202,7 @@ void keepStationAlive() {
 }  // namespace
 
 void linkBegin() {
-  bootSession = String(WALL_ID) + "-" + String(millis()) + String(random(1000, 9999));
+  bootSession = String(WALL_ID) + "-" + String(millis()) + String(1000 + esp_random() % 9000);
   session = bootSession;
 
 #if WALL_MODE_SOFTAP
