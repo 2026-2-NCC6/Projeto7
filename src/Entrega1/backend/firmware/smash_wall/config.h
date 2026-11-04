@@ -20,7 +20,7 @@
 //
 // Senhas e o segredo de pareamento ficam em secrets.h, nunca aqui: este arquivo
 // vai para o Git.
-#define WALL_MODE_SOFTAP 1
+#define WALL_MODE_SOFTAP 0
 
 static const char* WALL_ID = "wall-1";
 

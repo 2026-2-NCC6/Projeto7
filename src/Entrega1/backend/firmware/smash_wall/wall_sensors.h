@@ -15,6 +15,7 @@ struct WallImpact {
  * Máquina de estados por varredura (diagrama de Teoria da Computação):
  *
  *   IDLE -> ARMED -> MEASURING_PEAK -> EVENT_EMITTED -> DEBOUNCE -> IDLE
+ *                         └─(pico abaixo do limiar)─> IDLE
  *
  * As transições dependem só do limiar e do tempo decorrido. Nada bloqueia:
  * cada chamada faz uma varredura dos seis canais e volta.

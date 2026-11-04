@@ -98,7 +98,11 @@ bool sensorsPoll(WallImpact& impact) {
       trackPeaks();
 
       if (now - windowStartedAt >= PEAK_WINDOW_MS) {
-        state = WALL_EVENT_EMITTED;
+        // Uma leitura isolada de ruído (comum no ADC com o Wi-Fi ligado) abre
+        // a janela, mas some antes dela. Batida de verdade faz o piezo vibrar
+        // a janela inteira: sem pico acima do limiar, não houve impacto.
+        const uint8_t index = loudestTarget();
+        state = peak[index] >= TARGET_THRESHOLD[index] ? WALL_EVENT_EMITTED : WALL_IDLE;
       }
       return false;
 

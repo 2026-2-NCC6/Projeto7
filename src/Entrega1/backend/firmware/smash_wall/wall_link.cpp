@@ -166,6 +166,7 @@ bool stationAnnounced = false;
 void startStation() {
   WiFi.mode(WIFI_STA);
   WiFi.setSleep(false);
+  WiFi.setAutoReconnect(true);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("[wifi] entrando na rede ");
   Serial.println(WIFI_SSID);
@@ -193,9 +194,10 @@ void keepStationAlive() {
   }
 
   stationAnnounced = false;
+  // Não derrubar e recomeçar aqui: o handshake com um hotspot de celular passa
+  // de 3 s, e o disconnect() abortava cada tentativa no meio. O driver do Wi-Fi
+  // reconecta sozinho (setAutoReconnect).
   Serial.println("[wifi] sem conexao, tentando de novo");
-  WiFi.disconnect();
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 }
 #endif
 

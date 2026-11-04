@@ -490,12 +490,19 @@ Modelagem que é entregável da disciplina (`/docs/TC e MF`). O código em
 ```
 IDLE ──(algum canal cruza o limiar)──> ARMED
 ARMED ──(abre a janela de pico)──────> MEASURING_PEAK
-MEASURING_PEAK ──(20 ms)─────────────> EVENT_EMITTED
+MEASURING_PEAK ──(20 ms, pico ≥ limiar)─> EVENT_EMITTED
+MEASURING_PEAK ──(20 ms, pico < limiar)─> IDLE
 EVENT_EMITTED ──(evento publicado)───> DEBOUNCE
 DEBOUNCE ──(200 ms)──────────────────> IDLE
 ```
 
 As transições dependem só de duas coisas: cruzar o limiar e o tempo passar.
+
+**Por que a volta direta para IDLE existe.** Com o Wi-Fi ligado, o ADC do ESP32
+solta leituras isoladas de ruído. Uma delas basta para cruzar o limiar e abrir a
+janela, mas some antes da janela acabar. Uma batida de verdade faz o piezo vibrar
+durante a janela inteira. Se, ao fim dos 20 ms, nem o maior pico chega ao limiar
+do próprio alvo, não houve impacto: nada é publicado.
 
 O atuador (`wall_actuator.cpp`) fica **fora** desta máquina: é um sequenciador
 à parte, que só pisca o sinal que recebe. Detecção e retorno não se misturam, e o
