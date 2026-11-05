@@ -5,6 +5,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { setupApiDocs } from './presentation/http/api-docs';
 import { DomainErrorFilter } from './presentation/http/domain-error.filter';
 import { buildServerConfig } from './server-config';
 
@@ -39,6 +40,8 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks();
   app.useGlobalPipes(validationPipe);
   app.useGlobalFilters(new DomainErrorFilter());
+
+  setupApiDocs(app);
 
   await app.listen(config.port, config.host);
 }
