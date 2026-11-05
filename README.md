@@ -40,12 +40,14 @@ O projeto integra, na prática, os conteúdos de quatro disciplinas do 6º semes
 │   │   └── 📂 Redes de Computadores e Cibersegurança<br>
 │   │   └── 📂 Sistemas Embarcados e Robótica<br>
 │   │   └── 📂 Teoria da Computação e Linguagens Formais<br>
-│   └── 📁 Entrega2/ (mesma estrutura das disciplinas)<br>
+│   ├── 📁 Entrega2/ (mesma estrutura das disciplinas)<br>
+│   └── 📄 README.md → declaração de uso de IA nos documentos<br>
 ├── 🗂️ src/<br>
 │   ├── 📁 Entrega1/<br>
 │   │   ├── 📂 backend → NestJS + TypeORM + firmware do ESP32<br>
 │   │   └── 📂 frontend → Expo + React Native + TypeScript<br>
-│   └── 📁 Entrega2/ (não iniciada)<br>
+│   ├── 📁 Entrega2/ (não iniciada)<br>
+│   └── 📄 README.md → declaração de uso de IA no código<br>
 ├── 📄 CLAUDE.md<br>
 └── 📄 README.md<br>
 
