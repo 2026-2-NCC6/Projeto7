@@ -86,7 +86,7 @@ Os trechos de *prompts* entre aspas são cópias dos comandos enviados, com a gr
 | **Disciplina / Trabalho** | Redes de Computadores e Cibersegurança — Entrega 2 |
 | **Finalidade de uso** | Implementação das mitigações no código, scripts de teste de segurança e redação do relatório com os resultados do OWASP ZAP, Semgrep, Gitleaks e Aikido |
 | ***Prompts* principais utilizados** | 1. "Dá uma lida na nossa antiga entrega, que foi feita na entrega 1 […] e avalie, do estado do código atual e do que a gente entregou, o que tem que fazer: já dá para a gente fazer agora ou está faltando alguma coisa?"<br>2. "Eu só quero que você tenha certeza de que está exatamente tudo que o professor pediu, e se a linguagem não está técnica demais. […] Tem como a gente encurtar um pouco, mas sem perder detalhes?"<br>3. "O professor comentou que era para a gente utilizar alguns sites […]. Eu tirei foto de todas as análises, e a gente pode complementar o nosso documento com esse cara." |
-| **Trechos ou entregas afetadas** | `Entrega-2-Relatorio-de-Mitigacao-de-Riscos-Smash.docx` e `.pdf` (28 riscos, R01 a R28, e 21 ataques simulados) e `Projeto7-entrega2-ciberseguranca-codigo.zip`; mitigações no backend, no app e no firmware (ver `src/README.md`) |
+| **Trechos ou entregas afetadas** | `Entrega-2-Plano-de-Respostas-aos-Riscos-Smash.docx` e `.pdf` (30 riscos, R01 a R30, e 21 ataques simulados), `Entrega-2-Relatorio-Aikido-Security-Audit-Smash.pdf` e `Projeto7-entrega2-ciberseguranca-codigo.zip`; mitigações no backend, no app e no firmware (ver `src/README.md`) |
 
 ### Disciplina 3 — Teoria da Computação e Linguagens Formais
 
