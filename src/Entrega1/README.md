@@ -3,12 +3,15 @@
 Autenticação, Home, Perfil, Estatísticas e Ranking com dados reais do PostgreSQL,
 e o gameplay: **Color Mode**, **Score Mode**, **Infinite Color** e **Infinite
 Score**, com o motor de jogo separado do hardware — e o firmware da parede.
+Treinos criados e publicados no **site/dashboard** e jogados no app, com parada de
+emergência, operação offline, telemetria batida a batida e auditoria.
 
 ```
 backend/            NestJS + TypeORM + PostgreSQL (Clean Architecture)
 backend/firmware/   firmware do ESP32 (C++/Arduino) — veja o README de lá
 frontend/           React Native (Expo) + TypeScript + styled-components
-scripts/            utilitários (emulador Android)
+frontend/web/       site/dashboard: React + Vite + TypeScript
+scripts/            utilitários (emulador Android, emulador da parede, testes de segurança)
 ```
 
 ---
@@ -58,6 +61,7 @@ Para parar tudo: `Ctrl+C`.
 | `npm run dev` | backend + app, sem mexer no emulador |
 | `npm run backend` | só o backend |
 | `npm run app` | só o Metro (aperte `a` para abrir no Android) |
+| `npm run web` | só o site/dashboard, em http://localhost:5173 (a API vai por `/api`) |
 | `npm run emulator` | só abre o emulador e espera o boot |
 | `npm run wall` | emulador da parede: servidor WebSocket na porta 8181, com o protocolo do firmware |
 | `npm run db:migrate` | aplica as migrations pendentes |
@@ -83,6 +87,75 @@ EXPO_PUBLIC_API_URL=http://SEU_IP_LOCAL:3000 npm run app
 
 ---
 
+## Site e dashboard
+
+Um único site em `frontend/web`, responsivo e com tema claro/escuro. Ele usa a
+mesma conta do app e muda o menu conforme o papel:
+
+| Papel | O que vê |
+| --- | --- |
+| Visitante | catálogo público de treinos, detalhes e histórico de versões |
+| Jogador | histórico por período e por treino (volume, precisão, consistência, tempo, progressão), sessão batida a batida, perfil do praticante |
+| Treinador | estúdio: criar e editar treinos, simular, enviar para revisão, arquivar e analisar as sessões de cada treino |
+| Administrador | tudo acima, mais revisão e publicação, usuários e papéis, todas as sessões, dispositivos e auditoria |
+
+Um treino é uma sequência de etapas Color ou Score com os mesmos parâmetros das
+tabelas de níveis, mais público, objetivo, dificuldade, duração, instruções,
+critérios de pontuação, equipamentos, riscos e metadados de marketplace (categoria,
+licença, modelo de remuneração e compatibilidade; nenhuma cobrança no MVP).
+
+O ciclo é **rascunho → simulação → revisão → publicação**. O simulador do site roda
+o mesmo motor de jogo do app (`frontend/src/gameplay`), e o servidor só aceita
+enviar para revisão uma revisão do rascunho que foi simulada até o fim. Cada
+publicação cria uma versão imutável; editar um treino publicado abre uma nova
+revisão sem tirar a versão atual do catálogo.
+
+Toda conta nova é de jogador; um administrador promove pelo site. Para a
+apresentação:
+
+```bash
+npm --prefix backend run demo:staff       # cria um admin e um treinador e imprime as senhas uma vez
+npm --prefix backend run demo:trainings   # publica três treinos de exemplo
+npm --prefix backend run demo:accounts    # cria jogadores
+npm --prefix backend run demo:clean       # apaga todas as contas demo.smash.test
+```
+
+A documentação OpenAPI fica em `/docs` na API (`/api/docs` pelo site), com o JSON
+em `/docs/openapi.json`.
+
+## No app: treinos, parada segura e offline
+
+- **Jogar → Treinos publicados** lista o catálogo (com filtro por público), mostra
+  instruções, riscos, equipamentos e etapas, e joga etapa por etapa. Cada etapa é
+  uma sessão aberta no servidor com o treino, a versão e o índice da etapa.
+- **Parar** fica visível durante toda partida. Tocar pausa na hora; escolher o
+  motivo encerra a sessão como `emergencyStop`, sem XP, e trava o app em "Sistema
+  em parada segura" até alguém confirmar **Reiniciar sistema**. Enquanto parado,
+  nenhum comando vai para a parede. O motivo fica na sessão e na auditoria.
+- **Sem conexão**, o resultado fica numa fila no aparelho e é enviado quando a
+  internet volta. Se a partida foi aberta no servidor, vai com o ticket; se não,
+  vai pela rota offline, entra no histórico marcada como offline e não dá XP nem
+  ranking (risco R04). O catálogo também fica guardado para abrir sem rede.
+- Cada sessão leva a sequência de tentativas (momento, alvo, acerto ou erro,
+  tempo de reação, pontos e intensidade da parede real), as pausas, quedas da
+  parede, falhas de mensagem e o identificador do dispositivo.
+- **Perfil → Perfil do praticante** guarda faixa etária, nível, objetivos, mão
+  dominante e restrições. Menores aparecem no ranking só com o primeiro nome e a
+  inicial do sobrenome.
+
+## Docker
+
+```bash
+cp docker.env.example .env.docker   # defina DB_PASSWORD e JWT_SECRET
+docker compose --env-file .env.docker up -d --build
+```
+
+Sobe PostgreSQL, a API (que aplica as migrations ao iniciar) e o site atrás do
+nginx em http://localhost:8080, com a API em `/api`. `API_PORT` e `WEB_PORT`
+mudam as portas do host.
+
+---
+
 ## Banco de dados
 
 ```
@@ -95,7 +168,18 @@ training_sessions     uma linha por treino: modo, nível, concluído, score,
                       (simulated|websocket), quando
 training_session_targets  telemetria por alvo de cada treino: tentativas,
                       acertos, impacto médio e pico — PK (session_id, target_id)
+training_session_attempts cada tentativa da sessão: momento, tempo de reação,
+                      alvo, acerto ou erro, pontos e intensidade — PK (session_id, seq)
+trainings             treino: autor, situação (draft|in_review|published|archived),
+                      rascunho em JSON, revisão, revisão simulada e publicada
+training_versions     cada versão publicada, imutável — PK (training_id, version)
+audit_events          auditoria: quem, o quê, alvo, resultado, detalhes e IP
 ```
+
+`users` ganhou `role` (`player`|`coach`|`admin`) e o perfil do praticante.
+`training_sessions` ganhou o treino jogado (`training_id`, `training_version`,
+`step_index`), `end_reason`, `stop_reason`, contagem de pausas, quedas e falhas,
+`offline`, `client_session_id` e `device_id`.
 
 Ao criar uma conta, o backend grava numa **transação** o usuário, as duas
 trilhas de progressão (nível 0, 0 XP) e a ofensiva zerada.
@@ -268,6 +352,19 @@ sem origem de dados aparece como `—` em vez de um número inventado.
 | POST | `/me/sessions` | Bearer | `201` · `400` validação · `401` sem token |
 | GET | `/me/statistics` | Bearer | `200` · `401` sem token/expirado |
 | GET | `/rankings/:category` | opcional | `200` · `400` categoria inválida |
+| PATCH | `/me/profile` | Bearer | `200` · perfil do praticante |
+| POST | `/me/sessions/offline` | Bearer | `201` · `409` já sincronizada |
+| GET | `/me/sessions` | Bearer | `200` · histórico com filtro por período e treino |
+| GET | `/sessions/:id` | Bearer | `200` · dono, autor do treino ou admin · `404` |
+| GET | `/trainings` | — | `200` · catálogo com filtros |
+| GET | `/trainings/:id` | — | `200` · versão publicada (ou `?version=`) · `404` |
+| GET | `/trainings/:id/versions` | — | `200` · histórico de versões |
+| GET/POST | `/studio/trainings` | treinador/admin | `200`/`201` · `403` |
+| GET/PUT | `/studio/trainings/:id` | treinador/admin | `200` · `403` · `422` |
+| POST | `/studio/trainings/:id/{simulation,submit,publish,return,archive,restore}` | treinador/admin | `200` · `403` · `409` |
+| GET | `/studio/trainings/:id/analytics` | treinador/admin | `200` |
+| GET | `/admin/{overview,users,sessions,devices,audit}` | admin | `200` · `403` |
+| PATCH | `/admin/users/:id/role` | admin | `204` · `403` |
 
 `/me/home` devolve nome do jogador, ofensiva diária, progressão por trilha e o
 resumo das sessões.
@@ -384,12 +481,16 @@ A aba Estatísticas mostra o painel do jogador — gráficos de atividade e de
 precisão, mapa de acertos da parede, precisão por cor, impacto por alvo, modos,
 sessões recentes e recordes — e a telemetria da parede, dos sensores e do sistema.
 Campos de hardware que o firmware ainda não envia aparecem como "Indisponível". O
-botão do painel geral na web já está na tela, desabilitado até o site existir.
+botão do painel na web abre o site (`EXPO_PUBLIC_WEB_URL`, ou o host do Metro na
+porta 5173 em desenvolvimento).
 
 A aba Ranking tem seis categorias, pódio, lista dos 50 primeiros e a posição do
 jogador fixada no rodapé quando ele está fora da lista. Visitantes veem o ranking
 com um convite para entrar.
 
-Fora do escopo por enquanto: o painel web geral e o Desafio Diário como modo
-próprio. O firmware do ESP32 já existe em `backend/firmware/`; sem a
+O site/dashboard, o catálogo de treinos pela API, os papéis de treinador e
+administrador, a parada segura, a fila offline e a auditoria completam o cenário
+do enunciado: um autor publica no site, o app joga e o resultado volta para o
+site. Fora do escopo por enquanto: o Desafio Diário como modo próprio e a
+integração com uma máquina lançadora. O firmware do ESP32 já existe em `backend/firmware/`; sem a
 parede montada, o app continua usando o dispositivo simulado.
