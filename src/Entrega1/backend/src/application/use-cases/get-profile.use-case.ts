@@ -14,6 +14,8 @@ import {
 import { EMPTY_SESSION_STATS, SessionStats } from '../../domain/training-session/session-stats';
 import { TrainingSessionRepository } from '../../domain/training-session/training-session-repository.port';
 import { UserNotFoundError } from '../../domain/user/errors';
+import { PractitionerProfile } from '../../domain/user/practitioner-profile';
+import { UserRole } from '../../domain/user/role';
 import { UserRepository } from '../../domain/user/user-repository.port';
 import { playerRankOf, PlayerRank } from './player-rank';
 import { toTrackProgressView, TrackProgressView } from './track-progress';
@@ -24,6 +26,8 @@ export interface ProfileView {
     name: string;
     email: string;
     level: number;
+    role: UserRole;
+    practitioner: PractitionerProfile;
   };
   progress: TrackProgressView[];
   stats: SessionStats & { accuracyPercent: number | null };
@@ -67,6 +71,8 @@ export class GetProfileUseCase {
         name: user.name,
         email: user.email,
         level: highestLevelOf(progressions),
+        role: user.role,
+        practitioner: user.profile,
       },
       progress: progressions.map(toTrackProgressView),
       stats: { ...sessionStats, accuracyPercent: sessionInsights.accuracyPercent },

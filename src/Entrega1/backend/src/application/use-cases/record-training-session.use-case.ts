@@ -6,8 +6,17 @@ import { TRACK_BY_MODE } from '../../domain/game/session-mode';
 import { Progression } from '../../domain/progression/progression.entity';
 import { ProgressionRepository } from '../../domain/progression/progression-repository.port';
 import { xpForSession } from '../../domain/progression/session-reward';
+import { AUDIT_LOG_NONE, AuditLog, auditEntry } from '../../domain/audit/audit-event';
 import { DeviceKind } from '../../domain/training-session/device-kind';
 import { InvalidTrainingSessionError } from '../../domain/training-session/errors';
+import {
+  EndReason,
+  SessionAttemptInput,
+  SessionInterruptions,
+  sameTraining,
+  toSessionAttempt,
+  TrainingRef,
+} from '../../domain/training-session/session-context';
 import { TargetPerformance } from '../../domain/training-session/target-performance';
 import { TrainingSession } from '../../domain/training-session/training-session.entity';
 import { TrainingSessionRepository } from '../../domain/training-session/training-session-repository.port';
@@ -36,6 +45,12 @@ export interface RecordTrainingSessionInput {
   bestResponseMs?: number | null;
   deviceKind?: DeviceKind;
   targets?: TargetPerformanceInput[];
+  training?: TrainingRef | null;
+  endReason?: EndReason | null;
+  stopReason?: string | null;
+  interruptions?: SessionInterruptions;
+  deviceId?: string | null;
+  attempts?: SessionAttemptInput[];
 }
 
 export interface TargetPerformanceInput {
@@ -77,6 +92,7 @@ export class RecordTrainingSessionUseCase {
     private readonly sessions: TrainingSessionRepository,
     private readonly ids: IdGenerator,
     private readonly tickets: SessionTickets,
+    private readonly audit: AuditLog = AUDIT_LOG_NONE,
   ) {}
 
   /** The session must be the one opened on the server, and no longer than the time since then. */
@@ -88,6 +104,9 @@ export class RecordTrainingSessionUseCase {
     }
     if (ticket.mode !== input.mode || ticket.level !== input.level) {
       throw new InvalidTrainingSessionError('modo ou nível diferente do iniciado.');
+    }
+    if (!sameTraining(ticket.training, input.training ?? null)) {
+      throw new InvalidTrainingSessionError('treino diferente do iniciado.');
     }
     if (input.durationMs > Date.now() - ticket.startedAt.getTime() + CLOCK_TOLERANCE_MS) {
       throw new InvalidTrainingSessionError('duração maior que o tempo desde o início.');
@@ -135,6 +154,12 @@ export class RecordTrainingSessionUseCase {
       xpAwarded,
       deviceKind: input.deviceKind ?? 'simulated',
       targets: (input.targets ?? []).map(toTargetPerformance),
+      training: ticket.training,
+      endReason: input.endReason,
+      stopReason: input.stopReason,
+      interruptions: input.interruptions,
+      deviceId: input.deviceId,
+      attempts: input.attempts?.map(toSessionAttempt),
     });
 
     // Treinar conta como o dia cumprido; um nível não concluído não mantém a
@@ -148,6 +173,15 @@ export class RecordTrainingSessionUseCase {
       progression: rewarded,
       dailyStreak: nextStreak,
     });
+
+    if (session.endReason === 'emergencyStop') {
+      await this.audit.record(
+        auditEntry('session.emergency_stop', input.userId, { type: 'session', id: session.id }, {
+          reason: session.stopReason,
+          mode: session.mode,
+        }),
+      );
+    }
 
     return {
       xpAwarded,

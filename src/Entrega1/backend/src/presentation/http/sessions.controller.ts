@@ -1,4 +1,9 @@
 import { Body, Controller, HttpCode, HttpStatus, Inject, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  OfflineSessionView,
+  RecordOfflineSessionUseCase,
+} from '../../application/use-cases/record-offline-session.use-case';
 import {
   RecordedSessionView,
   RecordTrainingSessionUseCase,
@@ -8,10 +13,15 @@ import {
   StartTrainingSessionUseCase,
 } from '../../application/use-cases/start-training-session.use-case';
 import { CurrentUserId } from './current-user-id.decorator';
-import { RecordSessionDto } from './dto/record-session.dto';
-import { StartSessionDto } from './dto/start-session.dto';
+import {
+  RecordOfflineSessionDto,
+  RecordSessionDto,
+  StartSessionDto,
+} from './dto/record-session.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
+@ApiTags('Sessões de treino')
+@ApiBearerAuth()
 @Controller('me')
 @UseGuards(JwtAuthGuard)
 export class SessionsController {
@@ -20,6 +30,8 @@ export class SessionsController {
     private readonly startSession: StartTrainingSessionUseCase,
     @Inject(RecordTrainingSessionUseCase)
     private readonly recordSession: RecordTrainingSessionUseCase,
+    @Inject(RecordOfflineSessionUseCase)
+    private readonly recordOfflineSession: RecordOfflineSessionUseCase,
   ) {}
 
   @Post('sessions/start')
@@ -38,5 +50,14 @@ export class SessionsController {
     @Body() dto: RecordSessionDto,
   ): Promise<RecordedSessionView> {
     return this.recordSession.execute({ userId, ...dto });
+  }
+
+  @Post('sessions/offline')
+  @HttpCode(HttpStatus.CREATED)
+  recordOffline(
+    @CurrentUserId() userId: string,
+    @Body() dto: RecordOfflineSessionDto,
+  ): Promise<OfflineSessionView> {
+    return this.recordOfflineSession.execute({ userId, ...dto, playedAt: new Date(dto.playedAt) });
   }
 }

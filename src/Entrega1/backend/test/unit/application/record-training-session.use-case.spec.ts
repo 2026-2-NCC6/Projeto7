@@ -23,6 +23,7 @@ function ticketFor(overrides: Partial<SessionTicket> = {}): string {
     userId: 'ana',
     mode: 'level_color',
     level: 1,
+    training: null,
     startedAt: new Date(Date.now() - 60_000),
     ...overrides,
   });

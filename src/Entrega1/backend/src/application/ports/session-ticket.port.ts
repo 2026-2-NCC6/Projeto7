@@ -1,4 +1,5 @@
 import { GameMode } from '../../domain/game/game-mode';
+import { TrainingRef } from '../../domain/training-session/session-context';
 
 /**
  * Proof, signed by the API, that a training session was opened before it was
@@ -9,6 +10,7 @@ export interface SessionTicket {
   userId: string;
   mode: GameMode;
   level: number;
+  training: TrainingRef | null;
   startedAt: Date;
 }
 

@@ -75,9 +75,14 @@ interface ScopedQuery {
 }
 
 function scoped(scope: StatisticsScope): ScopedQuery {
-  return scope.kind === 'player'
-    ? { filter: 'session.user_id = $1', params: [scope.userId] }
-    : { filter: 'TRUE', params: [] };
+  switch (scope.kind) {
+    case 'player':
+      return { filter: 'session.user_id = $1', params: [scope.userId] };
+    case 'training':
+      return { filter: 'session.training_id = $1', params: [scope.trainingId] };
+    case 'all':
+      return { filter: 'TRUE', params: [] };
+  }
 }
 
 function toNumber(value: Numeric): number {

@@ -11,6 +11,7 @@ import { AddSessionTelemetry1757280000000 } from './migrations/1757280000000-Add
 import { ShrinkWallToSixTargets1757290000000 } from './migrations/1757290000000-ShrinkWallToSixTargets';
 import { AddUserTokenVersion1757300000000 } from './migrations/1757300000000-AddUserTokenVersion';
 import { AddSessionTicket1757310000000 } from './migrations/1757310000000-AddSessionTicket';
+import { AddTrainingPlatform1757320000000 } from './migrations/1757320000000-AddTrainingPlatform';
 
 /** Credentials have no fallback: a missing one stops the API instead of trying a known password. */
 function required(env: NodeJS.ProcessEnv, name: string): string {
@@ -46,6 +47,7 @@ export function buildDataSourceOptions(env: NodeJS.ProcessEnv = process.env): Da
       ShrinkWallToSixTargets1757290000000,
       AddUserTokenVersion1757300000000,
       AddSessionTicket1757310000000,
+      AddTrainingPlatform1757320000000,
     ],
     synchronize: false,
   };

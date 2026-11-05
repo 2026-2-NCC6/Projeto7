@@ -22,3 +22,9 @@ export class UserNotFoundError extends DomainError {
     super('Usuário não encontrado.');
   }
 }
+
+export class ForbiddenActionError extends DomainError {
+  constructor(message = 'Você não tem permissão para esta ação.') {
+    super(message);
+  }
+}

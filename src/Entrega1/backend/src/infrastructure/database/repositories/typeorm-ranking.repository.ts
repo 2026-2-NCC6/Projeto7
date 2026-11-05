@@ -6,27 +6,28 @@ import { RankingRepository } from '../../../domain/ranking/ranking-repository.po
 interface StandingRow {
   user_id: string;
   name: string;
+  minor: boolean;
   value: string;
   position: string;
 }
 
 const VALUE_SOURCE: Record<RankingCategory, string> = {
-  xp: `SELECT user_id, SUM(xp_awarded) AS value FROM training_sessions GROUP BY user_id`,
-  bestScore: `SELECT user_id, MAX(score) AS value FROM training_sessions GROUP BY user_id`,
-  totalScore: `SELECT user_id, SUM(score) AS value FROM training_sessions GROUP BY user_id`,
+  xp: `SELECT user_id, SUM(xp_awarded) AS value FROM training_sessions WHERE NOT offline GROUP BY user_id`,
+  bestScore: `SELECT user_id, MAX(score) AS value FROM training_sessions WHERE NOT offline GROUP BY user_id`,
+  totalScore: `SELECT user_id, SUM(score) AS value FROM training_sessions WHERE NOT offline GROUP BY user_id`,
   infiniteColor: `
     SELECT user_id, MAX(score) AS value FROM training_sessions
-    WHERE mode = 'infinite_color' GROUP BY user_id`,
+    WHERE mode = 'infinite_color' AND NOT offline GROUP BY user_id`,
   infiniteScore: `
     SELECT user_id, MAX(score) AS value FROM training_sessions
-    WHERE mode = 'infinite_score' GROUP BY user_id`,
+    WHERE mode = 'infinite_score' AND NOT offline GROUP BY user_id`,
   dailyStreak: `SELECT user_id, longest_streak AS value FROM daily_streaks`,
 };
 
 function rankedStandings(category: RankingCategory): string {
   return `
     WITH ranked AS (
-      SELECT source.user_id, users.name, source.value,
+      SELECT source.user_id, users.name, users.age_group IN ('child', 'teen') AS minor, source.value,
         RANK() OVER (ORDER BY source.value DESC) AS position
       FROM (${VALUE_SOURCE[category]}) AS source
       JOIN users ON users.id = source.user_id
@@ -40,6 +41,7 @@ function toEntry(row: StandingRow): LeaderboardEntry {
     position: Number(row.position),
     userId: row.user_id,
     name: row.name,
+    minor: row.minor === true,
     value: Number(row.value),
   };
 }
@@ -51,7 +53,7 @@ export class TypeOrmRankingRepository implements RankingRepository {
     const [rows, total] = await Promise.all([
       this.dataSource.query<StandingRow[]>(
         `${rankedStandings(category)}
-         SELECT user_id, name, value, position FROM ranked
+         SELECT user_id, name, minor, value, position FROM ranked
          ORDER BY position, name, user_id
          LIMIT $1`,
         [limit],
@@ -65,7 +67,7 @@ export class TypeOrmRankingRepository implements RankingRepository {
   async standingOf(category: RankingCategory, userId: string): Promise<LeaderboardEntry | null> {
     const [row] = await this.dataSource.query<StandingRow[]>(
       `${rankedStandings(category)}
-       SELECT user_id, name, value, position FROM ranked WHERE user_id = $1`,
+       SELECT user_id, name, minor, value, position FROM ranked WHERE user_id = $1`,
       [userId],
     );
 

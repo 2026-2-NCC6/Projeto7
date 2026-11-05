@@ -11,3 +11,5 @@ export function isLevelOpen(mode: GameMode, level: number, highestCleared: numbe
 
   return Number.isInteger(level) && level >= 1 && level <= highestCleared + 1;
 }
+
+export const TRAINING_STEP_LEVEL = 0;

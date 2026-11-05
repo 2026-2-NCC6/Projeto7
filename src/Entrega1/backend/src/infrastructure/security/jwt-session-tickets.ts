@@ -1,6 +1,7 @@
 import { JsonWebTokenError, sign, verify } from 'jsonwebtoken';
 import { SessionTicket, SessionTickets } from '../../application/ports/session-ticket.port';
 import { GameMode } from '../../domain/game/game-mode';
+import { TrainingRef } from '../../domain/training-session/session-context';
 
 /** Its own audience, so a ticket never passes as an access token, nor the reverse. */
 const AUDIENCE = 'smash-session';
@@ -12,6 +13,7 @@ interface TicketClaims {
   jti: string;
   mode: GameMode;
   level: number;
+  training?: TrainingRef;
   startedAt: number;
 }
 
@@ -24,6 +26,7 @@ export class JwtSessionTickets implements SessionTickets {
       jti: ticket.id,
       mode: ticket.mode,
       level: ticket.level,
+      ...(ticket.training ? { training: ticket.training } : {}),
       startedAt: ticket.startedAt.getTime(),
     };
 
@@ -39,6 +42,7 @@ export class JwtSessionTickets implements SessionTickets {
         userId: claims.sub,
         mode: claims.mode,
         level: claims.level,
+        training: claims.training ?? null,
         startedAt: new Date(claims.startedAt),
       };
     } catch (error) {

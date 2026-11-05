@@ -12,6 +12,12 @@ import { RANKING_REPOSITORY } from '../domain/ranking/ranking-repository.port';
 import { STATISTICS_REPOSITORY } from '../domain/statistics/statistics-repository.port';
 import { TRAINING_SESSION_REPOSITORY } from '../domain/training-session/training-session-repository.port';
 import { USER_REPOSITORY } from '../domain/user/user-repository.port';
+import { AUDIT_LOG } from '../domain/audit/audit-event';
+import { TRAINING_REPOSITORY } from '../domain/training/training-repository.port';
+import { SESSION_HISTORY_REPOSITORY } from '../domain/training-session/session-history';
+import { TypeOrmAuditLog } from './database/repositories/typeorm-audit-log';
+import { TypeOrmSessionHistoryRepository } from './database/repositories/typeorm-session-history.repository';
+import { TypeOrmTrainingRepository } from './database/repositories/typeorm-training.repository';
 import { buildDataSourceOptions } from './database/database.config';
 import { TypeOrmDailyStreakRepository } from './database/repositories/typeorm-daily-streak.repository';
 import { TypeOrmProgressionRepository } from './database/repositories/typeorm-progression.repository';
@@ -66,6 +72,21 @@ const JWT_TOKEN_SERVICE = Symbol('JwtTokenService');
       useFactory: (dataSource: DataSource) => new TypeOrmStatisticsRepository(dataSource),
     },
     {
+      provide: TRAINING_REPOSITORY,
+      inject: [DATA_SOURCE],
+      useFactory: (dataSource: DataSource) => new TypeOrmTrainingRepository(dataSource),
+    },
+    {
+      provide: SESSION_HISTORY_REPOSITORY,
+      inject: [DATA_SOURCE],
+      useFactory: (dataSource: DataSource) => new TypeOrmSessionHistoryRepository(dataSource),
+    },
+    {
+      provide: AUDIT_LOG,
+      inject: [DATA_SOURCE],
+      useFactory: (dataSource: DataSource) => new TypeOrmAuditLog(dataSource),
+    },
+    {
       provide: PASSWORD_HASHER,
       useFactory: () => new BcryptPasswordHasher(),
     },
@@ -107,6 +128,9 @@ const JWT_TOKEN_SERVICE = Symbol('JwtTokenService');
     TRAINING_SESSION_REPOSITORY,
     RANKING_REPOSITORY,
     STATISTICS_REPOSITORY,
+    TRAINING_REPOSITORY,
+    SESSION_HISTORY_REPOSITORY,
+    AUDIT_LOG,
     PASSWORD_HASHER,
     ID_GENERATOR,
     TOKEN_ISSUER,

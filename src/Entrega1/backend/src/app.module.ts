@@ -4,6 +4,7 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { AccessTokenModule } from './presentation/http/access-token.module';
 import { AuthModule } from './presentation/http/auth.module';
 import { HomeModule } from './presentation/http/home.module';
+import { PlatformModule } from './presentation/http/platform.module';
 import { ProfileModule } from './presentation/http/profile.module';
 import { RankingsModule } from './presentation/http/rankings.module';
 import { SecurityAuditMiddleware } from './presentation/http/security-audit';
@@ -21,6 +22,7 @@ import { StatisticsModule } from './presentation/http/statistics.module';
     SessionsModule,
     RankingsModule,
     StatisticsModule,
+    PlatformModule,
   ],
 })
 export class AppModule implements NestModule {

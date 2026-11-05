@@ -9,6 +9,14 @@ export class UserMapper {
       email: row.email,
       passwordHash: row.passwordHash,
       tokenVersion: row.tokenVersion,
+      role: row.role,
+      profile: {
+        ageGroup: row.ageGroup,
+        skillLevel: row.skillLevel,
+        goals: row.goals ?? [],
+        dominantHand: row.dominantHand,
+        restrictions: row.restrictions,
+      },
       createdAt: row.createdAt,
     });
   }
@@ -20,6 +28,12 @@ export class UserMapper {
     row.email = user.email;
     row.passwordHash = user.passwordHash;
     row.tokenVersion = user.tokenVersion;
+    row.role = user.role;
+    row.ageGroup = user.profile.ageGroup;
+    row.skillLevel = user.profile.skillLevel;
+    row.goals = user.profile.goals;
+    row.dominantHand = user.profile.dominantHand;
+    row.restrictions = user.profile.restrictions;
     row.createdAt = user.createdAt;
     return row;
   }

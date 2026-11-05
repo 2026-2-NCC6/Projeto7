@@ -4,6 +4,7 @@ export interface LeaderboardEntry {
   position: number;
   userId: string;
   name: string;
+  minor: boolean;
   value: number;
 }
 

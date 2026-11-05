@@ -1,4 +1,5 @@
 import { GameMode, isInfiniteMode } from '../game/game-mode';
+import { EndReason } from '../training-session/session-context';
 
 const CLEARED_BASE_XP = 120;
 const XP_PER_LEVEL = 20;
@@ -14,6 +15,7 @@ export interface SessionReward {
   level: number;
   cleared: boolean;
   score: number;
+  endReason?: EndReason | null;
 }
 
 /**
@@ -24,7 +26,11 @@ export interface SessionReward {
  * An endless run has no level and never clears, so it is paid for the score it
  * reached instead of the level it finished.
  */
-export function xpForSession({ mode, level, cleared, score }: SessionReward): number {
+export function xpForSession({ mode, level, cleared, score, endReason }: SessionReward): number {
+  if (endReason === 'emergencyStop') {
+    return 0;
+  }
+
   if (isInfiniteMode(mode)) {
     const earned = INFINITE_BASE_XP + Math.round(Math.max(0, score) * INFINITE_XP_PER_POINT);
 

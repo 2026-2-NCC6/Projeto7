@@ -24,15 +24,39 @@ import { EMPTY_SESSION_STATS, SessionStats } from '../../src/domain/training-ses
 import { TrainingSessionRepository } from '../../src/domain/training-session/training-session-repository.port';
 import { Account } from '../../src/domain/user/account';
 import { User } from '../../src/domain/user/user.entity';
-import { UserRepository } from '../../src/domain/user/user-repository.port';
+import {
+  UserListFilter,
+  UserPage,
+  UserRepository,
+} from '../../src/domain/user/user-repository.port';
+import { AuditEntry, AuditEvent, AuditLog } from '../../src/domain/audit/audit-event';
+import { EMPTY_PRACTITIONER_PROFILE } from '../../src/domain/user/practitioner-profile';
+import { USER_ROLES, UserRole } from '../../src/domain/user/role';
+import { TrainingContent } from '../../src/domain/training/training-content';
+import {
+  CatalogEntry,
+  StepBreakdown,
+  StudioEntry,
+  TrainingRepository,
+  VersionEntry,
+} from '../../src/domain/training/training-repository.port';
+import {
+  Training,
+  TRAINING_STATUSES,
+  TrainingStatus,
+  TrainingVersion,
+} from '../../src/domain/training/training.entity';
+import { TrainingSession } from '../../src/domain/training-session/training-session.entity';
 
-export function aUser(id: string, name = `Player ${id}`): User {
+export function aUser(id: string, name = `Player ${id}`, role: UserRole = 'player'): User {
   return User.restore({
     id,
     name,
     email: `${id}@smash.test`,
     passwordHash: 'hash',
     tokenVersion: 0,
+    role,
+    profile: EMPTY_PRACTITIONER_PROFILE,
     createdAt: new Date('2026-01-10T12:00:00.000Z'),
   });
 }
@@ -63,9 +87,39 @@ export class InMemoryUserRepository implements UserRepository {
         email: user.email,
         passwordHash: user.passwordHash,
         tokenVersion: user.tokenVersion + 1,
+        role: user.role,
+        profile: user.profile,
         createdAt: user.createdAt,
       });
     }
+  }
+
+  async save(user: User): Promise<void> {
+    const index = this.users.findIndex((existing) => existing.id === user.id);
+    this.users[index] = user;
+  }
+
+  async list({ limit, offset }: UserListFilter): Promise<UserPage> {
+    return {
+      total: this.users.length,
+      items: this.users.slice(offset, offset + limit).map((user) => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        ageGroup: user.profile.ageGroup,
+        sessions: 0,
+        lastPlayedAt: null,
+        createdAt: user.createdAt,
+      })),
+    };
+  }
+
+  async countByRole(): Promise<Record<UserRole, number>> {
+    return USER_ROLES.reduce(
+      (counts, role) => ({ ...counts, [role]: this.users.filter((user) => user.role === role).length }),
+      {} as Record<UserRole, number>,
+    );
   }
 }
 
@@ -113,6 +167,15 @@ export class InMemoryTrainingSessionRepository implements TrainingSessionReposit
       throw new SessionAlreadyRecordedError();
     }
     this.committed.push(completed);
+  }
+
+  readonly offline: TrainingSession[] = [];
+
+  async commitOffline(session: TrainingSession): Promise<void> {
+    if (this.offline.some((existing) => existing.clientSessionId === session.clientSessionId)) {
+      throw new SessionAlreadyRecordedError();
+    }
+    this.offline.push(session);
   }
 }
 
@@ -224,6 +287,91 @@ export function rankedEntries(count: number): LeaderboardEntry[] {
     position: index + 1,
     userId: `user-${index + 1}`,
     name: `Player ${index + 1}`,
+    minor: false,
     value: (count - index) * 100,
   }));
+}
+
+export class InMemoryAuditLog implements AuditLog {
+  readonly entries: AuditEntry[] = [];
+
+  async record(entry: AuditEntry): Promise<void> {
+    this.entries.push(entry);
+  }
+
+  async list(): Promise<AuditEvent[]> {
+    return [];
+  }
+}
+
+export class InMemoryTrainingRepository implements TrainingRepository {
+  readonly trainings = new Map<string, Training>();
+  readonly versions: TrainingVersion[] = [];
+
+  async findById(id: string): Promise<Training | null> {
+    return this.trainings.get(id) ?? null;
+  }
+
+  async save(training: Training): Promise<void> {
+    this.trainings.set(training.id, training);
+  }
+
+  async publish(training: Training, version: TrainingVersion): Promise<void> {
+    this.versions.push(version);
+    this.trainings.set(training.id, training);
+  }
+
+  async studio(): Promise<StudioEntry[]> {
+    return [...this.trainings.values()].map((training) => ({ training, authorName: 'Autor', sessions: 0 }));
+  }
+
+  async studioEntry(id: string): Promise<StudioEntry | null> {
+    const training = this.trainings.get(id);
+    return training ? { training, authorName: 'Autor', sessions: 0 } : null;
+  }
+
+  async catalog(): Promise<CatalogEntry[]> {
+    return [];
+  }
+
+  async publishedVersion(id: string, version?: number): Promise<CatalogEntry | null> {
+    const training = this.trainings.get(id);
+    const wanted = version ?? training?.currentVersion;
+    const found = this.versions.find((entry) => entry.trainingId === id && entry.version === wanted);
+
+    if (!training?.isListed || !found) {
+      return null;
+    }
+
+    return {
+      id,
+      version: found.version,
+      content: found.content as TrainingContent,
+      authorName: 'Autor',
+      publishedAt: found.publishedAt,
+      sessions: 0,
+    };
+  }
+
+  async versionsOf(id: string): Promise<VersionEntry[]> {
+    return this.versions
+      .filter((entry) => entry.trainingId === id)
+      .map((entry) => ({
+        version: entry.version,
+        publishedAt: entry.publishedAt,
+        publishedByName: 'Admin',
+        changeNote: entry.changeNote,
+      }));
+  }
+
+  async stepBreakdownOf(): Promise<StepBreakdown[]> {
+    return [];
+  }
+
+  async countByStatus(): Promise<Record<TrainingStatus, number>> {
+    return TRAINING_STATUSES.reduce(
+      (counts, status) => ({ ...counts, [status]: 0 }),
+      {} as Record<TrainingStatus, number>,
+    );
+  }
 }

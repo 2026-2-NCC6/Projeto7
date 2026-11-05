@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { GetProfileUseCase } from '../../application/use-cases/get-profile.use-case';
+import { UpdateProfileUseCase } from '../../application/use-cases/update-profile.use-case';
+import { AUDIT_LOG, AuditLog } from '../../domain/audit/audit-event';
 import {
   DAILY_STREAK_REPOSITORY,
   DailyStreakRepository,
@@ -37,6 +39,11 @@ import { ProfileController } from './profile.controller';
         sessions: TrainingSessionRepository,
         rankings: RankingRepository,
       ) => new GetProfileUseCase(users, progressions, dailyStreaks, sessions, rankings),
+    },
+    {
+      provide: UpdateProfileUseCase,
+      inject: [USER_REPOSITORY, AUDIT_LOG],
+      useFactory: (users: UserRepository, audit: AuditLog) => new UpdateProfileUseCase(users, audit),
     },
   ],
 })

@@ -1,6 +1,15 @@
 import { GameMode } from '../game/game-mode';
 import { DeviceKind } from './device-kind';
 import { InvalidTrainingSessionError } from './errors';
+import {
+  EndReason,
+  MAX_RECORDED_ATTEMPTS,
+  MAX_STOP_REASON_LENGTH,
+  NO_INTERRUPTIONS,
+  SessionAttempt,
+  SessionInterruptions,
+  TrainingRef,
+} from './session-context';
 import { IMPACT_MAX_RAW, TargetPerformance, WALL_TARGET_COUNT } from './target-performance';
 
 export interface TrainingSessionProps {
@@ -21,8 +30,30 @@ export interface TrainingSessionProps {
   xpAwarded: number;
   deviceKind: DeviceKind;
   targets: TargetPerformance[];
+  training: TrainingRef | null;
+  endReason: EndReason | null;
+  stopReason: string | null;
+  interruptions: SessionInterruptions;
+  offline: boolean;
+  clientSessionId: string | null;
+  deviceId: string | null;
+  attempts: SessionAttempt[];
   playedAt: Date;
 }
+
+type ContextKey =
+  | 'training'
+  | 'endReason'
+  | 'stopReason'
+  | 'interruptions'
+  | 'offline'
+  | 'clientSessionId'
+  | 'deviceId'
+  | 'attempts'
+  | 'playedAt';
+
+export type RecordedSessionProps = Omit<TrainingSessionProps, ContextKey> &
+  Partial<Pick<TrainingSessionProps, ContextKey>>;
 
 function sumOf(targets: TargetPerformance[], pick: (target: TargetPerformance) => number): number {
   return targets.reduce((total, target) => total + pick(target), 0);
@@ -78,6 +109,46 @@ function assertPlausible({ hits, misses, score, durationMs }: TrainingSessionPro
   }
 }
 
+function assertConsistentAttempts({ attempts, hits, misses, durationMs }: TrainingSessionProps): void {
+  if (attempts.length > MAX_RECORDED_ATTEMPTS || attempts.length > hits + misses) {
+    throw new InvalidTrainingSessionError('mais tentativas do que batidas na sessão.');
+  }
+  if (attempts.filter((attempt) => attempt.verdict === 'correct').length > hits) {
+    throw new InvalidTrainingSessionError('mais acertos registrados do que o total.');
+  }
+  if (
+    attempts.some(
+      (attempt) =>
+        (attempt.targetId !== null &&
+          (!Number.isInteger(attempt.targetId) ||
+            attempt.targetId < 1 ||
+            attempt.targetId > WALL_TARGET_COUNT)) ||
+        !isImpactInRange(attempt.intensity) ||
+        attempt.atMs < 0 ||
+        attempt.atMs > durationMs + MIN_ATTEMPT_INTERVAL_MS,
+    )
+  ) {
+    throw new InvalidTrainingSessionError('tentativa fora da parede ou da duração.');
+  }
+}
+
+function withContext(props: RecordedSessionProps): TrainingSessionProps {
+  const stopReason = props.stopReason?.trim().slice(0, MAX_STOP_REASON_LENGTH) || null;
+
+  return {
+    ...props,
+    training: props.training ?? null,
+    endReason: props.endReason ?? (props.cleared ? 'cleared' : null),
+    stopReason: props.endReason === 'emergencyStop' ? stopReason : null,
+    interruptions: props.interruptions ?? NO_INTERRUPTIONS,
+    offline: props.offline ?? false,
+    clientSessionId: props.clientSessionId ?? null,
+    deviceId: props.deviceId ?? null,
+    attempts: props.attempts ?? [],
+    playedAt: props.playedAt ?? new Date(),
+  };
+}
+
 export class TrainingSession {
   private constructor(private readonly props: TrainingSessionProps) {}
 
@@ -85,9 +156,10 @@ export class TrainingSession {
     return new TrainingSession(props);
   }
 
-  static record(props: Omit<TrainingSessionProps, 'playedAt'>): TrainingSession {
-    const session: TrainingSessionProps = { ...props, playedAt: new Date() };
+  static record(props: RecordedSessionProps): TrainingSession {
+    const session = withContext(props);
     assertConsistentTargets(session);
+    assertConsistentAttempts(session);
     assertPlausible(session);
     return new TrainingSession(session);
   }
@@ -154,6 +226,38 @@ export class TrainingSession {
 
   get targets(): TargetPerformance[] {
     return this.props.targets;
+  }
+
+  get training(): TrainingRef | null {
+    return this.props.training;
+  }
+
+  get endReason(): EndReason | null {
+    return this.props.endReason;
+  }
+
+  get stopReason(): string | null {
+    return this.props.stopReason;
+  }
+
+  get interruptions(): SessionInterruptions {
+    return this.props.interruptions;
+  }
+
+  get offline(): boolean {
+    return this.props.offline;
+  }
+
+  get clientSessionId(): string | null {
+    return this.props.clientSessionId;
+  }
+
+  get deviceId(): string | null {
+    return this.props.deviceId;
+  }
+
+  get attempts(): SessionAttempt[] {
+    return this.props.attempts;
   }
 
   get playedAt(): Date {

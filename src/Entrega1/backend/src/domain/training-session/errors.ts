@@ -11,3 +11,9 @@ export class SessionAlreadyRecordedError extends DomainError {
     super('Esta sessão de treino já foi registrada.');
   }
 }
+
+export class NotFoundSessionError extends DomainError {
+  constructor() {
+    super('Sessão não encontrada.');
+  }
+}

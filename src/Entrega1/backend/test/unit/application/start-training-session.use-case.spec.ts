@@ -5,6 +5,7 @@ import { UserNotFoundError } from '../../../src/domain/user/errors';
 import {
   aUser,
   InMemorySessionTickets,
+  InMemoryTrainingRepository,
   InMemoryTrainingSessionRepository,
   InMemoryUserRepository,
   SequentialIdGenerator,
@@ -20,6 +21,7 @@ function setup(highestColorCleared = 0) {
     }),
     tickets,
     new SequentialIdGenerator(),
+    new InMemoryTrainingRepository(),
   );
   return { tickets, useCase };
 }

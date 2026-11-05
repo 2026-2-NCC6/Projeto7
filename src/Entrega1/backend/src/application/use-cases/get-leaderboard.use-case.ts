@@ -1,6 +1,7 @@
 import { LEADERBOARD_SIZE, LeaderboardEntry } from '../../domain/ranking/leaderboard';
 import { RankingCategory } from '../../domain/ranking/ranking-category';
 import { RankingRepository } from '../../domain/ranking/ranking-repository.port';
+import { publicNameOf } from '../../domain/user/practitioner-profile';
 
 export interface RankedPlayerView {
   position: number;
@@ -19,7 +20,7 @@ export interface LeaderboardView {
 function toRankedPlayerView(entry: LeaderboardEntry, viewerId: string | null): RankedPlayerView {
   return {
     position: entry.position,
-    name: entry.name,
+    name: publicNameOf(entry.name, entry.minor),
     value: entry.value,
     isViewer: entry.userId === viewerId,
   };

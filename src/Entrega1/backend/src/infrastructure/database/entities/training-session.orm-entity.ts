@@ -1,6 +1,7 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 import { GameMode } from '../../../domain/game/game-mode';
 import { DeviceKind } from '../../../domain/training-session/device-kind';
+import { EndReason } from '../../../domain/training-session/session-context';
 
 @Entity({ name: 'training_sessions' })
 @Index('ix_training_sessions_user_played_at', ['userId', 'playedAt'])
@@ -50,6 +51,39 @@ export class TrainingSessionOrmEntity {
   @Column({ type: 'text', name: 'device_kind', default: 'simulated' })
   deviceKind: DeviceKind;
 
-  @CreateDateColumn({ type: 'timestamptz', name: 'played_at' })
+  @Column({ type: 'uuid', name: 'training_id', nullable: true })
+  trainingId: string | null;
+
+  @Column({ type: 'int', name: 'training_version', nullable: true })
+  trainingVersion: number | null;
+
+  @Column({ type: 'int', name: 'step_index', nullable: true })
+  stepIndex: number | null;
+
+  @Column({ type: 'text', name: 'end_reason', nullable: true })
+  endReason: EndReason | null;
+
+  @Column({ type: 'text', name: 'stop_reason', nullable: true })
+  stopReason: string | null;
+
+  @Column({ type: 'int', default: 0 })
+  pauses: number;
+
+  @Column({ type: 'int', name: 'device_losses', default: 0 })
+  deviceLosses: number;
+
+  @Column({ type: 'int', default: 0 })
+  faults: number;
+
+  @Column({ type: 'boolean', default: false })
+  offline: boolean;
+
+  @Column({ type: 'uuid', name: 'client_session_id', nullable: true })
+  clientSessionId: string | null;
+
+  @Column({ type: 'text', name: 'device_id', nullable: true })
+  deviceId: string | null;
+
+  @Column({ type: 'timestamptz', name: 'played_at', default: () => 'now()' })
   playedAt: Date;
 }

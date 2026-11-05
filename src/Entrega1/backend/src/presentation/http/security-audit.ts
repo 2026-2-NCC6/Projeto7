@@ -1,5 +1,6 @@
-import { ConsoleLogger, Injectable, NestMiddleware } from '@nestjs/common';
+import { ConsoleLogger, Inject, Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Response } from 'express';
+import { AUDIT_LOG, AuditAction, AuditLog } from '../../domain/audit/audit-event';
 import { AuthenticatedRequest } from './jwt-auth.guard';
 
 export interface AuditedRequest {
@@ -72,6 +73,24 @@ export function auditEntryFor(request: AuditedRequest): AuditEntry | null {
 export class SecurityAuditMiddleware implements NestMiddleware {
   private readonly logger = new ConsoleLogger('Security', { json: true });
 
+  constructor(@Inject(AUDIT_LOG) private readonly auditLog: AuditLog) {}
+
+  private persist(entry: AuditEntry): void {
+    const { event, outcome, status, method, path, ip, userId, email } = entry;
+
+    this.auditLog
+      .record({
+        action: event as AuditAction,
+        outcome,
+        actorId: userId ?? null,
+        targetType: null,
+        targetId: null,
+        details: { status, method, path, ...(email ? { email } : {}) },
+        ip,
+      })
+      .catch((error: unknown) => this.logger.error({ event: 'audit.write_failed', error: String(error) }));
+  }
+
   use(request: AuthenticatedRequest, response: Response, next: NextFunction): void {
     response.on('finish', () => {
       const entry = auditEntryFor({
@@ -92,6 +111,8 @@ export class SecurityAuditMiddleware implements NestMiddleware {
       } else {
         this.logger.log(entry);
       }
+
+      this.persist(entry);
     });
 
     next();
