@@ -296,8 +296,9 @@ usar para agregar todos os jogadores.
 `infiniteColor`, `infiniteScore` ou `dailyStreak`. Devolve os 50 primeiros, o
 total de classificados e, com um token válido, a posição de quem pediu (`viewer`),
 mesmo fora do top 50. Empates dividem a posição (`RANK()`), e ids de usuário não
-saem na resposta. O ranking confia nas sessões que o app envia — é o risco R04 do
-relatório de cibersegurança, ainda em aberto.
+saem na resposta. O ranking confia nas sessões que o app envia, dentro dos limites
+do ticket que o servidor abre no início da partida — é o risco R04 do plano de
+respostas aos riscos, concluído com risco residual Médio.
 
 ---
 
