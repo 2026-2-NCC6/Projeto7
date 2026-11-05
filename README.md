@@ -23,11 +23,13 @@ O **Smash** transforma uma parede comum em uma superfície de treino instrumenta
 
 Um microcontrolador **ESP32** varre continuamente os seis sensores, cada um ligado direto num pino analógico, aplica limiar e debounce por canal e decide, por comparação de pico, qual alvo foi realmente atingido. O evento chega em tempo real ao aplicativo mobile via **WebSocket**, para uma sessão de treino guiada por níveis e desafios, e o app envia cada sessão terminada ao backend por **HTTP**, para histórico, ranking e estatísticas.
 
+Os treinos nascem no **site/dashboard**: um treinador monta a sequência de etapas, as regras, os cuidados e os metadados de marketplace, simula o treino no navegador com o mesmo motor de jogo do app e envia para revisão; um administrador publica. O app busca os treinos publicados pela API, joga etapa por etapa na parede e devolve cada batida, as interrupções e o resultado, que voltam para o site no histórico do jogador, na análise do treino e no painel de administração. Durante o jogo há uma parada de emergência que trava o sistema até ser reiniciado, e sem internet o resultado fica guardado no celular e é enviado quando a conexão volta.
+
 O projeto integra, na prática, os conteúdos de quatro disciplinas do 6º semestre de Ciência da Computação:
 
 - **Sistemas Embarcados e Robótica** — leitura analógica dos piezos, um pino ADC por alvo, e firmware em C++ no ESP32;
 - **Teoria da Computação e Linguagens Formais** — a detecção por alvo modelada como máquina de estados finitos (`IDLE → ARMED → MEASURING_PEAK → EVENT_EMITTED → DEBOUNCE`);
-- **Redes de Computadores e Cibersegurança** — comunicação WebSocket entre parede e app, HTTP entre app e backend, e autenticação do jogador;
+- **Redes de Computadores e Cibersegurança** — comunicação WebSocket entre parede e app, HTTP entre app e backend, autenticação, papéis de acesso e auditoria;
 - **Inovação e Empreendedorismo** — viabilidade do produto para clubes, escolas de tênis e jogadores amadores.
 
 # 📋 Detalhes
@@ -45,8 +47,11 @@ O projeto integra, na prática, os conteúdos de quatro disciplinas do 6º semes
 ├── 🗂️ src/<br>
 │   ├── 📁 Entrega1/<br>
 │   │   ├── 📂 backend → NestJS + TypeORM + firmware do ESP32<br>
-│   │   └── 📂 frontend → Expo + React Native + TypeScript<br>
-│   ├── 📁 Entrega2/ (não iniciada)<br>
+│   │   ├── 📂 frontend → app em Expo + React Native + TypeScript<br>
+│   │   │   └── 📂 web → site/dashboard em React + Vite + TypeScript<br>
+│   │   ├── 📂 scripts → emulador Android, emulador da parede e testes de segurança<br>
+│   │   └── 📄 docker-compose.yml → banco, API e site em contêineres<br>
+│   ├── 📁 Entrega2/ (vazia: o código das duas entregas fica em Entrega1)<br>
 │   └── 📄 README.md → declaração de uso de IA no código<br>
 ├── 📄 CLAUDE.md<br>
 └── 📄 README.md<br>
@@ -58,9 +63,11 @@ O projeto integra, na prática, os conteúdos de quatro disciplinas do 6º semes
   <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/arduino/arduino-original.svg" width="18"/> <a href="https://www.arduino.cc/">Arduino (ESP32)</a></li>
   <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-original.svg" width="18"/> <a href="https://en.cppreference.com/">C/C++</a></li>
   <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" width="18"/> <a href="https://reactnative.dev/">React Native (Expo)</a></li>
+  <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vitejs/vitejs-original.svg" width="18"/> <a href="https://vite.dev/">React + Vite (site/dashboard)</a></li>
   <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" width="18"/> <a href="https://www.typescriptlang.org/">TypeScript</a></li>
   <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nestjs/nestjs-plain.svg" width="18"/> <a href="https://nestjs.com/">NestJS</a></li>
   <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="18"/> <a href="https://www.postgresql.org/">PostgreSQL</a></li>
+  <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg" width="18"/> <a href="https://www.docker.com/">Docker</a></li>
   <li><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" width="18"/> <a href="https://github.com/">GitHub</a></li>
 </ul>
 

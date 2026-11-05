@@ -51,9 +51,9 @@ Os trechos de *prompts* entre aspas são cópias dos comandos enviados, com a gr
 | **Ferramenta utilizada** | Claude (Claude Code) |
 | **Versão/modelo** | Claude Opus 5.5 |
 | **Disciplina / Trabalho** | Redes de Computadores e Cibersegurança e Projeto Interdisciplinar — Entrega 2 |
-| **Finalidade de uso** | Implementação das mitigações do relatório de riscos e dos seus testes |
-| ***Prompts* principais utilizados** | 1. "Dá uma lida na nossa antiga entrega, que foi feita na entrega 1 […] e avalie, do estado do código atual e do que a gente entregou, o que tem que fazer: já dá para a gente fazer agora ou está faltando alguma coisa?"<br>2. "Eu quero que você leia o que foi requisitado na segunda entrega […]. Eu tirei foto de todas as análises, e a gente pode complementar o nosso documento com esse cara." |
-| **Trechos ou entregas afetadas** | Sessão aberta pelo servidor com ticket, limite de tentativas no login, revogação de tokens, logs de auditoria em JSON, cabeçalhos de segurança, CORS restrito, recusa de segredo JWT fraco e atualização de dependências |
+| **Finalidade de uso** | Implementação das mitigações do relatório de riscos e dos seus testes; catálogo de treinos, papéis de acesso, telemetria por tentativa, sessões offline e auditoria pedidos pelo enunciado do PI |
+| ***Prompts* principais utilizados** | 1. "Dá uma lida na nossa antiga entrega, que foi feita na entrega 1 […] e avalie, do estado do código atual e do que a gente entregou, o que tem que fazer: já dá para a gente fazer agora ou está faltando alguma coisa?"<br>2. "Eu quero que você leia o que foi requisitado na segunda entrega […]. Eu tirei foto de todas as análises, e a gente pode complementar o nosso documento com esse cara."<br>3. "Eu só queria saber se está faltando alguma coisa em relação a código, em relação a produto, em relação a software, de dashboard, de alguma pendência que o nosso projeto não tem […]."<br>4. "É legal registrar esses dados que a gente consegue coletar, ter essas paradas dos treinos, ter como criar mais esses perfis de conta que você citou […]." |
+| **Trechos ou entregas afetadas** | Sessão aberta pelo servidor com ticket, limite de tentativas no login, revogação de tokens, logs de auditoria em JSON, cabeçalhos de segurança, CORS restrito, recusa de segredo JWT fraco e atualização de dependências; treinos com versões, revisão e publicação, papéis de jogador, treinador e administrador, perfil do praticante, telemetria por tentativa, sessões offline, auditoria no banco, documentação OpenAPI e a migration `AddTrainingPlatform` |
 
 ### Módulo do sistema 2 — Aplicativo (`src/Entrega1/frontend`)
 
@@ -62,9 +62,9 @@ Os trechos de *prompts* entre aspas são cópias dos comandos enviados, com a gr
 | **Ferramenta utilizada** | Claude (Claude Code) |
 | **Versão/modelo** | Claude Opus 5.5 |
 | **Disciplina / Trabalho** | Projeto Interdisciplinar e Redes de Computadores e Cibersegurança — Entrega 2 |
-| **Finalidade de uso** | Adaptação do app à parede 3×2, envio do retorno ao LED, pareamento por token e conexão com a parede real |
-| ***Prompts* principais utilizados** | 1. "Lembrando que agora eu estou sem o projeto físico, mas construa pensando que esteja […], de uma forma que seja fácil de testar quando eu estiver com ele de fato."<br>2. "A gente precisa fazer o projeto funcionar agora. […] O que a gente precisa fazer para o app conversar com o sistema físico que a gente está implementando?" |
-| **Trechos ou entregas afetadas** | `frontend/src/device` (modelo 3×2, parede incompatível, pareamento), `frontend/src/gameplay` (pausa enquanto a parede reconecta, comando `feedback`), exigência de HTTPS fora do desenvolvimento e atualização de dependências |
+| **Finalidade de uso** | Adaptação do app à parede 3×2, envio do retorno ao LED, pareamento por token e conexão com a parede real; treinos publicados, parada de emergência e operação offline |
+| ***Prompts* principais utilizados** | 1. "Lembrando que agora eu estou sem o projeto físico, mas construa pensando que esteja […], de uma forma que seja fácil de testar quando eu estiver com ele de fato."<br>2. "A gente precisa fazer o projeto funcionar agora. […] O que a gente precisa fazer para o app conversar com o sistema físico que a gente está implementando?"<br>3. "Faça um código limpo, responsivo, e que se adere e adeque às entregas de fato que a gente precisa fazer. […] Não importa se tiver muita gambiarra, mas o ideal é você não fazer, que não quebre nada em relação ao app." |
+| **Trechos ou entregas afetadas** | `frontend/src/device` (modelo 3×2, parede incompatível, pareamento), `frontend/src/gameplay` (pausa enquanto a parede reconecta, comando `feedback`), exigência de HTTPS fora do desenvolvimento e atualização de dependências; `gameplay/training` (etapa de treino no motor existente), `gameplay/outbox` (fila offline), parada de emergência no motor e em `store/safetyStore`, telas `TrainingCatalog`, `TrainingDetail`, `PractitionerProfile` e `SafetyLock` |
 
 ### Módulo do sistema 3 — Firmware do ESP32 (`src/Entrega1/backend/firmware`)
 
@@ -87,5 +87,16 @@ Os trechos de *prompts* entre aspas são cópias dos comandos enviados, com a gr
 | **Finalidade de uso** | Emulador da parede em rede e testes de segurança repetíveis |
 | ***Prompts* principais utilizados** | 1. "Lembrando que agora eu estou sem o projeto físico, mas construa pensando que esteja […], de uma forma que seja fácil de testar quando eu estiver com ele de fato."<br>2. "Dá uma lida na nossa antiga entrega […] e avalie o que tem que fazer." |
 | **Trechos ou entregas afetadas** | `wall-emulator.mjs`, `security-tests.mjs` e `zap-openapi.yaml` |
+
+### Módulo do sistema 5 — Site/dashboard (`src/Entrega1/frontend/web`) e implantação
+
+| **Aluno(s) Responsável(veis)** | Felipe Soares, Guilhermy Garcia, Gustavo Demetrio, Saulo Jesus |
+| :--- | :--- |
+| **Ferramenta utilizada** | Claude (Claude Code) |
+| **Versão/modelo** | Claude Opus 5.5 |
+| **Disciplina / Trabalho** | Projeto Interdisciplinar: IoT e Robótica — Entrega 2 |
+| **Finalidade de uso** | Geração e revisão do site/dashboard (catálogo público, estúdio de treinos, simulação, revisão e publicação, histórico do jogador e painel de administração) e da implantação com Docker |
+| ***Prompts* principais utilizados** | 1. "Já quero fazer tudo isso de uma vez só, o site, o dashboard, não sei se tem que ter os dois ou um deles, né? Mas a gente precisa ter essas paradas que estão faltando […]."<br>2. "Antes de subir qualquer coisa ou comentar qualquer coisa, eu preciso testar, e você precisa testar antes, né? Abrir a página, testar."<br>3. "E você consegue testar agora, porque os processos do outro projeto terminaram. Então dá para a gente testar tudo de ponta a ponta." |
+| **Trechos ou entregas afetadas** | `frontend/web/src` (páginas, componentes, cliente da API e simulador que usa o motor de jogo do app), `docker-compose.yml`, `backend/Dockerfile`, `frontend/web/Dockerfile` e `frontend/web/nginx.conf` |
 
 ***Declaro que o uso acima descrito está em conformidade com o GUIA PARA O USO RESPONSÁVEL DE INTELIGÊNCIA ARTIFICIAL NA FECAP e que o conteúdo final é de minha plena responsabilidade autoral.***
