@@ -97,7 +97,7 @@ Os trechos de *prompts* entre aspas são cópias dos comandos enviados, com a gr
 | **Disciplina / Trabalho** | Teoria da Computação e Linguagens Formais — Entrega 2 |
 | **Finalidade de uso** | Redação do relatório a partir do código e do material das aulas; revisão formal das máquinas M1 e M2, das pré e pós-condições e da análise de decidibilidade |
 | ***Prompts* principais utilizados** | 1. "Dá uma olhada nas minhas primeiras entregas […], o formato delas, os integrantes […]. […] Ler as regras da entrega de teoria da computação, veja a estrutura, veja se faz sentido. Eu vou te mandar alguns conteúdos das aulas."<br>2. "O nosso projeto está pronto no papel? […] Se tiver tudo funcionando, a gente parte para criar o documento da teoria da computação de fato."<br>3. "Agora estou com medo de ter ficado resumido e pequeno demais a ponto de ficar incompleto de acordo com o que a professora pediu de fato. O que acha?" |
-| **Trechos ou entregas afetadas** | `Entrega-2-Teoria-Computacao-Smash.docx` e `.pdf`: máquinas de estados M1 (detecção de pico em janela de 20 ms, no firmware) e M2 (sessão de jogo, no app), eventos, regras, pré e pós-condições, modelo computacional e decidibilidade |
+| **Trechos ou entregas afetadas** | `Entrega-2-Teoria-Computacao-Smash.docx` e `.pdf`: máquinas de estados M1 (detecção de pico em janela de 20 ms, no firmware), M2 (sessão de jogo, no app, com a parada de emergência) e M3 (ciclo de vida do treino, no backend), eventos, regras, pré e pós-condições, modelo computacional e decidibilidade |
 
 ### Disciplina 4 — Sistemas Embarcados e Robótica
 
@@ -117,8 +117,8 @@ Os trechos de *prompts* entre aspas são cópias dos comandos enviados, com a gr
 | **Ferramenta utilizada** | Claude (Claude Code) e Gemini |
 | **Versão/modelo** | Claude Opus 5.5 e Gemini Argon 4 |
 | **Disciplina / Trabalho** | Projeto Interdisciplinar: IoT e Robótica — Entrega 2 |
-| **Finalidade de uso** | Redação e revisão do relatório a partir das evidências da equipe (fotos, vídeos e testes de bancada); apoio no código e na depuração durante o teste com a parede real; estruturação dos testes automatizados (86 no backend e 117 no app) |
+| **Finalidade de uso** | Redação e revisão do relatório a partir das evidências da equipe (fotos, vídeos e testes de bancada); apoio no código e na depuração durante o teste com a parede real; estruturação dos testes automatizados (111 no backend e 126 no app) |
 | ***Prompts* principais utilizados** | 1. "Baseado na entrega 2 da matéria de projeto interdisciplinar, eu preciso que você faça um documento que o professor está pedindo, já com o mesmo modelo dos demais documentos já entregues, seguindo exatamente o que ele está pedindo, com uma linguagem clara, objetiva, separando cada página por cada tópico."<br>2. "A gente precisa fazer o projeto funcionar agora. […] O que a gente precisa fazer para o app conversar com o sistema físico que a gente está implementando?"<br>3. "O documento ficou mais exagerado agora, 33 páginas é demais; gostaria de no máximo umas 20 páginas, mas sem perder o que o professor de fato pede na entrega dele." |
-| **Trechos ou entregas afetadas** | `Entrega-2-Projeto-Interdisciplinar-IoT-Robotica-Smash.docx` e `.pdf` (seções 1 a 7 e Conclusão); correções do firmware feitas no teste de 03/11/2026 (ver `src/README.md`) |
+| **Trechos ou entregas afetadas** | `Entrega-2-Projeto-Interdisciplinar-IoT-Robotica-Smash.docx` e `.pdf` (seções 1 a 7 e Conclusão, incluindo a seção 4.4 sobre o site e os testes T9 a T12); correções do firmware feitas no teste de 03/11/2026 (ver `src/README.md`) |
 
 ***Declaro que o uso acima descrito está em conformidade com o GUIA PARA O USO RESPONSÁVEL DE INTELIGÊNCIA ARTIFICIAL NA FECAP e que o conteúdo final é de minha plena responsabilidade autoral.***
