@@ -12,6 +12,7 @@ import type {
   RoundOutcome,
 } from './game-rules';
 import type { AttemptRecord } from './metrics/attempt-record';
+import type { SessionInterruptions } from './metrics/session-result';
 import { isPlaying, isTerminal, type HitVerdict, type SessionPhase } from './session-phase';
 
 export const PREPARE_COUNTDOWN_MS = 3000;
@@ -20,7 +21,8 @@ export type GameInput =
   | { readonly kind: 'deviceEvent'; readonly event: DeviceEvent }
   | { readonly kind: 'tick'; readonly deltaMs: number }
   | { readonly kind: 'pause' }
-  | { readonly kind: 'resume' };
+  | { readonly kind: 'resume' }
+  | { readonly kind: 'emergencyStop' };
 
 export interface SessionFeedback {
   readonly seq: number;
@@ -40,6 +42,7 @@ export interface GameSession<TState> {
   readonly deviceStatus: DeviceConnectionStatus;
   readonly records: readonly AttemptRecord[];
   readonly feedback: SessionFeedback | null;
+  readonly interruptions: SessionInterruptions;
   readonly startedAt: number;
 }
 
@@ -71,6 +74,7 @@ export function startSession<TConfig extends LevelConfig, TState>({
     deviceStatus,
     records: [],
     feedback: null,
+    interruptions: { pauses: 0, deviceLosses: 0, faults: 0 },
     startedAt,
   };
 }
@@ -139,7 +143,16 @@ function onDeviceStatus<TState>(
   }
 
   if (status !== 'connected') {
-    return { ...session, deviceStatus: status, phase: { kind: 'deviceLost' } };
+    const dropped = session.phase.kind !== 'deviceLost';
+
+    return {
+      ...session,
+      deviceStatus: status,
+      phase: { kind: 'deviceLost' },
+      interruptions: dropped
+        ? { ...session.interruptions, deviceLosses: session.interruptions.deviceLosses + 1 }
+        : session.interruptions,
+    };
   }
 
   const recovered: SessionPhase =
@@ -249,15 +262,26 @@ export function applyInput<TConfig extends LevelConfig, TState>(
       if (input.event.kind === 'targetHit') {
         return onHit(session, input.event, rules, config);
       }
-      return session;
+      return isTerminal(session.phase)
+        ? session
+        : { ...session, interruptions: { ...session.interruptions, faults: session.interruptions.faults + 1 } };
 
     case 'tick':
       return onTick(session, input.deltaMs, rules, config);
 
     case 'pause':
       return isPlaying(session.phase) || session.phase.kind === 'deviceLost'
-        ? { ...session, phase: { kind: 'paused' } }
+        ? {
+            ...session,
+            phase: { kind: 'paused' },
+            interruptions: { ...session.interruptions, pauses: session.interruptions.pauses + 1 },
+          }
         : session;
+
+    case 'emergencyStop':
+      return isTerminal(session.phase)
+        ? session
+        : { ...session, phase: { kind: 'levelFailed', reason: 'emergencyStop' } };
 
     case 'resume':
       if (session.phase.kind !== 'paused') {

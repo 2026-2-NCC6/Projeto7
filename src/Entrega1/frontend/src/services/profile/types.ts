@@ -54,11 +54,25 @@ export interface Achievement {
   unlocked: boolean;
 }
 
+export type AgeGroup = 'child' | 'teen' | 'adult' | 'senior';
+export type SkillLevel = 'beginner' | 'intermediate' | 'advanced';
+export type PracticeGoal = 'precision' | 'consistency' | 'reaction' | 'fitness' | 'fun';
+export type DominantHand = 'right' | 'left';
+
+export interface PractitionerProfile {
+  ageGroup: AgeGroup | null;
+  skillLevel: SkillLevel | null;
+  goals: PracticeGoal[];
+  dominantHand: DominantHand | null;
+  restrictions: string | null;
+}
+
 export interface ProfilePlayer {
   id: string;
   name: string;
   email: string;
   level: number;
+  practitioner: PractitionerProfile;
 }
 
 export interface ProfileStats extends SessionStats {

@@ -4,6 +4,7 @@ import { hasLevels, INFINITE_LEVEL } from '../gameplay/modes/mode-catalog';
 import { HomeScreen } from '../screens/Home';
 import { RanksScreen } from '../screens/Ranks';
 import { StatsScreen } from '../screens/Stats';
+import type { TrainingRun } from '../gameplay/training/training-run';
 import type { PlayableModeId } from '../types/game';
 import {
   HomeIcon,
@@ -29,9 +30,10 @@ const tabs: TabDefinition[] = [
 
 interface AppTabsProps {
   onStartLevel: (mode: PlayableModeId, level: number) => void;
+  onStartTraining: (run: TrainingRun) => void;
 }
 
-export function AppTabs({ onStartLevel }: AppTabsProps) {
+export function AppTabs({ onStartLevel, onStartTraining }: AppTabsProps) {
   return (
     <Tab.Navigator
       screenOptions={{ headerShown: false }}
@@ -51,7 +53,9 @@ export function AppTabs({ onStartLevel }: AppTabsProps) {
           />
         )}
       </Tab.Screen>
-      <Tab.Screen name="Play">{() => <PlayNavigator onStartLevel={onStartLevel} />}</Tab.Screen>
+      <Tab.Screen name="Play">
+        {() => <PlayNavigator onStartLevel={onStartLevel} onStartTraining={onStartTraining} />}
+      </Tab.Screen>
       <Tab.Screen name="Stats" component={StatsScreen} />
       <Tab.Screen name="Ranks" component={RanksScreen} />
       <Tab.Screen name="Profile" component={ProfileNavigator} />

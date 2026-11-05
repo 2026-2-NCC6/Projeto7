@@ -50,6 +50,7 @@ export interface Colors {
   heroGradient: readonly [string, string];
 
   danger: string;
+  onDanger: string;
 
   target: Record<TargetColor, ColorPair>;
 
@@ -103,6 +104,7 @@ export const lightColors: Colors = {
   heroGradient: [palette.lime, palette.limeMid],
 
   danger: palette.red,
+  onDanger: palette.white,
 };
 
 export const darkColors: Colors = {
@@ -124,4 +126,5 @@ export const darkColors: Colors = {
   heroGradient: [palette.limeMid, palette.lime],
 
   danger: palette.coral,
+  onDanger: palette.charcoal,
 };

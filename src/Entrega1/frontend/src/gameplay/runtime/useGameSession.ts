@@ -16,6 +16,9 @@ import type { SessionResult } from '../domain/metrics/session-result';
 import { isTerminal } from '../domain/session-phase';
 import { rulesFor } from '../modes/registry';
 import { sessionService } from '../services/sessionService';
+import { useSafetyStore } from '../store/safetyStore';
+import { refOf, stepOf, type TrainingRun } from '../training/training-run';
+import { levelConfigOf } from '../training/training-step';
 import { pulseFor, pulseOutcome } from './haptics';
 
 const TICK_MS = 100;
@@ -29,15 +32,22 @@ export interface GameSessionController<TState> {
 export interface UseGameSessionInput {
   readonly mode: PlayableModeId;
   readonly level: number;
+  readonly training?: TrainingRun | null;
 }
+
 
 export function useGameSession<TState>({
   mode,
   level,
+  training = null,
 }: UseGameSessionInput): GameSessionController<TState> | null {
   const { device, status } = useDevice();
   const rules = useMemo(() => rulesFor(mode) as GameRules<LevelConfig, TState>, [mode]);
-  const config = useMemo(() => levelOf(rules.levels, level), [rules, level]);
+  const config = useMemo(
+    () => (training ? levelConfigOf(stepOf(training), training.difficulty) : levelOf(rules.levels, level)),
+    [rules, level, training],
+  );
+  const stopReason = useSafetyStore((state) => state.reason);
 
   const [session, setSession] = useState<GameSession<TState> | null>(null);
   const feedbackSeq = useRef(0);
@@ -74,13 +84,29 @@ export function useGameSession<TState>({
     const { accessToken } = useAuthStore.getState();
 
     if (accessToken) {
-      sessionService.open({ mode, level: config.level }, startedAt, accessToken);
+      sessionService.open(
+        { mode, level: config.level, ...(training ? { training: refOf(training) } : {}) },
+        startedAt,
+        accessToken,
+      );
     }
-  }, [config, rules, device, mode]);
+  }, [config, rules, device, mode, training]);
 
   useEffect(() => {
     return device.subscribe((event) => dispatch({ kind: 'deviceEvent', event }));
   }, [device, dispatch]);
+
+  useEffect(
+    () =>
+      useSafetyStore.subscribe((state, previous) => {
+        if (state.locked) {
+          dispatch({ kind: 'emergencyStop' });
+        } else if (state.stopping !== previous.stopping) {
+          dispatch({ kind: state.stopping ? 'pause' : 'resume' });
+        }
+      }),
+    [dispatch],
+  );
 
   useEffect(() => {
     dispatch({ kind: 'deviceEvent', event: { kind: 'status', status, deviceId: device.descriptor.id, at: Date.now() } });
@@ -106,7 +132,9 @@ export function useGameSession<TState>({
     if (feedback && feedback.seq !== feedbackSeq.current) {
       feedbackSeq.current = feedback.seq;
       pulseFor(feedback.verdict);
-      device.signal(feedback.verdict === 'correct' ? 'hit' : 'miss');
+      if (!useSafetyStore.getState().locked) {
+        device.signal(feedback.verdict === 'correct' ? 'hit' : 'miss');
+      }
     }
   }, [session?.feedback, device]);
 
@@ -115,7 +143,9 @@ export function useGameSession<TState>({
       outcomeAnnounced.current = true;
       const cleared = session.phase.kind === 'levelCleared';
       pulseOutcome(cleared);
-      device.signal(cleared ? 'levelCleared' : 'levelFailed');
+      if (!useSafetyStore.getState().locked) {
+        device.signal(cleared ? 'levelCleared' : 'levelFailed');
+      }
     }
   }, [session, device]);
 
@@ -125,12 +155,13 @@ export function useGameSession<TState>({
     }
 
     const cleared = session.phase.kind === 'levelCleared';
+    const failureReason = session.phase.kind === 'levelFailed' ? session.phase.reason : null;
 
     return {
       mode,
       level: config.level,
       cleared,
-      failureReason: session.phase.kind === 'levelFailed' ? session.phase.reason : null,
+      failureReason,
       startedAt: session.startedAt,
       endedAt: session.startedAt + session.sessionElapsedMs,
       deviceKind: device.descriptor.kind,
@@ -142,8 +173,13 @@ export function useGameSession<TState>({
         cleared,
         records: session.records,
       }),
+      training: training ? refOf(training) : null,
+      stopReason: failureReason === 'emergencyStop' ? stopReason : null,
+      interruptions: session.interruptions,
+      deviceId: device.descriptor.id,
+      records: session.records,
     };
-  }, [session, config, mode, device]);
+  }, [session, config, mode, device, training, stopReason]);
 
   if (!session || !config) {
     return null;

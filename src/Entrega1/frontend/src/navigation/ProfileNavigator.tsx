@@ -1,5 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AchievementsScreen } from '../screens/Achievements';
+import { PractitionerProfileScreen } from '../screens/PractitionerProfile';
 import { ProfileScreen } from '../screens/Profile';
 import type { ProfileStackParamList } from './types';
 
@@ -14,6 +15,7 @@ export function ProfileNavigator() {
             onOpenAchievements={(achievements) =>
               navigation.navigate('Achievements', { achievements })
             }
+            onOpenPractitioner={() => navigation.navigate('Practitioner')}
           />
         )}
       </Stack.Screen>
@@ -24,6 +26,9 @@ export function ProfileNavigator() {
             onGoBack={() => navigation.goBack()}
           />
         )}
+      </Stack.Screen>
+      <Stack.Screen name="Practitioner">
+        {({ navigation }) => <PractitionerProfileScreen onGoBack={() => navigation.goBack()} />}
       </Stack.Screen>
     </Stack.Navigator>
   );

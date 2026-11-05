@@ -3,7 +3,8 @@ export type HitVerdict = 'correct' | 'incorrect';
 export type FailureReason =
   | 'timeExpired'
   | 'mistakesExhausted'
-  | 'deviceLost';
+  | 'deviceLost'
+  | 'emergencyStop';
 
 export type SessionPhase =
   | { readonly kind: 'preparing'; readonly remainingMs: number }

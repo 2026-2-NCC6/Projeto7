@@ -1,5 +1,18 @@
 import type { DeviceKind } from '../../device/contracts';
 import type { GameModeId, ProgressionTrack } from '../../types/game';
+import type { SessionInterruptions } from '../domain/metrics/session-result';
+import type { TrainingRef } from '../training/training-run';
+
+export type EndReason = 'cleared' | 'timeExpired' | 'mistakesExhausted' | 'deviceLost' | 'emergencyStop';
+
+export interface AttemptRequest {
+  atMs: number;
+  responseMs: number;
+  verdict: 'correct' | 'incorrect';
+  targetId: number | null;
+  scoreDelta: number;
+  intensity: number | null;
+}
 
 export interface TargetPerformanceRequest {
   targetId: number;
@@ -12,6 +25,7 @@ export interface TargetPerformanceRequest {
 export interface StartSessionRequest {
   mode: GameModeId;
   level: number;
+  training?: TrainingRef;
 }
 
 export interface StartedSession {
@@ -19,9 +33,7 @@ export interface StartedSession {
   startedAt: string;
 }
 
-export interface RecordSessionRequest {
-  /** Issued when the session was opened; the server refuses a result without it. */
-  ticket: string;
+export interface SessionResultRequest {
   mode: GameModeId;
   level: number;
   cleared: boolean;
@@ -34,6 +46,16 @@ export interface RecordSessionRequest {
   bestResponseMs?: number;
   deviceKind: DeviceKind;
   targets: TargetPerformanceRequest[];
+  training?: TrainingRef;
+  endReason?: EndReason;
+  stopReason?: string;
+  interruptions: SessionInterruptions;
+  deviceId?: string;
+  attempts: AttemptRequest[];
+}
+
+export interface RecordSessionRequest extends SessionResultRequest {
+  ticket: string;
 }
 
 export interface RecordedSession {

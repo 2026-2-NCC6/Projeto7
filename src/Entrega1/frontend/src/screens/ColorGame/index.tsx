@@ -15,6 +15,7 @@ import { currentColorOf, type ColorRoundState } from '../../gameplay/modes/color
 import { GameplayDevPanel } from '../../gameplay/devtools/GameplayDevPanel';
 import { useColorWash } from '../../gameplay/runtime/useColorWash';
 import { useGameSession } from '../../gameplay/runtime/useGameSession';
+import type { TrainingRun } from '../../gameplay/training/training-run';
 import { targetsWithColor } from '../../device/contracts';
 import { TARGET_COLORS, type TargetColor } from '../../types/game';
 import {
@@ -33,15 +34,16 @@ const FULL_PERCENT = 100;
 
 interface ColorGameScreenProps {
   level: number;
+  training?: TrainingRun;
   onExit: () => void;
   onHelp: () => void;
   onFinish: (result: SessionResult) => void;
 }
 
-export function ColorGameScreen({ level, onExit, onHelp, onFinish }: ColorGameScreenProps) {
+export function ColorGameScreen({ level, training, onExit, onHelp, onFinish }: ColorGameScreenProps) {
   const theme = useTheme();
   const { status, reconnect } = useDevice();
-  const controller = useGameSession<ColorRoundState>({ mode: 'level_color', level });
+  const controller = useGameSession<ColorRoundState>({ mode: 'level_color', level, training });
 
   const modeState = controller?.session.modeState;
   const activeColor: TargetColor = modeState ? currentColorOf(modeState) : TARGET_COLORS[0];
@@ -75,7 +77,7 @@ export function ColorGameScreen({ level, onExit, onHelp, onFinish }: ColorGameSc
     <Stage style={{ backgroundColor: background }}>
       <Safe edges={['top', 'bottom']}>
         <GameHeader
-          label={texts.game.header(gameModeLabels.level_color, config.level)}
+          label={training ? texts.game.trainingHeader(training.title, training.stepIndex + 1, training.steps.length) : texts.game.header(gameModeLabels.level_color, config.level)}
           foreground={tone.foreground}
           chipBackground={overlay}
           onClose={onExit}

@@ -6,7 +6,7 @@ import { sessionService } from '../services/sessionService';
 import type { RecordedSession } from '../services/types';
 import { useLevelProgressStore } from '../store/levelProgressStore';
 
-export type RecordStatus = 'idle' | 'saving' | 'saved' | 'guest' | 'error';
+export type RecordStatus = 'idle' | 'saving' | 'saved' | 'queued' | 'guest' | 'error';
 
 export interface RecordSessionState {
   status: RecordStatus;
@@ -29,7 +29,9 @@ export function useRecordSession(result: SessionResult | null): RecordSessionSta
       return;
     }
 
-    recordResult(result);
+    if (!result.training) {
+      recordResult(result);
+    }
 
     if (!accessToken) {
       setState({ status: 'guest', recorded: null, error: null });
@@ -42,9 +44,14 @@ export function useRecordSession(result: SessionResult | null): RecordSessionSta
 
     sessionService
       .record(result, accessToken)
-      .then((recorded) => {
-        if (active) {
-          setState({ status: 'saved', recorded, error: null });
+      .then((outcome) => {
+        if (!active) {
+          return;
+        }
+        if (outcome.kind === 'queued') {
+          setState({ status: 'queued', recorded: null, error: null });
+        } else {
+          setState({ status: 'saved', recorded: outcome.recorded, error: null });
           // Only now does the server know about the session, so this is the
           // earliest point at which refetching Home or Profile is meaningful.
           markSynced();

@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { SessionResult } from '../gameplay/domain/metrics/session-result';
+import type { TrainingRun } from '../gameplay/training/training-run';
 import type { Achievement } from '../services/profile/types';
 import type { LevelModeId, PlayableModeId } from '../types/game';
 import type { TabIconProps } from './components/TabIcons';
@@ -11,7 +12,7 @@ export type AuthStackParamList = {
 
 export type AppStackParamList = {
   Tabs: undefined;
-  Game: { mode: PlayableModeId; level: number };
+  Game: { mode: PlayableModeId; level: number; training?: TrainingRun };
 };
 
 export type AppTabParamList = {
@@ -25,17 +26,20 @@ export type AppTabParamList = {
 export type PlayStackParamList = {
   PlayHome: undefined;
   LevelSelect: { mode: LevelModeId };
+  Trainings: undefined;
+  TrainingDetail: { id: string };
 };
 
 export type GameStackParamList = {
-  ModeIntro: { mode: PlayableModeId; level: number };
-  Match: { mode: PlayableModeId; level: number };
-  Results: { result: SessionResult };
+  ModeIntro: { mode: PlayableModeId; level: number; training?: TrainingRun };
+  Match: { mode: PlayableModeId; level: number; training?: TrainingRun };
+  Results: { result: SessionResult; training?: TrainingRun };
 };
 
 export type ProfileStackParamList = {
   ProfileOverview: undefined;
   Achievements: { achievements: Achievement[] };
+  Practitioner: undefined;
 };
 
 export type AppTabName = keyof AppTabParamList;

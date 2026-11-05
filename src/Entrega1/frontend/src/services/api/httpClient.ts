@@ -22,7 +22,7 @@ function extractMessage(body: ErrorBody, status: number): string {
 }
 
 interface RequestOptions {
-  method: 'GET' | 'POST';
+  method: 'GET' | 'POST' | 'PATCH';
   path: string;
   body?: object;
   accessToken?: string | null;
@@ -68,4 +68,12 @@ export function post<TResponse>(
 
 export function get<TResponse>(path: string, accessToken: string | null): Promise<TResponse> {
   return request<TResponse>({ method: 'GET', path, accessToken });
+}
+
+export function patch<TResponse>(
+  path: string,
+  body: object,
+  accessToken: string | null,
+): Promise<TResponse> {
+  return request<TResponse>({ method: 'PATCH', path, body, accessToken });
 }

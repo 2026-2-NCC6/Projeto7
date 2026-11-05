@@ -1,6 +1,7 @@
 import type { SessionMetrics, TargetMetrics } from '../domain/metrics/session-metrics';
 import type { SessionResult } from '../domain/metrics/session-result';
-import { post } from '../../services/api/httpClient';
+import { ApiError, post } from '../../services/api/httpClient';
+import { useOutboxStore } from '../outbox/outboxStore';
 import { sessionService, toRecordSessionRequest } from './sessionService';
 
 jest.mock('../../services/api/httpClient', () => ({
@@ -37,6 +38,11 @@ function resultWith(perTarget: TargetMetrics[], deviceKind: SessionResult['devic
     endedAt: 30_000,
     deviceKind,
     metrics,
+    training: null,
+    stopReason: null,
+    interruptions: { pauses: 0, deviceLosses: 0, faults: 0 },
+    deviceId: null,
+    records: [],
   };
 }
 
@@ -132,4 +138,53 @@ describe('sessionService', () => {
 
     await expect(sessionService.record(result, 'token')).rejects.toThrow('conectar ao servidor');
   });
+
+  it('keeps the result on the phone when the network fails after the session was opened', async () => {
+    useOutboxStore.setState({ pending: [] });
+    jest
+      .mocked(post)
+      .mockResolvedValueOnce({ ticket: 'ticket-7', startedAt: '' })
+      .mockRejectedValueOnce(new ApiError('Não foi possível conectar ao servidor.', 0));
+
+    sessionService.open({ mode: 'level_color', level: 2 }, result.startedAt, 'token');
+
+    await expect(sessionService.record(result, 'token')).resolves.toEqual({ kind: 'queued' });
+    expect(useOutboxStore.getState().pending).toEqual([
+      expect.objectContaining({ ticket: 'ticket-7', request: expect.objectContaining({ score: 900 }) }),
+    ]);
+  });
 });
+
+describe('toSessionResultRequest telemetry', () => {
+  it('sends the training step, the stop reason, interruptions and each attempt', () => {
+    const request = toRecordSessionRequest(
+      {
+        ...resultWith([], 'websocket'),
+        cleared: false,
+        failureReason: 'emergencyStop',
+        training: { id: 'training-1', version: 2, stepIndex: 1 },
+        stopReason: 'Pessoa ou objeto na área de jogo',
+        interruptions: { pauses: 1, deviceLosses: 2, faults: 0 },
+        deviceId: 'smash-wall',
+        records: [
+          { atMs: 1200.4, responseMs: 800.6, verdict: 'correct', targetId: 3, color: 'red', scoreDelta: 12, impact: { raw: 2100, simulated: false } },
+          { atMs: 2400, responseMs: 1000, verdict: 'incorrect', targetId: null, color: null, scoreDelta: 0, impact: null },
+        ],
+      },
+      'ticket-1',
+    );
+
+    expect(request).toMatchObject({
+      training: { id: 'training-1', version: 2, stepIndex: 1 },
+      endReason: 'emergencyStop',
+      stopReason: 'Pessoa ou objeto na área de jogo',
+      interruptions: { pauses: 1, deviceLosses: 2, faults: 0 },
+      deviceId: 'smash-wall',
+      attempts: [
+        { atMs: 1200, responseMs: 801, verdict: 'correct', targetId: 3, scoreDelta: 12, intensity: 2100 },
+        { atMs: 2400, responseMs: 1000, verdict: 'incorrect', targetId: null, scoreDelta: 0, intensity: null },
+      ],
+    });
+  });
+});
+

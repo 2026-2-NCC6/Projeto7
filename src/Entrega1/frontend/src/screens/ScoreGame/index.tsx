@@ -14,6 +14,7 @@ import { accuracyOf, type ScoreRoundState } from '../../gameplay/modes/score/sco
 import { multiplierFor } from '../../gameplay/modes/shared/scoring';
 import { GameplayDevPanel } from '../../gameplay/devtools/GameplayDevPanel';
 import { useGameSession } from '../../gameplay/runtime/useGameSession';
+import type { TrainingRun } from '../../gameplay/training/training-run';
 import { WALL_TARGETS } from '../../device/contracts';
 import { TARGET_COLORS } from '../../types/game';
 import {
@@ -36,15 +37,16 @@ const FULL_PERCENT = 100;
 
 interface ScoreGameScreenProps {
   level: number;
+  training?: TrainingRun;
   onExit: () => void;
   onHelp: () => void;
   onFinish: (result: SessionResult) => void;
 }
 
-export function ScoreGameScreen({ level, onExit, onHelp, onFinish }: ScoreGameScreenProps) {
+export function ScoreGameScreen({ level, training, onExit, onHelp, onFinish }: ScoreGameScreenProps) {
   const theme = useTheme();
   const { status, reconnect } = useDevice();
-  const controller = useGameSession<ScoreRoundState>({ mode: 'level_score', level });
+  const controller = useGameSession<ScoreRoundState>({ mode: 'level_score', level, training });
 
   useEffect(() => {
     if (controller?.result) {
@@ -74,7 +76,7 @@ export function ScoreGameScreen({ level, onExit, onHelp, onFinish }: ScoreGameSc
   return (
     <Stage edges={['top', 'bottom']}>
       <GameHeader
-        label={texts.game.header(gameModeLabels.level_score, config.level)}
+        label={training ? texts.game.trainingHeader(training.title, training.stepIndex + 1, training.steps.length) : texts.game.header(gameModeLabels.level_score, config.level)}
         foreground={theme.colors.ink}
         chipBackground={theme.colors.surface}
         onClose={onExit}

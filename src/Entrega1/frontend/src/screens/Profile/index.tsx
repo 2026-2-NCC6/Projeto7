@@ -16,9 +16,10 @@ import { Centered, Content, ErrorMessage, GuestMessage, RetryLabel, Section } fr
 
 interface ProfileScreenProps {
   onOpenAchievements: (achievements: Achievement[]) => void;
+  onOpenPractitioner: () => void;
 }
 
-export function ProfileScreen({ onOpenAchievements }: ProfileScreenProps) {
+export function ProfileScreen({ onOpenAchievements, onOpenPractitioner }: ProfileScreenProps) {
   const theme = useTheme();
   const session = useAuthStore((state) => state.session);
   const signOut = useAuthStore((state) => state.signOut);
@@ -83,7 +84,7 @@ export function ProfileScreen({ onOpenAchievements }: ProfileScreenProps) {
         <AchievementStrip achievements={profile.achievements} onSeeAll={() => onOpenAchievements(profile.achievements)} />
 
         <Section>{texts.profile.settings}</Section>
-        <SettingsList onSignOut={signOut} />
+        <SettingsList onSignOut={signOut} onOpenPractitioner={onOpenPractitioner} />
       </Content>
     </Screen>
   );

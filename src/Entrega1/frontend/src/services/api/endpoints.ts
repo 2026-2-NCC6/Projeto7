@@ -8,6 +8,9 @@ export const endpoints = {
   profile: '/me/profile',
   startSession: '/me/sessions/start',
   recordSession: '/me/sessions',
+  recordOfflineSession: '/me/sessions/offline',
+  trainings: '/trainings',
+  training: (id: string) => `/trainings/${id}`,
   statistics: '/me/statistics',
   ranking: (category: RankingCategory) => `/rankings/${category}`,
 } as const;

@@ -17,6 +17,7 @@ export const sizes = {
   hairline: 1,
 
   gameChip: 32,
+  emergencyButtonOffset: 112,
   promptRing: 110,
   promptRingBorder: 3,
   timelineDot: 26,

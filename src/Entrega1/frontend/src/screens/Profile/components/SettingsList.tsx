@@ -1,4 +1,4 @@
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { Card } from '../../../components/Card';
 import { Text } from '../../../components/Text';
@@ -31,15 +31,34 @@ const SignOutLabel = styled(Text).attrs({
   tone: 'danger',
 })``;
 
+const EntryLabel = styled(Text).attrs({ size: 'mdPlus', weight: 'bold' })``;
+
+const EntryHint = styled(Text).attrs({ size: 'sm', tone: 'inkSoft' })``;
+
 interface SettingsListProps {
   onSignOut: () => void;
+  onOpenPractitioner?: () => void;
 }
 
-export function SettingsList({ onSignOut }: SettingsListProps) {
+export function SettingsList({ onSignOut, onOpenPractitioner }: SettingsListProps) {
   const theme = useTheme();
 
   return (
     <Container>
+      {onOpenPractitioner ? (
+        <>
+          <Pressable onPress={onOpenPractitioner} accessibilityRole="button">
+            <Row>
+              <View>
+                <EntryLabel>{texts.practitioner.entry}</EntryLabel>
+                <EntryHint>{texts.practitioner.entryHint}</EntryHint>
+              </View>
+              <Triangle direction="right" {...CHEVRON} color={theme.colors.inkSoft} />
+            </Row>
+          </Pressable>
+          <Separator />
+        </>
+      ) : null}
       <ThemeModeRow />
       <Separator />
       <Pressable onPress={onSignOut} accessibilityRole="button">
