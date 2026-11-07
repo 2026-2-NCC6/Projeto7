@@ -1,4 +1,4 @@
-# Smash — Entrega 1
+# Smash — Entrega 2
 
 Autenticação, Home, Perfil, Estatísticas e Ranking com dados reais do PostgreSQL,
 e o gameplay: **Color Mode**, **Score Mode**, **Infinite Color** e **Infinite
