@@ -1,0 +1,6 @@
+node_modules
+dist
+firmware
+test
+.env
+*.log

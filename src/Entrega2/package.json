@@ -1,0 +1,25 @@
+{
+  "name": "smash-entrega1",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Smash: app, site/dashboard, API e firmware da parede",
+  "scripts": {
+    "setup": "npm --prefix backend install && npm --prefix frontend install && npm --prefix frontend/web install && npm run db:migrate",
+    "db:migrate": "npm --prefix backend run db:migrate",
+    "emulator": "bash scripts/emulator.sh",
+    "wall": "node scripts/wall-emulator.mjs",
+    "security:test": "node scripts/security-tests.mjs",
+    "backend": "npm --prefix backend run start:dev",
+    "app": "npm --prefix frontend start",
+    "web": "npm --prefix frontend/web run dev",
+    "dev": "concurrently -n backend,app,web -c cyan,magenta,green \"npm:backend\" \"npm --prefix frontend start -- --android\" \"npm:web\"",
+    "start": "npm run emulator && npm run dev",
+    "typecheck": "npm --prefix backend run typecheck && npm --prefix frontend run typecheck && npm --prefix frontend/web run typecheck",
+    "lint": "npm --prefix backend run lint && npm --prefix frontend run lint",
+    "test": "npm --prefix backend test && npm --prefix frontend test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "ws": "^8.22.0"
+  }
+}

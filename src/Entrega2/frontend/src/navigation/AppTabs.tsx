@@ -1,0 +1,64 @@
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { texts } from '../content/texts';
+import { hasLevels, INFINITE_LEVEL } from '../gameplay/modes/mode-catalog';
+import { HomeScreen } from '../screens/Home';
+import { RanksScreen } from '../screens/Ranks';
+import { StatsScreen } from '../screens/Stats';
+import type { TrainingRun } from '../gameplay/training/training-run';
+import type { PlayableModeId } from '../types/game';
+import {
+  HomeIcon,
+  PlayIcon,
+  ProfileIcon,
+  RanksIcon,
+  StatsIcon,
+} from './components/TabIcons';
+import { SmashTabBar } from './components/SmashTabBar';
+import { PlayNavigator } from './PlayNavigator';
+import { ProfileNavigator } from './ProfileNavigator';
+import type { AppTabParamList, TabDefinition } from './types';
+
+const Tab = createBottomTabNavigator<AppTabParamList>();
+
+const tabs: TabDefinition[] = [
+  { name: 'Home', label: texts.tabs.home, icon: HomeIcon },
+  { name: 'Play', label: texts.tabs.play, icon: PlayIcon },
+  { name: 'Stats', label: texts.tabs.stats, icon: StatsIcon },
+  { name: 'Ranks', label: texts.tabs.ranks, icon: RanksIcon },
+  { name: 'Profile', label: texts.tabs.profile, icon: ProfileIcon },
+];
+
+interface AppTabsProps {
+  onStartLevel: (mode: PlayableModeId, level: number) => void;
+  onStartTraining: (run: TrainingRun) => void;
+}
+
+export function AppTabs({ onStartLevel, onStartTraining }: AppTabsProps) {
+  return (
+    <Tab.Navigator
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => <SmashTabBar {...props} tabs={tabs} />}
+    >
+      <Tab.Screen name="Home">
+        {({ navigation }) => (
+          <HomeScreen
+            onViewProfile={() => navigation.navigate('Profile')}
+            onOpenPlay={() => navigation.navigate('Play')}
+            // An endless mode has nothing to select, so it opens straight into the game.
+            onSelectMode={(mode) =>
+              hasLevels(mode)
+                ? navigation.navigate('Play', { screen: 'LevelSelect', params: { mode } })
+                : onStartLevel(mode, INFINITE_LEVEL)
+            }
+          />
+        )}
+      </Tab.Screen>
+      <Tab.Screen name="Play">
+        {() => <PlayNavigator onStartLevel={onStartLevel} onStartTraining={onStartTraining} />}
+      </Tab.Screen>
+      <Tab.Screen name="Stats" component={StatsScreen} />
+      <Tab.Screen name="Ranks" component={RanksScreen} />
+      <Tab.Screen name="Profile" component={ProfileNavigator} />
+    </Tab.Navigator>
+  );
+}

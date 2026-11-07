@@ -1,0 +1,128 @@
+import type { DeviceEvent } from '../../contracts/device-event';
+import { WebSocketTargetDevice } from './websocket-device';
+
+class FakeSocket {
+  static last: FakeSocket | null = null;
+
+  onopen: (() => void) | null = null;
+  onmessage: ((event: { data: unknown }) => void) | null = null;
+  onerror: (() => void) | null = null;
+  onclose: (() => void) | null = null;
+  readonly sent: string[] = [];
+
+  constructor(readonly url: string) {
+    FakeSocket.last = this;
+  }
+
+  send(data: string): void {
+    this.sent.push(data);
+  }
+
+  close(): void {}
+
+  receive(frame: object): void {
+    this.onmessage?.({ data: JSON.stringify(frame) });
+  }
+}
+
+const hello = { tipo: 'hello', protocolo: 2, parede: 'wall-1', alvos: 6, sessao: 'app-1', t_ms: 10 };
+
+async function connectedDevice() {
+  const device = new WebSocketTargetDevice('ws://wall.test:81', 'segredo');
+  const events: DeviceEvent[] = [];
+  device.subscribe((event) => events.push(event));
+  await device.connect();
+  FakeSocket.last!.onopen?.();
+  return { device, events, socket: FakeSocket.last! };
+}
+
+describe('WebSocketTargetDevice', () => {
+  const realWebSocket = globalThis.WebSocket;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    (globalThis as { WebSocket: unknown }).WebSocket = FakeSocket;
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    (globalThis as { WebSocket: unknown }).WebSocket = realWebSocket;
+  });
+
+  it('pairs with the secret in the path it connects to', async () => {
+    const { device, socket } = await connectedDevice();
+
+    expect(socket.url).toBe('ws://wall.test:81/?token=segredo');
+    await device.disconnect();
+  });
+
+  it.each([
+    ['nao autorizado', 'segredo de pareamento recusado pela parede'],
+    ['parede ocupada', 'outro app já está usando a parede'],
+  ])('reports a wall that refuses to pair (%s)', async (detalhe, detail) => {
+    const { device, events, socket } = await connectedDevice();
+
+    socket.receive({ tipo: 'erro', detalhe, t_ms: 1 });
+
+    expect(events.at(-1)).toMatchObject({ kind: 'fault', code: 'pairingRefused', detail });
+    await device.disconnect();
+  });
+
+  it('ignores an ordinary command error', async () => {
+    const { device, events, socket } = await connectedDevice();
+
+    socket.receive({ tipo: 'erro', detalhe: 'comando desconhecido', t_ms: 1 });
+
+    expect(events.filter((event) => event.kind === 'fault')).toEqual([]);
+    await device.disconnect();
+  });
+
+  it('sends the session id and turns impacts into hits', async () => {
+    const { device, events, socket } = await connectedDevice();
+
+    socket.receive(hello);
+    socket.receive({ alvo: 4, linha: 2, coluna: 1, intensidade: 900, t_ms: 50, sessao: 'app-1' });
+
+    expect(JSON.parse(socket.sent[0])).toMatchObject({ cmd: 'session' });
+    expect(events.filter((event) => event.kind === 'fault')).toEqual([]);
+    expect(events.at(-1)).toMatchObject({ kind: 'targetHit', targetId: 4, row: 2, column: 1 });
+    await device.disconnect();
+  });
+
+  it.each([
+    ['hit', 'acerto'],
+    ['miss', 'erro'],
+    ['levelCleared', 'nivel_concluido'],
+    ['levelFailed', 'nivel_falhou'],
+  ] as const)('asks the wall to play %s', async (feedback, resultado) => {
+    const { device, socket } = await connectedDevice();
+
+    device.signal(feedback);
+
+    expect(JSON.parse(socket.sent.at(-1)!)).toEqual({ cmd: 'feedback', resultado });
+    await device.disconnect();
+  });
+
+  it('stays quiet while the wall is not connected', async () => {
+    const device = new WebSocketTargetDevice('ws://wall.test:81');
+    await device.connect();
+
+    device.signal('hit');
+
+    expect(FakeSocket.last!.sent).toEqual([]);
+    await device.disconnect();
+  });
+
+  it.each([
+    ['an old protocol version', { ...hello, protocolo: 1 }],
+    ['a wall with another number of targets', { ...hello, alvos: 9 }],
+  ])('reports %s as an incompatible wall', async (_, frame) => {
+    const { device, events, socket } = await connectedDevice();
+
+    socket.receive(frame);
+
+    expect(events.at(-1)).toMatchObject({ kind: 'fault', code: 'incompatibleWall' });
+    expect(device.status).toBe('connected');
+    await device.disconnect();
+  });
+});

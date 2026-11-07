@@ -1,0 +1,102 @@
+# Rotas da API do Smash, para a varredura do OWASP ZAP (zap-api-scan.py).
+# Descreve só o que o ZAP precisa para montar requisições válidas e atacá-las.
+# POST /auth/sign-out fica de fora: ele revogaria o token da própria varredura.
+openapi: 3.0.3
+info:
+  title: Smash API
+  version: entrega2
+servers:
+  - url: http://127.0.0.1:3000
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+  schemas:
+    Credentials:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, example: zap@demo.smash.test }
+        password: { type: string, example: Senha-da-varredura-1 }
+    SignUp:
+      type: object
+      required: [name, email, password]
+      properties:
+        name: { type: string, example: Varredura ZAP }
+        email: { type: string, example: zap-cadastro@demo.smash.test }
+        password: { type: string, example: Senha-da-varredura-1 }
+    StartSession:
+      type: object
+      required: [mode, level]
+      properties:
+        mode: { type: string, enum: [level_color, level_score, infinite_color, infinite_score], example: level_color }
+        level: { type: integer, example: 1 }
+    RecordSession:
+      type: object
+      required: [ticket, mode, level, cleared, score, hits, misses, bestStreak, durationMs]
+      properties:
+        ticket: { type: string, example: ticket-da-varredura }
+        mode: { type: string, example: level_color }
+        level: { type: integer, example: 1 }
+        cleared: { type: boolean, example: true }
+        score: { type: integer, example: 100 }
+        hits: { type: integer, example: 6 }
+        misses: { type: integer, example: 1 }
+        bestStreak: { type: integer, example: 4 }
+        durationMs: { type: integer, example: 20000 }
+paths:
+  /auth/sign-up:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SignUp' }
+      responses: { '201': { description: conta criada } }
+  /auth/sign-in:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Credentials' }
+      responses: { '200': { description: token de acesso } }
+  /rankings/{category}:
+    get:
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema: { type: string, enum: [xp, bestScore, totalScore, infiniteColor, infiniteScore, dailyStreak], example: xp }
+      responses: { '200': { description: ranking } }
+  /me/home:
+    get:
+      security: [{ bearer: [] }]
+      responses: { '200': { description: resumo do jogador } }
+  /me/profile:
+    get:
+      security: [{ bearer: [] }]
+      responses: { '200': { description: perfil e conquistas } }
+  /me/statistics:
+    get:
+      security: [{ bearer: [] }]
+      responses: { '200': { description: estatísticas do jogador } }
+  /me/sessions/start:
+    post:
+      security: [{ bearer: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StartSession' }
+      responses: { '201': { description: ticket da sessão } }
+  /me/sessions:
+    post:
+      security: [{ bearer: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RecordSession' }
+      responses: { '201': { description: sessão registrada } }
