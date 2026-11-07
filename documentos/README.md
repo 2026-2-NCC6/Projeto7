@@ -108,7 +108,7 @@ Os trechos de *prompts* entre aspas são cópias dos comandos enviados, com a gr
 | **Disciplina / Trabalho** | Sistemas Embarcados e Robótica — Entrega 2 |
 | **Finalidade de uso** | Redação do relatório; comentários no firmware C++, leitura direta dos 6 pinos do ADC1, decisão pelo maior pico em 20 ms e sequenciador não bloqueante do LED no GPIO 2 |
 | ***Prompts* principais utilizados** | 1. "Gere um PDF e o arquivo DOCX baseados nas últimas entregas, no mesmo molde, mesmos integrantes, número, capa. O documento, de acordo com o professor, deve ter de 1 a 2 páginas no máximo: que código usou, componentes e como ele funciona, explicação do projeto em si e o que é mostrado no vídeo, mantendo um tom claro e objetivo."<br>2. "Por que temos que ter essas peças adicionais? Somente detectar as vibrações não seria suficiente para se conectar com o app? Não tínhamos LED desenhado no projeto."<br>3. "Lembrando que agora eu estou sem o projeto físico, mas construa pensando que esteja […], de uma forma que seja fácil de testar quando eu estiver com ele de fato." |
-| **Trechos ou entregas afetadas** | `Entrega-2-Sistemas-Embarcados-Smash.docx` e `.pdf` (seções 1 a 5); firmware em `src/Entrega1/backend/firmware/smash_wall` |
+| **Trechos ou entregas afetadas** | `Entrega-2-Sistemas-Embarcados-Smash.docx` e `.pdf` (seções 1 a 5); firmware em `src/Entrega2/backend/firmware/smash_wall` |
 
 ### Disciplina 5 — Projeto Interdisciplinar: IoT e Robótica
 

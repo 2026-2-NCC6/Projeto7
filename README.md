@@ -45,13 +45,13 @@ O projeto integra, na prática, os conteúdos de quatro disciplinas do 6º semes
 │   ├── 📁 Entrega2/ (mesma estrutura das disciplinas)<br>
 │   └── 📄 README.md → declaração de uso de IA nos documentos<br>
 ├── 🗂️ src/<br>
-│   ├── 📁 Entrega1/<br>
+│   ├── 📁 Entrega1/ → código da Entrega 1<br>
 │   │   ├── 📂 backend → NestJS + TypeORM + firmware do ESP32<br>
 │   │   ├── 📂 frontend → app em Expo + React Native + TypeScript<br>
 │   │   │   └── 📂 web → site/dashboard em React + Vite + TypeScript<br>
 │   │   ├── 📂 scripts → emulador Android, emulador da parede e testes de segurança<br>
 │   │   └── 📄 docker-compose.yml → banco, API e site em contêineres<br>
-│   ├── 📁 Entrega2/ (vazia: o código das duas entregas fica em Entrega1)<br>
+│   ├── 📁 Entrega2/ → código da Entrega 2, versão final do projeto (mesma estrutura de Entrega1)<br>
 │   └── 📄 README.md → declaração de uso de IA no código<br>
 ├── 📄 CLAUDE.md<br>
 └── 📄 README.md<br>

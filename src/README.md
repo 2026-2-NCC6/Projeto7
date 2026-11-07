@@ -1,7 +1,7 @@
 # Entregas do PI
 ### **DECLARAÇÃO DE USO DE INTELIGÊNCIA ARTIFICIAL**
 
-Todo o código das duas entregas fica em `src/Entrega1`; a pasta `src/Entrega2` continua vazia. O uso de IA nos documentos de cada disciplina está declarado em [`documentos/README.md`](../documentos/README.md).
+O código da Entrega 1 fica em `src/Entrega1` e o da Entrega 2, a versão final do projeto, em `src/Entrega2`. O uso de IA nos documentos de cada disciplina está declarado em [`documentos/README.md`](../documentos/README.md).
 
 ## Entrega 1
 <br><br>
@@ -44,7 +44,7 @@ Todo o código das duas entregas fica em `src/Entrega1`; a pasta `src/Entrega2` 
 
 Os trechos de *prompts* entre aspas são cópias dos comandos enviados, com a grafia corrigida.
 
-### Módulo do sistema 1 — Backend (`src/Entrega1/backend/src`)
+### Módulo do sistema 1 — Backend (`src/Entrega2/backend/src`)
 
 | **Aluno(s) Responsável(veis)** | Felipe Soares, Guilhermy Garcia, Gustavo Demetrio, Saulo Jesus |
 | :--- | :--- |
@@ -55,7 +55,7 @@ Os trechos de *prompts* entre aspas são cópias dos comandos enviados, com a gr
 | ***Prompts* principais utilizados** | 1. "Dá uma lida na nossa antiga entrega, que foi feita na entrega 1 […] e avalie, do estado do código atual e do que a gente entregou, o que tem que fazer: já dá para a gente fazer agora ou está faltando alguma coisa?"<br>2. "Eu quero que você leia o que foi requisitado na segunda entrega […]. Eu tirei foto de todas as análises, e a gente pode complementar o nosso documento com esse cara."<br>3. "Eu só queria saber se está faltando alguma coisa em relação a código, em relação a produto, em relação a software, de dashboard, de alguma pendência que o nosso projeto não tem […]."<br>4. "É legal registrar esses dados que a gente consegue coletar, ter essas paradas dos treinos, ter como criar mais esses perfis de conta que você citou […]." |
 | **Trechos ou entregas afetadas** | Sessão aberta pelo servidor com ticket, limite de tentativas no login, revogação de tokens, logs de auditoria em JSON, cabeçalhos de segurança, CORS restrito, recusa de segredo JWT fraco e atualização de dependências; treinos com versões, revisão e publicação, papéis de jogador, treinador e administrador, perfil do praticante, telemetria por tentativa, sessões offline, auditoria no banco, documentação OpenAPI e a migration `AddTrainingPlatform` |
 
-### Módulo do sistema 2 — Aplicativo (`src/Entrega1/frontend`)
+### Módulo do sistema 2 — Aplicativo (`src/Entrega2/frontend`)
 
 | **Aluno(s) Responsável(veis)** | Felipe Soares, Guilhermy Garcia, Gustavo Demetrio, Saulo Jesus |
 | :--- | :--- |
@@ -66,7 +66,7 @@ Os trechos de *prompts* entre aspas são cópias dos comandos enviados, com a gr
 | ***Prompts* principais utilizados** | 1. "Lembrando que agora eu estou sem o projeto físico, mas construa pensando que esteja […], de uma forma que seja fácil de testar quando eu estiver com ele de fato."<br>2. "A gente precisa fazer o projeto funcionar agora. […] O que a gente precisa fazer para o app conversar com o sistema físico que a gente está implementando?"<br>3. "Faça um código limpo, responsivo, e que se adere e adeque às entregas de fato que a gente precisa fazer. […] Não importa se tiver muita gambiarra, mas o ideal é você não fazer, que não quebre nada em relação ao app." |
 | **Trechos ou entregas afetadas** | `frontend/src/device` (modelo 3×2, parede incompatível, pareamento), `frontend/src/gameplay` (pausa enquanto a parede reconecta, comando `feedback`), exigência de HTTPS fora do desenvolvimento e atualização de dependências; `gameplay/training` (etapa de treino no motor existente), `gameplay/outbox` (fila offline), parada de emergência no motor e em `store/safetyStore`, telas `TrainingCatalog`, `TrainingDetail`, `PractitionerProfile` e `SafetyLock` |
 
-### Módulo do sistema 3 — Firmware do ESP32 (`src/Entrega1/backend/firmware`)
+### Módulo do sistema 3 — Firmware do ESP32 (`src/Entrega2/backend/firmware`)
 
 | **Aluno(s) Responsável(veis)** | Felipe Soares, Guilhermy Garcia, Gustavo Demetrio, Saulo Jesus |
 | :--- | :--- |
@@ -77,7 +77,7 @@ Os trechos de *prompts* entre aspas são cópias dos comandos enviados, com a gr
 | ***Prompts* principais utilizados** | 1. "Por que temos que ter essas peças adicionais? Somente detectar as vibrações não seria suficiente para se conectar com o app? Não tínhamos LED desenhado no projeto."<br>2. "Sim, faz o 1 e o 2 e bora pro atuador."<br>3. "A gente precisa fazer o projeto funcionar agora. Basicamente, a gente está com ele conectado aqui, com as 6 placas […]." |
 | **Trechos ou entregas afetadas** | `smash_wall/config.h`, `wall_sensors`, `wall_actuator`, `wall_link`, `wall_protocol`, `secrets_example.h` e `firmware/README.md`; descarte de ruído do ADC e reconexão do Wi-Fi (03/11/2026) |
 
-### Módulo do sistema 4 — Scripts (`src/Entrega1/scripts`)
+### Módulo do sistema 4 — Scripts (`src/Entrega2/scripts`)
 
 | **Aluno(s) Responsável(veis)** | Felipe Soares, Guilhermy Garcia, Gustavo Demetrio, Saulo Jesus |
 | :--- | :--- |
@@ -88,7 +88,7 @@ Os trechos de *prompts* entre aspas são cópias dos comandos enviados, com a gr
 | ***Prompts* principais utilizados** | 1. "Lembrando que agora eu estou sem o projeto físico, mas construa pensando que esteja […], de uma forma que seja fácil de testar quando eu estiver com ele de fato."<br>2. "Dá uma lida na nossa antiga entrega […] e avalie o que tem que fazer." |
 | **Trechos ou entregas afetadas** | `wall-emulator.mjs`, `security-tests.mjs` e `zap-openapi.yaml` |
 
-### Módulo do sistema 5 — Site/dashboard (`src/Entrega1/frontend/web`) e implantação
+### Módulo do sistema 5 — Site/dashboard (`src/Entrega2/frontend/web`) e implantação
 
 | **Aluno(s) Responsável(veis)** | Felipe Soares, Guilhermy Garcia, Gustavo Demetrio, Saulo Jesus |
 | :--- | :--- |
