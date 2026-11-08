@@ -3,6 +3,8 @@
 
 O uso de IA no código-fonte está declarado em [`src/README.md`](../src/README.md).
 
+A ficha oficial da FECAP, única para todas as entregas e assinada por todos os integrantes, está em [`Ficha-Declaracao-Uso-IA-Smash.pdf`](Ficha-Declaracao-Uso-IA-Smash.pdf).
+
 ## Entrega 1
 <br><br>
 
